@@ -1,0 +1,135 @@
+{
+  "$schema": "../verification-contract.schema.json",
+  "targets": {
+    "traework": {
+      "verification": {
+        "required": [
+          {
+            "name": "host-class-present",
+            "any": ["html.agentskin-host-traework"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "palette-accent-applied",
+            "any": [":root[style*='--agentskin-accent']", "html[style*='--agentskin-accent']"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "recommended": [
+          {
+            "name": "adapter-marker-present",
+            "any": ["body"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "tokens-layer-present",
+            "any": [
+              ":root[style*='--agentskin-background']",
+              "html[style*='--agentskin-background']"
+            ],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "contexts": [
+          {
+            "name": "sidebar-visible",
+            "when": {
+              "any": ["[class*='sidebar']", "[class*='SideBar']", "[data-testid='sidebar']"]
+            },
+            "required": [
+              {
+                "name": "sidebar-themed",
+                "any": [
+                  "[class*='sidebar'] [style*='--agentskin']",
+                  "[class*='sidebar'][style*='--agentskin']"
+                ],
+                "provenance": {
+                  "source": "reporter",
+                  "strength": "medium",
+                  "knownGaps": ["sidebar class selector may vary across traework versions"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "solo-lite-html",
+            "when": { "any": ["body[data-solo-lite]", "html[lang='zh']"] },
+            "required": [
+              {
+                "name": "solo-lite-host-class",
+                "any": ["html.agentskin-host-traework[data-solo-lite]"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "strong",
+                  "knownGaps": ["solo-lite attribute may change across versions"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "icube-tokens-discoverable",
+            "when": {
+              "any": [":root[style*='--vscode-icube-']", "html[style*='--vscode-icube-']"]
+            },
+            "required": [
+              {
+                "name": "icube-tokens-overridden",
+                "any": [":root[style*='--vscode-icube-colorBg1']"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["icube token names may change if BYTEDANCE updates design system"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "task-view-active",
+            "when": {
+              "any": ["[class*='task-view']", "[class*='taskView']", "[data-testid='task-view']"]
+            },
+            "required": [
+              {
+                "name": "task-view-themed",
+                "any": ["[class*='task-view'] [style*='--agentskin']"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["task view DOM structure differs from chat view"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

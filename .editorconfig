@@ -1,0 +1,25 @@
+# EditorConfig is awesome: https://editorconfig.org
+# Keeps encoding and line endings consistent across editors and CI.
+
+root = true
+
+[*]
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# NSIS source files must be UTF-8 with BOM.
+# NSIS uses the BOM to detect UTF-8 encoding; without it, the script is
+# interpreted as ACP (GBK on Chinese Windows), causing "Bad text encoding"
+# errors on any non-ASCII content.
+[*.nsi]
+charset = utf-8-bom
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.nsh]
+charset = utf-8-bom
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true

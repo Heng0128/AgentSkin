@@ -1,0 +1,274 @@
+[
+  {
+    "filePath": "src/preload.ts",
+    "lineNumber": 136,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "30 preload IPC invoke calls carry TODO type-guard comments — no runtime validation of IPC responses",
+      "listStyleSheets, snapshotThemeDom, snapshotBaseline, captureLiveDom, listStudioProjects, createStudioProject, saveStudioProject, importStudioProject, loadStudioSnapshot, getVisualAnalysisTarget, listVisualAnalysisTargets, listVisualAnalysisSummaries, detectVisualAnalysisAgent, exportVisualAnalysisTheme, extractThemeFromImage, listBundles, listWallpapersForStudio, getPerformanceTimeouts, getPerformanceHistory, getPerformanceMemory, triggerManualRegen, probeSelector, validateSelectors, getMcpStatus all lack type-guards"
+    ],
+    "severity": "major",
+    "affectedModules": ["preload", "renderer", "ipc"]
+  },
+  {
+    "filePath": "src/main/cdp/injection/health-monitor.ts",
+    "lineNumber": 380,
+    "currentStatus": "stub",
+    "missingPoints": [
+      "InjectionHealthMonitor singleton (injectionHealthMonitor) is exported but never imported or used anywhere outside its own test file",
+      "No integration with notificationStore or statusStore — onFailure callback is never wired to surface user-facing notifications",
+      "No integration with themeStore or apply flow — reInjectFn is never connected to the actual theme re-apply logic",
+      "Effectively dead code: the live health monitoring path uses theme-health-check.ts + cdp-fingerprint.ts drift detection instead"
+    ],
+    "severity": "critical",
+    "affectedModules": ["health-monitor", "notificationStore", "statusStore", "themeStore"]
+  },
+  {
+    "filePath": "src/main/cdp/cdp-fingerprint.ts",
+    "lineNumber": 133,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "pushDriftStatus only sends THEME_DRIFT_STATUS to mainWindow — studioWindow is not notified",
+      "Breaks the fan-out pattern established by notifyStatusChanged/notifyPersistFailure/sendDeepLinkToRenderer which all send to both windows"
+    ],
+    "severity": "major",
+    "affectedModules": ["cdp-fingerprint", "diagnosticsStore", "studioWindow"]
+  },
+  {
+    "filePath": "src/main/cdp/cdp-fanout.ts",
+    "lineNumber": 906,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "THEME_HEALTH_REPORT is only pushed to mainWindow — studioWindow does not receive health reports",
+      "Breaks the dual-window fan-out pattern; Studio's capture-store subscribes to onThemeHealthReport but will never get updates"
+    ],
+    "severity": "major",
+    "affectedModules": ["cdp-fanout", "capture-store", "studioWindow", "WorkspacePage"]
+  },
+  {
+    "filePath": "src/main/cdp/cdp-fanout.ts",
+    "lineNumber": 701,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "THEME_ENGINE_INJECT_FAILURE is only sent to mainWindow — studioWindow is not notified of engine injection failures",
+      "Inconsistent with the dual-window fan-out pattern used by other critical notifications"
+    ],
+    "severity": "minor",
+    "affectedModules": ["cdp-fanout", "studioWindow", "notificationStore"]
+  },
+  {
+    "filePath": "src/main/ipc/bundle-ipc.ts",
+    "lineNumber": 131,
+    "currentStatus": "stub",
+    "missingPoints": [
+      "BUNDLE_OPEN_FILE IPC handler is registered (ipcMain.handle) but never invoked from preload.ts — no renderer-facing API exists",
+      "handleThemeFileOpen in main-context.ts calls installBundleFromPath directly, bypassing the BUNDLE_OPEN_FILE channel entirely",
+      "The channel is dead code — registered but unreachable from the renderer"
+    ],
+    "severity": "major",
+    "affectedModules": ["bundle-ipc", "preload", "file-open", "main-context"]
+  },
+  {
+    "filePath": "src/main/ipc/bundle-ipc.ts",
+    "lineNumber": 143,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "FILE_IMPORTED event after bundle install is only sent to mainWindow — studioWindow does not receive it",
+      "Inconsistent with the dual-window pattern; Studio's theme list may go stale after a bundle install"
+    ],
+    "severity": "minor",
+    "affectedModules": ["bundle-ipc", "studioWindow", "themeStore"]
+  },
+  {
+    "filePath": "src/ui/stores/secondaryInjectStore.ts",
+    "lineNumber": 158,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "disposeSecondaryInjectSubscriptions is exported and called from renderer.tsx beforeunload, but no HMR dispose hook exists",
+      "@todo comment acknowledges the gap — subscription leaks can occur across HMR reloads",
+      "init() has an _initialized guard but dispose does not reset it, so re-init after dispose would be a no-op"
+    ],
+    "severity": "major",
+    "affectedModules": ["secondaryInjectStore", "renderer", "HMR-lifecycle"]
+  },
+  {
+    "filePath": "src/main/agent-engine-service.ts",
+    "lineNumber": 1005,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "restoreAll() catches per-agent restore errors individually (survives a failing restore) but does NOT implement transaction rollback — partial restore leaves system in inconsistent state",
+      "No notification to the user when some agents fail and others succeed — failures are silently swallowed",
+      "No integration with notificationStore to surface partial-failure results"
+    ],
+    "severity": "major",
+    "affectedModules": ["agent-engine-service", "notificationStore", "statusStore"]
+  },
+  {
+    "filePath": "src/main/main-context.ts",
+    "lineNumber": 206,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "notifyPersistFailure sends PERSIST_FAILURE_WARNING to both windows (correct fan-out) but the renderer-side handler in useAppController only updates diagnosticsStore — no user-facing toast or alert is shown",
+      "The IPC channel comment says 'Renderer subscribes via preload and shows a destructive toast' but the actual implementation only increments a counter in diagnosticsStore"
+    ],
+    "severity": "major",
+    "affectedModules": ["main-context", "useAppController", "diagnosticsStore", "notificationStore"]
+  },
+  {
+    "filePath": "src/ui/stores/environmentStore.ts",
+    "lineNumber": 131,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "environmentStore.switchEnvironment applies theme + wallpaper but does NOT subscribe to settingsStore changes — if the user changes app path/port while an environment is active, the environment is not re-applied",
+      "No cross-store subscription to settingsStore for reactive re-apply when agent configuration changes",
+      "environmentStore.purgeTheme removes presets but does not notify settingsStore or trigger a status refresh"
+    ],
+    "severity": "major",
+    "affectedModules": ["environmentStore", "settingsStore", "statusStore"]
+  },
+  {
+    "filePath": "src/ui/stores/settingsStore.ts",
+    "lineNumber": 116,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "settingsStore mutations (setRadiusScale, setDensity, setMotion, setCustomThemeCss) only update localStorage + state — no cross-module notification is emitted",
+      "No SETTINGS_CHANGED IPC event or callback to notify themeStore/wallpaperStore/shellStore that settings have changed",
+      "Other stores must poll or re-read settings via api.getSettings() rather than being pushed updates"
+    ],
+    "severity": "major",
+    "affectedModules": ["settingsStore", "themeStore", "wallpaperStore", "shellStore"]
+  },
+  {
+    "filePath": "src/ui/stores/settingsStore.ts",
+    "lineNumber": 224,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "refreshMcpStatus silently ignores errors — MCP start failure is not surfaced to the user through notificationStore",
+      "toggleMcp surfaces errors via notificationStore.fail but the mcpRunning/mcpUrl state is only visible in SettingsPage — no global status indicator for MCP connection state"
+    ],
+    "severity": "major",
+    "affectedModules": ["settingsStore", "notificationStore", "statusStore", "statusBar"]
+  },
+  {
+    "filePath": "src/main/deep-link-handler.ts",
+    "lineNumber": 160,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "sendDeepLinkToRenderer correctly fans out to both windows, but the renderer-side handling of deep link events (apply-result, apply-error, restore) is not wired to notificationStore for user-facing feedback",
+      "handleRestore does not send any result event back to the renderer — the UI cannot show success/failure for restore deep links"
+    ],
+    "severity": "major",
+    "affectedModules": ["deep-link-handler", "notificationStore", "renderer"]
+  },
+  {
+    "filePath": "src/main/theme-health-check.ts",
+    "lineNumber": 344,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "detectOverriddenVariables has a TODO type-guard comment — the JSON.parse(raw) result is cast as OverriddenVariable[] without runtime validation",
+      "No integration with notificationStore to alert the user when theme variables are being overridden by the host app"
+    ],
+    "severity": "minor",
+    "affectedModules": ["theme-health-check", "notificationStore"]
+  },
+  {
+    "filePath": "src/ui/stores/wallpaperStore.ts",
+    "lineNumber": 356,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "wallpaperStore→themeStore companion flow (runWallpaperCompanion) calls api.applyTheme directly but does not wire into the full apply-flow error handling — failures are only reported via notificationStore",
+      "No rollback mechanism: if theme apply succeeds but wallpaper re-apply fails, the system is left in an inconsistent state"
+    ],
+    "severity": "major",
+    "affectedModules": ["wallpaperStore", "themeStore", "notificationStore"]
+  },
+  {
+    "filePath": "src/shared/import/parsers/dreamskin-parser.ts",
+    "lineNumber": 1,
+    "currentStatus": "missing",
+    "missingPoints": [
+      "Zero test coverage — no dreamskin-parser.test.ts exists in the entire codebase",
+      "Parser correctness for DreamSkin ZIP packages is entirely unverified"
+    ],
+    "severity": "critical",
+    "affectedModules": ["dreamskin-parser", "theme-import", "theme-source-parser"]
+  },
+  {
+    "filePath": "src/shared/import/parsers/agentskin-built-parser.ts",
+    "lineNumber": 1,
+    "currentStatus": "missing",
+    "missingPoints": [
+      "Zero test coverage — no agentskin-built-parser.test.ts exists",
+      "The identity parser used for re-importing exported themes and built-in themes is unverified"
+    ],
+    "severity": "critical",
+    "affectedModules": ["agentskin-built-parser", "theme-import", "theme-export"]
+  },
+  {
+    "filePath": "src/shared/import/parsers/source-directory-parser.ts",
+    "lineNumber": 1,
+    "currentStatus": "missing",
+    "missingPoints": [
+      "Zero test coverage — no source-directory-parser.test.ts exists",
+      "The catch-all parser for raw source theme directories is unverified"
+    ],
+    "severity": "critical",
+    "affectedModules": ["source-directory-parser", "theme-import", "theme-source-parser"]
+  },
+  {
+    "filePath": "engines/shared/adopted-sheets-manager.mjs",
+    "lineNumber": 1,
+    "currentStatus": "missing",
+    "missingPoints": [
+      "Zero test coverage for engines/shared/ adoption-sheets-manager.mjs",
+      "Core CDP injection infrastructure (adoptedStyleSheets management) has no unit tests"
+    ],
+    "severity": "critical",
+    "affectedModules": ["engine-strategy", "cdp-injection", "adopted-sheets-manager"]
+  },
+  {
+    "filePath": "engines/shared/deep-core.mjs",
+    "lineNumber": 1,
+    "currentStatus": "missing",
+    "missingPoints": [
+      "Zero test coverage for engines/shared/ deep-core.mjs",
+      "DeepCore (Shadow DOM + route handling) is a critical injection layer with no unit tests"
+    ],
+    "severity": "critical",
+    "affectedModules": ["deep-core", "cdp-injection", "adapter"]
+  },
+  {
+    "filePath": "engines/shared/token-discovery.mjs",
+    "lineNumber": 1,
+    "currentStatus": "missing",
+    "missingPoints": [
+      "Zero test coverage for engines/shared/ token-discovery.mjs",
+      "Token discovery (CSS variable extraction from target pages) is unverified"
+    ],
+    "severity": "major",
+    "affectedModules": ["token-discovery", "engine-strategy", "palette-builder"]
+  },
+  {
+    "filePath": "engines/shared/injection-feedback.mjs",
+    "lineNumber": 1,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "injection-feedback.test.mjs exists but only covers basic feedback reporting — no integration tests with health-monitor or drift detection",
+      "No test coverage for the feedback→notificationStore integration path"
+    ],
+    "severity": "major",
+    "affectedModules": ["injection-feedback", "health-monitor", "notificationStore"]
+  },
+  {
+    "filePath": "src/main/agent-engine-service.ts",
+    "lineNumber": 1,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "agent-engine-service.ts has 8 dedicated test files (apply-integration, core-reliability, metrics, persist-visibility, reliability, restore-integration, wallpaper-integration, wallpaper-resolution) — good coverage",
+      "However, the test files mock most sub-modules; the actual integration between apply→wallpaper→health-check is not tested end-to-end",
+      "restoreAll transaction rollback is tested only for survival of errors, not for consistency of final state"
+    ],
+    "severity": "minor",
+    "affectedModules": ["agent-engine-service", "apply-flow", "restore-flow", "wallpaper"]
+  }
+]

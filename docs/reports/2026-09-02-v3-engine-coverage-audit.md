@@ -1,0 +1,363 @@
+# V3 切换门禁 — 引擎覆盖度审计报告
+
+- 日期: 2026-09-02
+- 结论: **FAIL — 禁止批量升级**
+
+## Gate A 冻结同构性
+
+| agent | 同构 | 结构变体数 |
+|---|---|---|
+| traework | ✗ | 4 |
+| qoderwork | ✓ | 1 |
+| workbuddy | ✓ | 1 |
+| doubao | ✓ | 1 |
+| codex | ✓ | 1 |
+| zcode | ✓ | 1 |
+
+## Gate B 原生 token 覆盖
+
+- **traework**: 生成器 117 / 引擎 150，无缺口
+- **qoderwork**: 生成器 120 / 引擎 108，缺口 12:
+  - --color-blue
+  - --color-blue-bg
+  - --color-blue-hover
+  - --color-orange
+  - --color-orange-bg
+  - --color-orange-hover
+  - --color-slate
+  - --color-slate-bg
+  - --color-slate-hover
+  - --color-yellow
+  - --color-yellow-bg
+  - --color-yellow-hover
+- **workbuddy**: 生成器 153 / 引擎 197，缺口 2:
+  - --filled
+  - --primary
+- **doubao**: 生成器 434 / 引擎 412，缺口 22:
+  - --dbx-bg-blur-md
+  - --s-color-glow-black
+  - --s-color-glow-black-hover
+  - --s-color-glow-blue
+  - --s-color-glow-green
+  - --s-color-glow-grey
+  - --s-color-glow-purple
+  - --s-color-glow-red
+  - --s-color-glow-white
+  - --s-color-glow-white-hover
+  - --s-color-glow-yellow
+  - --s-color-gradient-blue
+  - --s-color-gradient-blue-hover
+  - --s-color-gradient-blue-orange
+  - --s-color-gradient-blue-purple
+  - --s-color-gradient-purple-trans
+  - --s-color-horizon-gradient-blue
+  - --s-color-horizon-gradient-green
+  - --s-color-horizon-gradient-grey
+  - --s-color-horizon-gradient-purple
+  - --s-color-horizon-gradient-red
+  - --semi-color-focus-border
+- **codex**: 生成器 27 / 引擎 0，缺口 27:
+  - --accent
+  - --bg-active
+  - --bg-hover
+  - --bg-selected
+  - --color-token-bg-primary
+  - --color-token-bg-secondary
+  - --color-token-bg-tertiary
+  - --color-token-border
+  - --color-token-border-default
+  - --color-token-border-heavy
+  - --color-token-border-light
+  - --color-token-description-foreground
+  - --color-token-diff-surface
+  - --color-token-dropdown-background
+  - --color-token-dropdown-foreground
+  - --color-token-focus-border
+  - --color-token-foreground
+  - --color-token-input-border
+  - --color-token-list-hover-background
+  - --color-token-main-surface-primary
+  - --color-token-primary
+  - --color-token-scrollbar-slider-hover-background
+  - --color-token-side-bar-background
+  - --color-token-text-link-foreground
+  - --color-token-text-primary
+  - --color-token-text-secondary
+  - --color-token-text-tertiary
+- **zcode**: 生成器 125 / 引擎 0，缺口 125:
+  - --accent
+  - --accent-hover
+  - --accent-pressed
+  - --accent-soft
+  - --accent-soft-hover
+  - --bg-active
+  - --bg-base
+  - --bg-canvas
+  - --bg-elevated
+  - --bg-hover
+  - --bg-primary
+  - --bg-secondary
+  - --bg-selected
+  - --bg-surface
+  - --bg-tertiary
+  - --border-medium
+  - --border-strong
+  - --border-subtle
+  - --border-xsubtle
+  - --button-primary-bg
+  - --button-primary-fg
+  - --button-primary-hover
+  - --button-secondary-bg
+  - --button-secondary-fg
+  - --code-bg
+  - --code-fg
+  - --color-accent
+  - --color-background
+  - --color-background-alt
+  - --color-background-win-alt
+  - --color-border
+  - --color-border-hover
+  - --color-brand
+  - --color-card
+  - --color-card-border
+  - --color-card-selected
+  - --color-command-node
+  - --color-command-node-foreground
+  - --color-command-node-hover
+  - --color-destructive
+  - --color-destructive-foreground
+  - --color-diff-added
+  - --color-diff-added-foreground
+  - --color-diff-removed
+  - --color-diff-removed-foreground
+  - --color-file-node
+  - --color-file-node-foreground
+  - --color-file-node-hover
+  - --color-find-highlight
+  - --color-find-highlight-active
+  - --color-foreground
+  - --color-foreground-inverse
+  - --color-foreground-subtle
+  - --color-foreground-subtlest
+  - --color-header
+  - --color-hover
+  - --color-icon-blue
+  - --color-input
+  - --color-input-border
+  - --color-input-border-focused
+  - --color-input-border-hover
+  - --color-input-focused
+  - --color-interaction-ask-fill
+  - --color-interaction-ask-foreground
+  - --color-interaction-ask-surface
+  - --color-interaction-confirmation-foreground
+  - --color-interaction-confirmation-surface
+  - --color-markdown-inline-code
+  - --color-menu
+  - --color-menu-hover
+  - --color-panel
+  - --color-plugin-node
+  - --color-plugin-node-foreground
+  - --color-plugin-node-hover
+  - --color-popover
+  - --color-popover-border
+  - --color-popover-foreground
+  - --color-popover-header
+  - --color-primary
+  - --color-primary-foreground
+  - --color-secondary
+  - --color-selected
+  - --color-session-node
+  - --color-session-node-foreground
+  - --color-session-node-hover
+  - --color-sidebar
+  - --color-skill-node
+  - --color-skill-node-foreground
+  - --color-skill-node-hover
+  - --color-subagent-node
+  - --color-subagent-node-foreground
+  - --color-subagent-node-hover
+  - --color-success
+  - --color-success-foreground
+  - --color-surface
+  - --color-surface-hover
+  - --color-tab
+  - --color-tab-active
+  - --color-tab-border
+  - --color-terminal-bg
+  - --color-terminal-fg
+  - --color-terminal-selection
+  - --color-terminal-selection-inactive
+  - --color-toast
+  - --color-tooltip
+  - --color-tooltip-tag
+  - --color-tooltip-tag-foreground
+  - --color-warning
+  - --color-warning-foreground
+  - --input-bg
+  - --input-border
+  - --input-focus-ring
+  - --link
+  - --link-hover
+  - --panel-bg
+  - --selection-bg
+  - --shadow-lg
+  - --shadow-md
+  - --shadow-sm
+  - --shadow-xl
+  - --sidebar-bg
+  - --text-primary
+  - --text-quaternary
+  - --text-secondary
+  - --text-tertiary
+
+## Gate C 结构选择器覆盖
+
+- **traework**: 生成器 47 个选择器，未覆盖 18:
+  - html.agentskin-host-traework .solo-header-btn:hover {
+  - html.agentskin-host-traework [class*="agent-avatar"] {
+  - html.agentskin-host-traework [class*="cardImage"] {
+  - html.agentskin-host-traework [class*="chatFile"] {
+  - html.agentskin-host-traework [class*="chatFile"]:hover {
+  - html.agentskin-host-traework [class*="file-link"] {
+  - html.agentskin-host-traework [class*="file-link"]:hover {
+  - html.agentskin-host-traework [class*="messageInputContainer"] {
+  - html.agentskin-host-traework [class*="solo-common-button"] {
+  - html.agentskin-host-traework [contenteditable="true"] {
+  - html.agentskin-host-traework a {
+  - html.agentskin-host-traework button[role="tab"] {
+  - html.agentskin-host-traework code {
+  - html.agentskin-host-traework pre code {
+  - html.agentskin-host-traework pre {
+  - html.agentskin-host-traework select {
+  - html.agentskin-host-traework select:focus {
+  - html.agentskin-host-traework {
+- **qoderwork**: 生成器 24 个选择器，未覆盖 4:
+  - html.agentskin-host-qoderwork .agents-sidebar div[class~="group/sidebar"] {
+  - html.agentskin-host-qoderwork a:hover {
+  - html.agentskin-host-qoderwork pre code {
+  - html.agentskin-host-qoderwork {
+- **workbuddy**: 生成器 46 个选择器，未覆盖 45:
+  - body[data-application-name="workbuddy"] *::after {
+  - body[data-application-name="workbuddy"] ::-webkit-scrollbar {
+  - body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb {
+  - body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb:hover {
+  - body[data-application-name="workbuddy"] ::-webkit-scrollbar-track {
+  - body[data-application-name="workbuddy"] ::selection {
+  - body[data-application-name="workbuddy"] {
+  - html.agentskin-host-workbuddy #root {
+  - html.agentskin-host-workbuddy #root::before {
+  - html.agentskin-host-workbuddy .chat-container {
+  - html.agentskin-host-workbuddy .conversation-sidebar [class*="conversation-item"] {
+  - html.agentskin-host-workbuddy .detail-panel {
+  - html.agentskin-host-workbuddy .my-files-search {
+  - html.agentskin-host-workbuddy .quick-actions__item {
+  - html.agentskin-host-workbuddy .quick-actions__item:hover {
+  - html.agentskin-host-workbuddy .quick-actions__list * {
+  - html.agentskin-host-workbuddy .sidebar-next {
+  - html.agentskin-host-workbuddy .teams-container > div {
+  - html.agentskin-host-workbuddy .teams-container.is-mac {
+  - html.agentskin-host-workbuddy .teams-main-content {
+  - html.agentskin-host-workbuddy .tencent-docs-auth-guide__permissions {
+  - html.agentskin-host-workbuddy .wb-button {
+  - html.agentskin-host-workbuddy .wb-button--filled:hover {
+  - html.agentskin-host-workbuddy .wb-home-composer [contenteditable="true"]:focus {
+  - html.agentskin-host-workbuddy .wb-home-composer:focus-within [class*="_mainArea_"] {
+  - html.agentskin-host-workbuddy .wb-home-composer__input-slot {
+  - html.agentskin-host-workbuddy .wb-home-composer__input-slot:focus-within {
+  - html.agentskin-host-workbuddy .workbuddy-window-control-button {
+  - html.agentskin-host-workbuddy .workbuddy-window-control-button.close:hover {
+  - html.agentskin-host-workbuddy .workbuddy-window-control-button:hover {
+  - html.agentskin-host-workbuddy .workbuddy-window-controls {
+  - html.agentskin-host-workbuddy [class*="_gridView_"] > div > div {
+  - html.agentskin-host-workbuddy [class*="_headerTopPadding_"][class*="collapsible"] {
+  - html.agentskin-host-workbuddy [class*="_mainArea_"] {
+  - html.agentskin-host-workbuddy [class*="menu-bar"] [class*="label"] {
+  - html.agentskin-host-workbuddy [class*="menu-bar"] [class*="label"]:hover {
+  - html.agentskin-host-workbuddy [class*="msg-content"] {
+  - html.agentskin-host-workbuddy [class*="msg-content"][class*="bot"] {
+  - html.agentskin-host-workbuddy [class*="quick-action"]:not(.quick-actions__item) {
+  - html.agentskin-host-workbuddy a {
+  - html.agentskin-host-workbuddy a:hover {
+  - html.agentskin-host-workbuddy code {
+  - html.agentskin-host-workbuddy pre code {
+  - html.agentskin-host-workbuddy pre {
+  - html.agentskin-host-workbuddy {
+- **doubao**: 生成器 47 个选择器，未覆盖 31:
+  - html.agentskin-host-doubao [class*="body-wrapper"] {
+  - html.agentskin-host-doubao [class*="btn"][class*="disabled"] {
+  - html.agentskin-host-doubao [class*="composer"]::after {
+  - html.agentskin-host-doubao [class*="greeting-text"]::before {
+  - html.agentskin-host-doubao [class*="icon-btn"]:not([class*="brand"]) {
+  - html.agentskin-host-doubao [class*="icon-btn"]:not([class*="brand"]):hover {
+  - html.agentskin-host-doubao [class*="input-area"] {
+  - html.agentskin-host-doubao [class*="input-guidance"] [class*="editor"] {
+  - html.agentskin-host-doubao [class*="input-guidance"]:focus-within {
+  - html.agentskin-host-doubao [class*="mascot"] {
+  - html.agentskin-host-doubao [class*="outline-btn"] {
+  - html.agentskin-host-doubao [class*="outline-btn"]:hover {
+  - html.agentskin-host-doubao [class*="rounded-full"] button[class*="text-dbx-text-primary"] {
+  - html.agentskin-host-doubao [class*="rounded-full"] button[class*="text-dbx-text-secondary"] {
+  - html.agentskin-host-doubao [class*="rounded-full"] button[class*="text-dbx-text-secondary"]:hover {
+  - html.agentskin-host-doubao [class*="shortcut"] {
+  - html.agentskin-host-doubao [class*="topic"]:hover {
+  - html.agentskin-host-doubao [class~="group/sidebar_nav_item"][data-active="true"] {
+  - html.agentskin-host-doubao [data-testid*="msg_bubble"] {
+  - html.agentskin-host-doubao [data-testid="chat_route_layout_leftside_nav"] {
+  - html.agentskin-host-doubao [data-testid="flow_chat_sidebar"] > div {
+  - html.agentskin-host-doubao [data-testid="flow_chat_sidebar"] a {
+  - html.agentskin-host-doubao [data-testid="flow_chat_sidebar"] a:hover {
+  - html.agentskin-host-doubao [data-testid="send_btn"]:active {
+  - html.agentskin-host-doubao [data-testid="send_btn"]:hover {
+  - html.agentskin-host-doubao [role="main"] {
+  - html.agentskin-host-doubao body::after {
+  - html.agentskin-host-doubao button:not(.agentskin-non-controlled)[data-dbx-name="button"]:not([data-disabled="true"]) {
+  - html.agentskin-host-doubao button[class*="ai"] {
+  - html.agentskin-host-doubao div.agentskin-background-layer {
+  - html.agentskin-host-doubao {
+- **codex**: 生成器 29 个选择器，未覆盖 28:
+  - :root.agentskin-host-codex #root {
+  - :root.agentskin-host-codex #root::before {
+  - :root.agentskin-host-codex *::after {
+  - :root.agentskin-host-codex .app-shell-left-panel {
+  - :root.agentskin-host-codex ::-webkit-scrollbar {
+  - :root.agentskin-host-codex ::-webkit-scrollbar-thumb {
+  - :root.agentskin-host-codex ::-webkit-scrollbar-thumb:hover {
+  - :root.agentskin-host-codex ::-webkit-scrollbar-track {
+  - :root.agentskin-host-codex ::selection {
+  - :root.agentskin-host-codex [class*="_multilineSurface_"] {
+  - :root.agentskin-host-codex [contenteditable="true"] {
+  - :root.agentskin-host-codex [contenteditable="true"]:focus-within {
+  - :root.agentskin-host-codex [data-app-action-sidebar-project-id]:hover {
+  - :root.agentskin-host-codex [data-app-action-sidebar-thread-active="true"] {
+  - :root.agentskin-host-codex [role="listbox"] {
+  - :root.agentskin-host-codex [role="main"] {
+  - :root.agentskin-host-codex a {
+  - :root.agentskin-host-codex article {
+  - :root.agentskin-host-codex body {
+  - :root.agentskin-host-codex button.sidebar-item {
+  - :root.agentskin-host-codex button.sidebar-item[data-app-action-sidebar-project-collapsed="false"] {
+  - :root.agentskin-host-codex code {
+  - :root.agentskin-host-codex header.pointer-events-none.fixed {
+  - :root.agentskin-host-codex pre code {
+  - :root.agentskin-host-codex pre {
+  - :root.agentskin-host-codex select {
+  - :root.agentskin-host-codex select:focus {
+  - :root.agentskin-host-codex {
+- **zcode**: 生成器 26 个选择器，未覆盖 12:
+  - html.agentskin-host-zcode #root::before {
+  - html.agentskin-host-zcode [aria-current] {
+  - html.agentskin-host-zcode [contenteditable="true"] {
+  - html.agentskin-host-zcode [contenteditable="true"]:focus-within {
+  - html.agentskin-host-zcode [data-slot="button"]:hover {
+  - html.agentskin-host-zcode [data-workspace-sidebar-panel="true"] {
+  - html.agentskin-host-zcode [role="listbox"] {
+  - html.agentskin-host-zcode article {
+  - html.agentskin-host-zcode select {
+  - html.agentskin-host-zcode select:focus {
+  - html.agentskin-host-zcode textarea {
+  - html.agentskin-host-zcode {
+
+## 结论
+
+存在引擎层缺口，须先按上方缺口清单补齐 engines/<agent>/ 层，重跑本审计通过后才能执行批量升级。

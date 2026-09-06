@@ -1,0 +1,161 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agentskin.dev/schema/verification-contract.json",
+  "title": "AgentSkin Verification Contract",
+  "description": "Declarative contract describing how to verify that an adapter injection succeeded in the target DOM. Uses three-level semantics: required (must pass), recommended (warn on failure), contexts (conditional checks).",
+  "type": "object",
+  "required": ["targets"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editor validation"
+    },
+    "targets": {
+      "type": "object",
+      "description": "Per-adapter verification contracts keyed by adapter id",
+      "additionalProperties": {
+        "$ref": "#/definitions/adapterContract"
+      }
+    }
+  },
+  "definitions": {
+    "adapterContract": {
+      "type": "object",
+      "required": ["verification"],
+      "additionalProperties": false,
+      "properties": {
+        "verification": {
+          "$ref": "#/definitions/verification"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "description": "Three-level verification contract for a single adapter",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "array",
+          "description": "Checks that must pass for the injection to be considered successful",
+          "items": {
+            "$ref": "#/definitions/check"
+          }
+        },
+        "recommended": {
+          "type": "array",
+          "description": "Checks that should pass but are not deal-breakers (produce warnings)",
+          "items": {
+            "$ref": "#/definitions/check"
+          }
+        },
+        "contexts": {
+          "type": "array",
+          "description": "Conditional checks — only evaluated when the context's 'when' selector matches",
+          "items": {
+            "$ref": "#/definitions/contextCheck"
+          }
+        }
+      }
+    },
+    "check": {
+      "type": "object",
+      "required": ["name", "any"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Human-readable check identifier (e.g. 'host-class-present')"
+        },
+        "any": {
+          "type": "array",
+          "description": "List of CSS selectors — at least one must match in the DOM snapshot",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "provenance": {
+          "$ref": "#/definitions/provenance"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Evidence source and coverage metadata for a check. Optional — checks without provenance still validate but produce a warning in CI.",
+      "additionalProperties": false,
+      "required": ["source", "strength"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": ["maintainer", "reporter", "fixture", "inferred", "reverse-engineering"],
+          "description": "Evidence source: maintainer (known contract), reporter (user report), fixture (test fixture), inferred (derived from other evidence), reverse-engineering (derived from binary/static analysis of target application)"
+        },
+        "strength": {
+          "type": "string",
+          "enum": ["strong", "medium", "weak"],
+          "description": "Evidence strength: strong (verified in production), medium (verified in fixture), weak (unverified or heuristic)"
+        },
+        "knownGaps": {
+          "type": "array",
+          "description": "Known coverage gaps — scenarios where this check may not hold",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "coveredVersions": {
+          "type": "array",
+          "description": "Application versions where this check has been verified",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "lastVerified": {
+          "type": "string",
+          "description": "ISO 8601 date (YYYY-MM-DD) when this check was last verified",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      }
+    },
+    "contextCheck": {
+      "type": "object",
+      "required": ["name", "when", "required"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Context identifier (e.g. 'sidebar-expanded')"
+        },
+        "when": {
+          "$ref": "#/definitions/whenClause"
+        },
+        "required": {
+          "type": "array",
+          "description": "Checks that must pass when this context is active",
+          "items": {
+            "$ref": "#/definitions/check"
+          }
+        }
+      }
+    },
+    "whenClause": {
+      "type": "object",
+      "description": "Condition that activates the context — at least one selector must match",
+      "required": ["any"],
+      "additionalProperties": false,
+      "properties": {
+        "any": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}

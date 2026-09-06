@@ -1,0 +1,158 @@
+/* ============================================================
+   ENGINE: doubao — Layer 2: Cosmetic Enhancement
+   ------------------------------------------------------------
+   Visual polish that enhances the theme but is NOT critical.
+   If any rule here fails (agent renames a class, removes an
+   element), the theme still works — just with slightly less
+   visual flair.
+
+   Stability: LOW — these target visual details that agents
+   change frequently. All rules use !important but are designed
+   to fail silently (no layout breakage if selector misses).
+   ============================================================ */
+
+/* === Scrollbars: accent gradient thumb === */
+html.agentskin-host-doubao ::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+html.agentskin-host-doubao ::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+html.agentskin-host-doubao ::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 30%, transparent) 100%
+  ) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+html.agentskin-host-doubao ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 50%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 50%, transparent) 100%
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* === Selection: accent tint === */
+html.agentskin-host-doubao ::selection {
+  background: color-mix(in srgb, var(--agentskin-accent) 32%, transparent) !important;
+}
+
+/* === Reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+  html.agentskin-host-doubao *,
+  html.agentskin-host-doubao *::before,
+  html.agentskin-host-doubao *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+/* ============================================================
+   ENGINE: doubao — Layer 4-5: Structural (migrated from adapter-config.mjs)
+   ============================================================ */
+
+html.agentskin-host-doubao body {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+html.agentskin-host-doubao :is([data-testid="chat_list_wrapper"], [data-testid="chat_route_layout_leftside_nav"], [role="main"], [role="log"], [class*="message-list"], [class*="chat-content"], [class*="greeting"], [class*="welcome"]) [style*="color: rgb(0"],
+html.agentskin-host-doubao :is([data-testid="chat_list_wrapper"], [data-testid="chat_route_layout_leftside_nav"], [role="main"], [role="log"], [class*="message-list"], [class*="chat-content"], [class*="greeting"], [class*="welcome"]) [style*="color: #000"],
+html.agentskin-host-doubao :is([data-testid="chat_list_wrapper"], [data-testid="chat_route_layout_leftside_nav"], [role="main"], [role="log"], [class*="message-list"], [class*="chat-content"], [class*="greeting"], [class*="welcome"]) [style*="color: black"],
+html.agentskin-host-doubao :is([data-testid="chat_list_wrapper"], [data-testid="chat_route_layout_leftside_nav"], [role="main"], [role="log"], [class*="message-list"], [class*="chat-content"], [class*="greeting"], [class*="welcome"]) [style*="color:rgb(0"],
+html.agentskin-host-doubao :is([data-testid="chat_list_wrapper"], [data-testid="chat_route_layout_leftside_nav"], [role="main"], [role="log"], [class*="message-list"], [class*="chat-content"], [class*="greeting"], [class*="welcome"]) [style*="color:#000"],
+html.agentskin-host-doubao :is([data-testid="chat_list_wrapper"], [data-testid="chat_route_layout_leftside_nav"], [role="main"], [role="log"], [class*="message-list"], [class*="chat-content"], [class*="greeting"], [class*="welcome"]) [style*="color:black"] {
+  color: var(--agentskin-text) !important;
+}
+html.agentskin-host-doubao body::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background: var(--agentskin-art, none) cover no-repeat !important;
+  background-position:
+    calc(var(--ag-art-focus-x, 100%) + var(--ag-art-offset-x, 0px))
+    calc(var(--ag-art-focus-y, 50%) + var(--ag-art-offset-y, 0px)) !important;
+}
+html.agentskin-host-doubao [data-testid="chat_input"],
+html.agentskin-host-doubao [class*="input-guidance"],
+html.agentskin-host-doubao [class*="input-container"][class*="flex"] {
+  background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 80%, var(--agentskin-accent) 20%) 48%, transparent) !important;
+  border: none !important;
+  border-radius: var(--dbx-radius-4xl, 24px) !important;
+  box-shadow: none !important;
+}
+html.agentskin-host-doubao [data-testid="chat_input"]:focus-within,
+html.agentskin-host-doubao [class*="input-guidance"]:focus-within,
+html.agentskin-host-doubao [class*="input-container"][class*="flex"]:focus-within {
+  border-color: transparent !important;
+}
+html.agentskin-host-doubao [class*="welcome"] img,
+html.agentskin-host-doubao [class*="home-bg"] img,
+html.agentskin-host-doubao [class*="illustration"],
+html.agentskin-host-doubao [class*="home-illustration"],
+html.agentskin-host-doubao [class*="welcome-image"],
+html.agentskin-host-doubao [class*="guide-image"],
+html.agentskin-host-doubao [class*="mascot"],
+html.agentskin-host-doubao [class*="welcome"] svg,
+html.agentskin-host-doubao [class*="home-header"] img,
+html.agentskin-host-doubao [class*="greeting"] img,
+html.agentskin-host-doubao [class*="logo-decoration"] {
+  display: none !important;
+}
+html.agentskin-host-doubao [class*="h-header-height"] {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  border-bottom: none !important;
+}
+html.agentskin-host-doubao [class*="h-header-height"] button {
+  background: transparent !important;
+  color: var(--agentskin-text) !important;
+}
+html.agentskin-host-doubao [class*="h-header-height"] button:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+}
+html.agentskin-host-doubao [data-testid="chat_route_layout_leftside_nav"],
+html.agentskin-host-doubao [data-testid="flow_chat_sidebar"],
+html.agentskin-host-doubao [class*="left-side"] > div[class*="relative"][class*="fixed"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+html.agentskin-host-doubao [data-testid="chat_route_layout_leftside_nav"] [class*="rounded-full"][class*="size-20"],
+html.agentskin-host-doubao [data-testid="chat_route_layout_leftside_nav"] [class*="rounded-full"][class*="size-22"],
+html.agentskin-host-doubao [data-testid="chat_route_layout_leftside_nav"] [class*="rounded-dbx"][class*="border"],
+html.agentskin-host-doubao [class*="sidebar_nav_item"],
+html.agentskin-host-doubao [class*="sidebar_nav_item"] * {
+  box-shadow: none !important;
+  border: none !important;
+}
+html.agentskin-host-doubao [class*="suggest"],
+html.agentskin-host-doubao [class*="recommend"],
+html.agentskin-host-doubao [class*="topic"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+html.agentskin-host-doubao [class*="suggest"] *,
+html.agentskin-host-doubao [class*="recommend"] *,
+html.agentskin-host-doubao [class*="topic"] * {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+html.agentskin-host-doubao [role="dialog"],
+html.agentskin-host-doubao [role="menu"],
+html.agentskin-host-doubao [role="tooltip"],
+html.agentskin-host-doubao [role="listbox"] {
+  background: color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent) !important;
+  backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
+  border: 1px solid var(--ag-glass-border) !important;
+}

@@ -1,0 +1,58 @@
+{
+  "id": "yule-fireplace-glow",
+  "name": "yule-fireplace-glow",
+  "displayName": "Yule Fireplace Glow",
+  "version": "2.0.0",
+  "description": "Girl in Santa sweater beside a glowing fireplace.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "anime",
+    "christmas",
+    "warm"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#9d7ce0",
+    "secondary": "#7c61ce",
+    "background": "#2a301f",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#414836",
+    "surfaceElevated": "#4e5443",
+    "border": "#464c3a",
+    "codeBackground": "#262c1c",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#3d4431",
+    "buttonBackground": "#9d7ce0",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#9d7ce060"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

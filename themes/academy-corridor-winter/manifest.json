@@ -1,0 +1,58 @@
+{
+  "id": "academy-corridor-winter",
+  "name": "academy-corridor-winter",
+  "displayName": "Academy Corridor Winter",
+  "version": "2.0.0",
+  "description": "Girl in a dark blazer carrying a book down a snowy school corridor.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "anime",
+    "winter",
+    "school"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#afcad2",
+    "secondary": "#bfd4db",
+    "background": "#13171a",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#292d30",
+    "surfaceElevated": "#373b3e",
+    "border": "#2d3235",
+    "codeBackground": "#111517",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#24292c",
+    "buttonBackground": "#afcad2",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#afcad260"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

@@ -1,0 +1,1370 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "react-day-picker/style.css";
+@import "./shadcn-tailwind.css";
+
+/* Limit Tailwind v4 auto-scan to source tree only — prevents HMR loop
+   caused by scanner picking up Vite's own cache/output directories. */
+@source "../../src/**/*.{ts,tsx}";
+@source "!../../node_modules";
+@source "!../../out";
+
+@custom-variant dark (&:is(.dark *));
+
+/* =================================================================== */
+/* AgentSkin Design Tokens — Refined Workbench Theme                    */
+/*                                                                      */
+/* Product Identity: AI Agent Visual Customization Engine               */
+/* Design Language: Refined · Layered · Expressive · Clear             */
+/*                                                                      */
+/* Principles:                                                          */
+/*   1. Layered depth — 5 background levels, soft shadows, subtle glow */
+/*   2. Refined — purposeful restraint, not minimalism                 */
+/*   3. Expressive brand — rose accent ~12% area, used for focus/CTA  */
+/*   4. Clear hierarchy — type weight + spacing + color, not noise     */
+/* =================================================================== */
+
+:root {
+  /* Dynamic radius — drives the `rounded-[var(--dl-radius,2px)]` utility. */
+  --dl-radius: 6px;
+
+  /* Typography — Inter for all UI (no Space Grotesk) */
+  --font-ui:
+    "Inter Variable", "Inter", "Microsoft YaHei UI", "PingFang SC", -apple-system, "Segoe UI",
+    system-ui, sans-serif;
+  --font-mono:
+    "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, ui-monospace, monospace;
+}
+
+/* =================================================================== */
+/* Dark theme                                                            */
+/* =================================================================== */
+:root,
+.dark {
+  /* ---- Background layers (5-level depth) ---- */
+  --background: #0a0a0d;
+  --foreground: #f5f5f7;
+
+  --card: #16161c;
+  --card-foreground: #f5f5f7;
+
+  --popover: #18181e;
+  --popover-foreground: #f5f5f7;
+
+  --secondary: #111115;
+  --secondary-foreground: #9ca0aa;
+
+  --muted: rgba(255, 255, 255, 0.045);
+  --muted-foreground: #9ca0aa;
+
+  /* ---- Brand — Rose Red (AgentSkin identity) ---- */
+  --primary: #e11d48;
+  --primary-foreground: #ffffff;
+
+  --accent: rgba(225, 29, 72, 0.1);
+  --accent-foreground: #fb3658;
+
+  --destructive: #be123c;
+  --destructive-foreground: #ffffff;
+
+  /* ---- Borders (minimal: softer, less visible) ---- */
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.07);
+
+  /* ---- Focus ring ---- */
+  --ring: rgba(225, 29, 72, 0.4);
+
+  /* ---- Surface ---- */
+  --surface: #0e0e12;
+  --surface-raised: #1a1a21;
+
+  /* ---- Brand glow (subtle, for focus/active only) ---- */
+  --glow-brand: rgba(225, 29, 72, 0.08);
+  --glow-brand-strong: rgba(225, 29, 72, 0.12);
+
+  /* ---- Shadows (minimal: restrained depth, no glow noise) ---- */
+  --shadow-elev1: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-elev2: 0 2px 6px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-elev3: 0 4px 12px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.06);
+
+  /* ---- Scrim / overlay ---- */
+  --scrim: rgba(0, 0, 0, 0.5);
+
+  --shadow: var(--shadow-elev1);
+  --shadow-xs: var(--shadow-elev1);
+  --shadow-sm: var(--shadow-elev1);
+  --shadow-md: var(--shadow-elev2);
+  --shadow-lg: var(--shadow-elev3);
+  --shadow-xl: var(--shadow-float);
+
+  /* ---- Chart ---- */
+  --chart-1: #e11d48;
+  --chart-2: #22c55e;
+  --chart-3: #eab308;
+  --chart-4: #3b82f6;
+  --chart-5: #a855f7;
+
+  /* ---- Sidebar ---- */
+  --sidebar: #0e0e12;
+  --sidebar-foreground: #f5f5f7;
+  --sidebar-primary: #e11d48;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(225, 29, 72, 0.1);
+  --sidebar-accent-foreground: #fb3658;
+  --sidebar-border: rgba(255, 255, 255, 0.075);
+  --sidebar-ring: rgba(225, 29, 72, 0.4);
+
+  /* ---- Semantic status ---- */
+  --cr-success: #22c55e;
+  --cr-warning: #eab308;
+  --cr-info: #3b82f6;
+
+  /* ---- RGB channels for alpha compositing ---- */
+  --brand-rgb: 225 29 72;
+
+  /* ---- z-index scale ---- */
+  --z-bg: 0;
+  --z-content: 10;
+  --z-overlay: 50;
+  --z-dock: 90;
+  --z-toast: 100;
+  --z-install: 110;
+  --z-studio-stage: 1;
+  --z-studio-toolbar: 50;
+  --z-studio-dock: 100;
+  --z-studio-topbar: 110;
+  --z-studio-status: 120;
+  --z-studio-dialog: 200;
+
+  /* ---- Elevated card surface ---- */
+  --card2: #1c1c23;
+
+  /* ---- Layout rhythm tokens ---- */
+  --space-page-x: 20px;
+  --space-page-y: 16px;
+  --space-section: 20px;
+  --space-card-pad: 14px;
+  --radius-card: 10px;
+}
+
+/* =================================================================== */
+/* Light theme                                                           */
+/* =================================================================== */
+:root:not(.dark),
+.light {
+  --dl-radius: 6px;
+  --dl-density-scale: 1;
+
+  /* ---- Background layers ---- */
+  --background: #f7f7f8;
+  --foreground: #18181b;
+
+  --card: #ffffff;
+  --card-foreground: #18181b;
+
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+
+  --secondary: #f1f1f3;
+  --secondary-foreground: #6b7280;
+
+  --muted: rgba(0, 0, 0, 0.035);
+  --muted-foreground: #6b7280;
+
+  /* ---- Brand — same Rose Red ---- */
+  --primary: #e11d48;
+  --primary-foreground: #ffffff;
+
+  --accent: rgba(225, 29, 72, 0.08);
+  --accent-foreground: #e11d48;
+
+  --destructive: #be123c;
+  --destructive-foreground: #ffffff;
+
+  /* ---- Borders ---- */
+  --border: rgba(0, 0, 0, 0.075);
+  --border-strong: rgba(0, 0, 0, 0.13);
+  --input: rgba(0, 0, 0, 0.09);
+
+  /* ---- Focus ring ---- */
+  --ring: rgba(225, 29, 72, 0.35);
+
+  --surface: #eeeeef;
+  --surface-raised: #ffffff;
+
+  /* ---- Brand glow ---- */
+  --glow-brand: rgba(225, 29, 72, 0.08);
+  --glow-brand-strong: rgba(225, 29, 72, 0.14);
+
+  /* ---- Shadows (minimal: lighter for bright bg, no brand glow) ---- */
+  --shadow-elev1: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-elev2: 0 2px 6px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --shadow-elev3: 0 4px 12px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
+
+  /* ---- Scrim / overlay ---- */
+  --scrim: rgba(0, 0, 0, 0.5);
+
+  --shadow: var(--shadow-elev1);
+  --shadow-xs: var(--shadow-elev1);
+  --shadow-sm: var(--shadow-elev1);
+  --shadow-md: var(--shadow-elev2);
+  --shadow-lg: var(--shadow-elev3);
+  --shadow-xl: var(--shadow-float);
+
+  /* ---- Chart ---- */
+  --chart-1: #e11d48;
+  --chart-2: #16a34a;
+  --chart-3: #ca8a04;
+  --chart-4: #2563eb;
+  --chart-5: #9333ea;
+
+  /* ---- Sidebar ---- */
+  --sidebar: #eeeeef;
+  --sidebar-foreground: #18181b;
+  --sidebar-primary: #e11d48;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(225, 29, 72, 0.08);
+  --sidebar-accent-foreground: #e11d48;
+  --sidebar-border: rgba(0, 0, 0, 0.075);
+  --sidebar-ring: rgba(225, 29, 72, 0.35);
+
+  /* ---- Semantic status ---- */
+  --cr-success: #16a34a;
+  --cr-warning: #ca8a04;
+  --cr-info: #2563eb;
+
+  /* ---- RGB channels for alpha compositing ---- */
+  --brand-rgb: 225 29 72;
+
+  /* ---- z-index scale ---- */
+  --z-bg: 0;
+  --z-content: 10;
+  --z-overlay: 50;
+  --z-dock: 90;
+  --z-toast: 100;
+  --z-install: 110;
+  --z-studio-stage: 1;
+  --z-studio-toolbar: 50;
+  --z-studio-dock: 100;
+  --z-studio-topbar: 110;
+  --z-studio-status: 120;
+  --z-studio-dialog: 200;
+
+  /* ---- Elevated card surface ---- */
+  --card2: #ffffff;
+
+  /* ---- Layout rhythm tokens ---- */
+  --space-page-x: 20px;
+  --space-page-y: 16px;
+  --space-section: 20px;
+  --space-card-pad: 14px;
+  --radius-card: 10px;
+}
+
+/* =================================================================== */
+/* Tailwind @theme inline — maps CSS vars to Tailwind utilities        */
+/* =================================================================== */
+@theme inline {
+  --color-page-gutter: var(--space-page-x);
+  --font-sans: var(--font-ui);
+  --font-heading: var(--font-ui);
+  --font-display: var(--font-ui);
+  --font-mono: var(--font-mono);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-scrim: var(--scrim);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-card2: var(--card2);
+  --color-border-strong: var(--border-strong);
+  --color-glow-brand: var(--glow-brand);
+  --color-glow-brand-strong: var(--glow-brand-strong);
+  --color-cr-success: var(--cr-success);
+  --color-cr-warning: var(--cr-warning);
+  --color-cr-info: var(--cr-info);
+  --color-success: var(--cr-success);
+  --color-warning: var(--cr-warning);
+  --color-info: var(--cr-info);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+
+  /* Typography scale */
+  --font-size-micro: 10px;
+  --font-size-label: 11px;
+  --font-size-caption: 12px;
+  --font-size-body: 12px;
+  --font-size-body-lg: 14px;
+  --font-size-title: 17px;
+  --font-size-display: 22px;
+  --leading-title: 1.25;
+  --leading-body: 1.5;
+  --tracking-tight: -0.02em;
+
+  /* Duration scale */
+  --duration-multiplier: 1;
+  --duration-instant: 0ms;
+  --duration-fast: calc(100ms * var(--duration-multiplier, 1));
+  --duration-base: calc(150ms * var(--duration-multiplier, 1));
+  --duration-slow: calc(200ms * var(--duration-multiplier, 1));
+  --duration-slower: calc(280ms * var(--duration-multiplier, 1));
+
+  /* Easing — unified spring-like curve for all transitions */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Radius derived scale — all utilities derive from the dynamic --dl-radius
+     so rounded-sm/md/lg/xl FOLLOW the user's radius preference (set in App.tsx
+     from the settings store) and stay consistent with card/panel tokens. */
+  --radius-sm: calc(var(--dl-radius) * 0.75);
+  --radius-md: var(--dl-radius);
+  --radius-lg: calc(var(--dl-radius) * 1.25);
+  --radius-xl: calc(var(--dl-radius) * 1.5);
+  --radius-2xl: calc(var(--dl-radius) * 1.75);
+  --radius-pill: 9999px;
+
+  /* Density */
+  --dl-density-scale: 1;
+}
+
+/* =================================================================== */
+/* Base Reset                                                           */
+/* =================================================================== */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* Accessibility — reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms;
+      animation-duration: 0.01ms;
+    }
+  }
+  body.no-anim *,
+  body.no-anim *::before,
+  body.no-anim *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  html {
+    @apply scroll-smooth font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv11", "ss01", "ss03";
+  }
+  html.theming *,
+  html.theming *::before,
+  html.theming *::after {
+    transition:
+      background-color var(--duration-slow) ease,
+      color var(--duration-slow) ease,
+      border-color var(--duration-slow) ease;
+  }
+  body {
+    @apply overflow-hidden bg-background text-foreground;
+  }
+  ::selection {
+    background: rgba(var(--brand-rgb), 0.25);
+  }
+
+  /* Particle system keyframes — GPU-friendly (transform + opacity only) */
+  @keyframes ps-rain {
+    0% {
+      transform: translateY(-100vh) scaleY(1);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) scaleY(1);
+      opacity: 0;
+    }
+  }
+
+  @keyframes ps-float {
+    0% {
+      transform: translateY(-10vh) translateX(0) scale(0.5);
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+      transform: translateY(0) translateX(0) scale(1);
+    }
+    85% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(100vh) translateX(40px) scale(0.3);
+      opacity: 0;
+    }
+  }
+
+  @keyframes ps-sway {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(30px);
+    }
+  }
+
+  @keyframes ps-thunder-flash {
+    0%,
+    100% {
+      opacity: 0;
+    }
+    2% {
+      opacity: 0.35;
+    }
+    4% {
+      opacity: 0;
+    }
+    6% {
+      opacity: 0.25;
+    }
+    8% {
+      opacity: 0;
+    }
+  }
+
+  .ps-particle {
+    will-change: transform, opacity;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .ps-rain {
+    animation-name: ps-rain;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  .ps-float {
+    animation-name: ps-float;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+
+  .ps-sway-true {
+    animation-name: ps-float, ps-sway;
+    animation-timing-function: ease-in-out, ease-in-out;
+    animation-iteration-count: infinite, infinite;
+  }
+
+  .ps-flash {
+    background: rgba(255, 255, 255, 0.15);
+    animation: ps-thunder-flash 8s ease-in-out infinite;
+  }
+
+  /* Respect reduced motion for particles */
+  @media (prefers-reduced-motion: reduce) {
+    .ps-overlay {
+      display: none !important;
+    }
+  }
+
+  body.no-anim .ps-overlay {
+    display: none !important;
+  }
+}
+
+/* =================================================================== */
+/* Global Scrollbar                                                     */
+/* =================================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover {
+  scrollbar-color: var(--border-strong) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+  transition: background-color var(--duration-fast);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--brand-rgb), 0.4);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* =================================================================== */
+/* Page Transition                                                      */
+/* =================================================================== */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.996);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.page-enter {
+  animation: page-fade-in var(--duration-slow) var(--ease-spring);
+  will-change: opacity, transform, filter;
+}
+
+/* =================================================================== */
+/* Animations                                                           */
+/* =================================================================== */
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(var(--brand-rgb), 0);
+  }
+  50% {
+    opacity: 0.85;
+    box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.08);
+  }
+}
+
+@keyframes status-pulse-success {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-status-pulse {
+  animation: status-pulse 2.4s ease-in-out infinite;
+}
+
+.animate-status-pulse-success {
+  animation: status-pulse-success 2.4s ease-in-out infinite;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* =================================================================== */
+/* Flexible Skeleton System                                             */
+/* =================================================================== */
+/* Config-driven skeleton: layout shape is controlled via CSS custom
+   properties, so pages only declare *what* they need (columns, rows,
+   shape) — no hardcoded per-page JSX. */
+
+@keyframes skeleton-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.skeleton-provider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.skeleton-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.skeleton-header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.skeleton-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.skeleton-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--skeleton-columns, 4), minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  overflow: hidden;
+  border-radius: var(--dl-radius, 0.375rem);
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 0.625rem;
+  animation: skeleton-fade-in 0.3s var(--ease-out, ease) both;
+}
+
+.skeleton-card-thumb {
+  border-radius: calc(var(--dl-radius, 0.375rem) - 2px);
+  background: var(--muted);
+  aspect-ratio: var(--skeleton-aspect, 16 / 9);
+  animation: shimmer 1.8s ease-in-out infinite;
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    var(--muted) 100%
+  );
+}
+
+.skeleton-card-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0 0.125rem;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: var(--dl-radius, 0.375rem);
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 0.75rem 1rem;
+  animation: skeleton-fade-in 0.3s var(--ease-out, ease) both;
+}
+
+.skeleton-row-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1;
+}
+
+.skeleton-block {
+  border-radius: calc(var(--dl-radius, 0.375rem) - 2px);
+  background: var(--muted);
+  animation: shimmer 1.8s ease-in-out infinite;
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    var(--muted) 100%
+  );
+}
+
+/* Staggered entrance: delay scales with nth-child up to 12 */
+.skeleton-card:nth-child(1),
+.skeleton-row:nth-child(1) {
+  animation-delay: 0ms;
+}
+.skeleton-card:nth-child(2),
+.skeleton-row:nth-child(2) {
+  animation-delay: 30ms;
+}
+.skeleton-card:nth-child(3),
+.skeleton-row:nth-child(3) {
+  animation-delay: 60ms;
+}
+.skeleton-card:nth-child(4),
+.skeleton-row:nth-child(4) {
+  animation-delay: 90ms;
+}
+.skeleton-card:nth-child(5),
+.skeleton-row:nth-child(5) {
+  animation-delay: 120ms;
+}
+.skeleton-card:nth-child(6),
+.skeleton-row:nth-child(6) {
+  animation-delay: 150ms;
+}
+.skeleton-card:nth-child(7),
+.skeleton-row:nth-child(7) {
+  animation-delay: 180ms;
+}
+.skeleton-card:nth-child(8),
+.skeleton-row:nth-child(8) {
+  animation-delay: 210ms;
+}
+.skeleton-card:nth-child(9),
+.skeleton-row:nth-child(9) {
+  animation-delay: 240ms;
+}
+.skeleton-card:nth-child(10),
+.skeleton-row:nth-child(10) {
+  animation-delay: 270ms;
+}
+.skeleton-card:nth-child(11),
+.skeleton-row:nth-child(11) {
+  animation-delay: 300ms;
+}
+.skeleton-card:nth-child(12),
+.skeleton-row:nth-child(12) {
+  animation-delay: 330ms;
+}
+
+/* =================================================================== */
+/* Custom Utilities                                                     */
+/* =================================================================== */
+@utility shadow-float {
+  box-shadow: var(--shadow-float);
+}
+
+/* =================================================================== */
+/* Typography Utility Classes                                           */
+/* =================================================================== */
+@layer utilities {
+  .as-label {
+    font-weight: 500;
+    font-size: var(--font-size-label);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .as-micro {
+    font: 400 var(--font-size-micro) var(--font-ui);
+    line-height: 1.5;
+    color: var(--muted-foreground);
+  }
+
+  .as-mono {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: var(--font-size-label);
+    color: var(--muted-foreground);
+  }
+
+  /* Key-value row */
+  .as-kv {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: var(--font-size-body);
+  }
+  .as-kv-key {
+    font-size: var(--font-size-label);
+    color: var(--muted-foreground);
+  }
+  .as-kv-val {
+    font-weight: 500;
+    color: var(--foreground);
+  }
+
+  /* Status dot */
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .status-dot.good {
+    background: var(--cr-success);
+  }
+  .status-dot.warn {
+    background: var(--cr-warning);
+  }
+  .status-dot.bad {
+    background: var(--destructive);
+  }
+  .status-dot.idle {
+    color: var(--muted-foreground);
+  }
+
+  /* ---- Panel: consistent card/panel surface (minimal) ---- */
+  .as-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-xs);
+  }
+
+  /* ---- Section title ---- */
+  .as-section-title {
+    font-size: var(--font-size-label);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  /* ---- Hairline divider ---- */
+  .as-hairline {
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ---- Vertical hairline ---- */
+  .as-hairline-v {
+    width: 1px;
+    background: var(--border);
+  }
+
+  /* ---- Stats bar: horizontal inline stat strip (minimal) ---- */
+  .as-stat-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-xs);
+  }
+
+  /* ---- Subtle brand tint for active/selected rows ---- */
+  .as-active-tint {
+    background: rgba(var(--brand-rgb), 0.06);
+    border-color: rgba(var(--brand-rgb), 0.2);
+  }
+
+  /* ---- Glass surface for wallpaper mode ---- */
+  .as-glass {
+    background: color-mix(in srgb, var(--surface) 72%, transparent);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  }
+
+  /* ---- Section gap: consistent vertical rhythm between page sections ---- */
+  .as-section-gap {
+    height: var(--space-section);
+  }
+
+  /* ---- Card surface: unified elevated card ---- */
+  .as-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-elev1);
+    transition:
+      transform var(--duration-base) cubic-bezier(0.16, 1, 0.3, 1),
+      border-color var(--duration-base) ease,
+      box-shadow var(--duration-base) ease;
+  }
+
+  /* ---- Subtle hover lift for interactive cards (minimal: gentle, not bouncy) ---- */
+  .as-card-hover {
+    transition:
+      transform var(--duration-base) var(--ease-spring),
+      border-color var(--duration-base) ease,
+      box-shadow var(--duration-base) ease;
+  }
+  .as-card-hover:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-elev2);
+  }
+
+  /* ---- Brand accent line: thin gradient bar for active states ---- */
+  .as-brand-line {
+    background: linear-gradient(
+      to bottom,
+      rgba(var(--brand-rgb), 0.8),
+      rgba(var(--brand-rgb), 0.3)
+    );
+  }
+
+  /* ---- Brand gradient text ---- */
+  .as-brand-text {
+    background: linear-gradient(135deg, var(--foreground) 0%, rgba(var(--brand-rgb), 0.8) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* ---- Brand glow box — restrained, functional ---- */
+  .as-glow {
+    box-shadow: 0 0 0 1px rgba(var(--brand-rgb), 0.1);
+  }
+  .as-glow:hover {
+    box-shadow: 0 0 0 1px rgba(var(--brand-rgb), 0.16);
+  }
+
+  /* ---- Glass surface enhanced ---- */
+  .as-glass-strong {
+    background: color-mix(in srgb, var(--surface) 80%, transparent);
+    backdrop-filter: blur(28px) saturate(1.6);
+    -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  }
+
+  /* ---- Card shine sweep (hover) — subtle, understated ---- */
+  .as-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .as-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.03) 48%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0.03) 52%,
+      transparent 65%
+    );
+    background-size: 300% 100%;
+    background-position: 150% 0;
+    transition: background-position var(--duration-slower) var(--ease-out);
+    pointer-events: none;
+  }
+  .as-shine:hover::after {
+    background-position: -150% 0;
+  }
+
+  /* ---- Breathing pulse for empty states and placeholders — softer ---- */
+  @keyframes as-breathe {
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.55;
+      transform: scale(1.03);
+    }
+  }
+  .as-breathe {
+    animation: as-breathe 3.5s ease-in-out infinite;
+  }
+
+  /* ---- Slide-up enter (for detail panels and drawers) ---- */
+  @keyframes as-slide-up-enter {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .as-slide-up-enter {
+    animation: as-slide-up-enter var(--duration-slow) var(--ease-spring);
+    will-change: opacity, transform;
+  }
+
+  /* ---- Toast enter/exit — gentle, minimal motion ---- */
+  @keyframes as-toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @keyframes as-toast-out {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(6px) scale(0.97);
+      pointer-events: none;
+    }
+  }
+  .as-toast-enter {
+    animation: as-toast-in var(--duration-slow) var(--ease-spring);
+  }
+  .as-toast-exit {
+    animation: as-toast-out var(--duration-base) var(--ease-out) forwards;
+  }
+
+  /* ---- Particle overlay (floating ambient particles) ---- */
+  @keyframes as-particle-float {
+    0%,
+    100% {
+      transform: translateY(0) translateX(0);
+    }
+    25% {
+      transform: translateY(-20px) translateX(10px);
+    }
+    50% {
+      transform: translateY(-10px) translateX(-15px);
+    }
+    75% {
+      transform: translateY(-25px) translateX(5px);
+    }
+  }
+  @keyframes as-particle-rain {
+    0% {
+      transform: translateY(-10vh) translateX(0);
+    }
+    100% {
+      transform: translateY(110vh) translateX(2px);
+    }
+  }
+  @keyframes as-particle-sway {
+    0%,
+    100% {
+      transform: translateY(0) translateX(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-15px) translateX(10px) rotate(15deg);
+    }
+  }
+  @keyframes as-particle-flash {
+    0%,
+    92%,
+    100% {
+      opacity: 0;
+    }
+    94%,
+    98% {
+      opacity: 0.4;
+    }
+  }
+  .as-particle {
+    will-change: transform, opacity;
+  }
+  .as-float {
+    animation: as-particle-float linear infinite;
+  }
+  .as-rain {
+    animation: as-particle-rain linear infinite;
+  }
+  .as-sway {
+    animation: as-particle-sway ease-in-out infinite;
+  }
+  .as-flash {
+    animation: as-particle-flash 8s ease-in-out infinite;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .as-particle,
+    .as-flash {
+      animation: none;
+    }
+  }
+
+  /* ---- Wallpaper media crossfade (DynamicBackground) ----
+     Fades a keyed-remounted media layer in when the wallpaper/src changes,
+     replacing the historical hard cut. Opacity-only (GPU-friendly); rides
+     the global --duration-slow token plus the reduced-motion override in
+     @layer base. */
+  @keyframes as-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .as-fade-in {
+    animation: as-fade-in var(--duration-slow) var(--ease-spring);
+  }
+}
+
+/* =================================================================== */
+/* Layout Foundations                                                   */
+/* =================================================================== */
+html,
+body {
+  height: 100%;
+}
+
+#root {
+  height: 100%;
+}
+
+/* =================================================================== */
+/* Global Focus-Visible & Micro-interactions                            */
+/* =================================================================== */
+
+/* Unified focus-visible ring — applies to all interactive elements.
+   Uses var(--ring) so the brand color drives the focus indicator,
+   with a subtle outer glow for depth. */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+  border-radius: var(--radius-sm);
+}
+
+/* Remove focus ring for mouse-only clicks (:focus) vs keyboard (:focus-visible) */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Page enter animation — cross-fade + slight upward slide.
+   Triggered by the `key={route}` on the page container in App.tsx. */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-enter {
+  animation: page-enter var(--duration-base) var(--ease-spring);
+}
+
+/* Card hover micro-interaction — subtle lift (minimal).
+   Applied via .as-card-hover utility class on interactive cards. */
+.as-card-hover {
+  transition:
+    transform var(--duration-base) var(--ease-spring),
+    box-shadow var(--duration-base) ease-out,
+    border-color var(--duration-base) ease-out;
+}
+.as-card-hover:hover {
+  transform: translateY(-1px);
+}
+.as-card-hover:active {
+  transform: translateY(0);
+}
+
+/* Active scale — for buttons and interactive elements.
+   Complements the Button's active:scale-[0.97] with a CSS-level fallback. */
+.as-pressable:active {
+  transform: scale(0.97);
+}
+
+/* Reduced motion — disable all non-essential animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .page-enter,
+  .as-card-hover,
+  .as-pressable:active {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* Crop mask — used by ImageCropDialog to dim everything outside the crop frame.
+   Uses var(--scrim) for a semi-transparent overlay that lets the image show through. */
+.as-crop-mask {
+  box-shadow: 0 0 0 9999px var(--scrim);
+}
+
+/* Input focus */
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary);
+}
+
+/* =================================================================== */
+/* Range Slider                                                         */
+/* =================================================================== */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--foreground);
+  border: 2px solid var(--card);
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition: transform var(--duration-fast) ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--foreground);
+  border: 2px solid var(--card);
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+}
+
+/* =================================================================== */
+/* Grid System                                                          */
+/* =================================================================== */
+.g12 {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+
+/* =================================================================== */
+/* Toggle Switch                                                        */
+/* =================================================================== */
+.sw {
+  width: 34px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  position: relative;
+  cursor: pointer;
+  transition: background-color var(--duration-base) ease;
+  flex: none;
+  border: none;
+}
+.sw::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--card);
+  top: 2px;
+  left: 2px;
+  transition:
+    left var(--duration-base) cubic-bezier(0.16, 1, 0.3, 1),
+    background var(--duration-base) ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.sw:hover::after {
+  transform: scale(1.08);
+}
+.sw.on {
+  background: var(--primary);
+}
+.sw.on::after {
+  left: 18px;
+  background: var(--primary-foreground);
+}
+
+/* =================================================================== */
+/* Tag Badge                                                            */
+/* =================================================================== */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 500 var(--font-size-label) var(--font-ui);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--accent-foreground);
+  white-space: nowrap;
+  border: 1px solid rgba(var(--brand-rgb), 0.15);
+}

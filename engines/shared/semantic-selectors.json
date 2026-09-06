@@ -1,0 +1,58 @@
+{
+  "_comment": "Semantic selector map — each role maps to multiple candidate selectors. Runtime tries each until one matches. App updates don't break themes as long as at least one candidate still matches.",
+  "_pattern": "Dream Work Theme mainSelectors + CodeDrobe verification.any + Codex-Dream-Skin safe-css-policy combined",
+  "traework": {
+    "root": [".panel-container", ".solo-lite-layout", "#root", "body"],
+    "main": [".solo-lite-shell .chat-area", "[data-trae-ref='chat']", "main", ".chat-view"],
+    "sidebar": [".side-panel", "[data-trae-ref='sidebar']", "aside", "nav"],
+    "composer": [".input-area", "[data-trae-ref='composer']", "[contenteditable]", "textarea"],
+    "dialog": ["[role='dialog']", ".modal", ".overlay"],
+    "button": ["button", "[role='button']", ".btn-primary"],
+    "menu": ["[role='menu']", ".dropdown-menu", ".popup"]
+  },
+  "qoderwork": {
+    "root": [".agents-layout-root", "#root", "body"],
+    "main": [".agents-main-content", "main", ".chat-surface", ".conversation-panel"],
+    "sidebar": [".agents-sidebar", "aside", "[role='navigation'", ".nav-panel"],
+    "composer": [".agents-composer", "[contenteditable]", "textarea", ".editor-area"],
+    "dialog": ["[role='dialog']", ".ant-modal", ".ant-drawer"],
+    "button": ["button", "[role='button']", ".ant-btn"],
+    "menu": ["[role='menu']", ".ant-dropdown", ".ant-popover"]
+  },
+  "workbuddy": {
+    "root": [".teams-container", "#root", "body[data-application-name='workbuddy']"],
+    "main": [".wb-cb-chat", ".conversation-surface", "main", ".chat-area"],
+    "sidebar": [".conversation-sidebar", "aside", "[role='navigation']", ".sidebar-next"],
+    "composer": [".wb-cb-input", "[contenteditable]", "textarea", ".input-container"],
+    "dialog": ["[role='dialog']", ".ms-Dialog", ".modal-overlay"],
+    "button": ["button", "[role='button']", ".ms-Button"],
+    "menu": ["[role='menu']", ".ms-ContextualMenu", ".dropdown"]
+  },
+  "doubao": {
+    "root": ["#root", "body", ".app-container"],
+    "main": [".chat-main", ".conversation-panel", "main", ".main-content"],
+    "sidebar": [".chat-list", "aside", "[role='navigation']", ".conversation-list"],
+    "composer": [".chat-input-container", ".input-area", "[contenteditable]", "textarea"],
+    "dialog": ["[role='dialog']", ".ant-modal", ".modal-root"],
+    "button": ["button", "[role='button']", ".ant-btn"],
+    "menu": ["[role='menu']", ".ant-dropdown", ".dropdown-menu"]
+  },
+  "codex": {
+    "root": ["main.main-surface", "main[class*='MainContentSurface']", ":root", "body"],
+    "main": [".thread-scroll-container", "main", ".chat-surface", ".main-area"],
+    "sidebar": [".sidebar", "aside", "[role='navigation']", ".side-panel"],
+    "composer": [".composer-area", "[contenteditable]", ".chat-input", "textarea"],
+    "dialog": ["[role='dialog']", ".codex-modal", ".overlay"],
+    "button": ["button", "[role='button']", "[data-testid='send-button']"],
+    "menu": ["[role='menu']", ".dropdown", ".menu-popup"]
+  },
+  "zcode": {
+    "root": ["#root", "body", ".app", ".monaco-workbench"],
+    "main": [".editor-instance", "main", "[role='main']", ".monaco-editor-background"],
+    "sidebar": [".sidebar", "aside", "[role='navigation']", ".part.sidebar"],
+    "composer": [".inputarea", "textarea", "[contenteditable]", ".monaco-editor"],
+    "dialog": ["[role='dialog']", ".monaco-overlay", ".modal"],
+    "button": ["button", "[role='button']", ".monaco-button"],
+    "menu": ["[role='menu']", ".monaco-dropdown", ".context-view"]
+  }
+}

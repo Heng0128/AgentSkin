@@ -1,0 +1,89 @@
+{
+  "schema": "builder-report/v1",
+  "plan": "RC1-B",
+  "title": "Fix-in-Place Progressive Repair — CDP Session Pool Hardening + Cross-Module Adoption",
+  "branch": "main",
+  "startedAt": "2026-08-26T11:15:00+08:00",
+  "completedAt": "2026-08-26T11:40:00+08:00",
+  "status": "complete",
+  "summary": {
+    "totalCommits": 5,
+    "totalFilesChanged": 11,
+    "totalInsertions": 238,
+    "totalDeletions": 44,
+    "tscClean": true,
+    "testsPass": "not-run (tsc clean verified)"
+  },
+  "phases": [
+    {
+      "step": 1,
+      "commit": "e61679af",
+      "message": "fix(cdp/session-pool): capacity guard前置 + retired safety valve + targetKeyFor uniqueness [phase5-step1]",
+      "files": ["src/main/cdp/session-pool.ts"],
+      "description": "Three hardening improvements to CdpSessionPool: (1) Capacity guard前置 — moved the MAX_SESSIONS_PER_AGENT check before open() to avoid a wasted ~200ms WebSocket handshake when the per-agent cap is reached. (2) Retired session safety valve — added a dedicated retiredScanTimer (setInterval) that force-discards sessions retired longer than RETIRE_GRACE_MS even if a stale refCount > 0 pins them, preventing socket leaks from forgotten releases. (3) targetKeyFor uniqueness — replaced the collision-prone 'unknown-target' fallback with unknown-${++counter} so targets missing both id and url get unique pool keys.",
+      "linesChanged": { "insertions": 66, "deletions": 16 }
+    },
+    {
+      "step": 2,
+      "commit": "4cd1b2da",
+      "message": "fix(cdp/apply-baseline): route baseline capture + probe through session pool [phase5-step2]",
+      "files": [
+        "src/main/cdp/apply-baseline.ts",
+        "src/main/agent-engine-service.ts",
+        "src/main/theme-apply-flow.ts"
+      ],
+      "description": "Rewired captureBaselineOnPort and probeThemeLiveOnPort to acquire sessions via acquireSession from the pool instead of direct connectCdp. openMainDomSession now returns {session, targetKey, pooled} so the caller knows whether to release (pooled) or close (one-shot). Added optional pool parameter to both public functions and added appId to probeThemeLiveOnPort signature for pool keying. Updated ApplyFlowDeps interface and applyFlowDeps() binding to inject this.cdpSessionPool.",
+      "linesChanged": { "insertions": 58, "deletions": 14 }
+    },
+    {
+      "step": 3,
+      "commit": "f10d06ff",
+      "message": "fix(cdp/inspect-session): route live-inspect CDP session through pool + event delegation [phase5-step3]",
+      "files": ["src/main/cdp/inspect-session.ts"],
+      "description": "Rewired startInspect to acquire sessions via acquireSession with connectEventCdp as the open callback. Event delegation: the pool stores CdpSession but the open callback creates an EventCdpSession, so the result is cast back to EventCdpSession for on/off event subscription. On stop() and error paths, pooled sessions are released back to the pool via releaseSession instead of closed. Added optional pool parameter to StartInspectOptions.",
+      "linesChanged": { "insertions": 44, "deletions": 6 }
+    },
+    {
+      "step": 4,
+      "commit": "84e87faa",
+      "message": "fix(cdp/reload-watchdog): route watchdog CDP session through pool + event delegation [phase5-step4]",
+      "files": ["src/main/cdp/reload-watchdog.ts"],
+      "description": "Rewired openWatchdogSession to acquire sessions via acquireSession with connectEventCdp as the open callback, casting to EventCdpSession for Page.loadEventFired subscription (event delegation). detachReloadWatchdog now releases pooled sessions back to the pool via releaseSession instead of closing them. Added pool, targetKey, and pooled tracking to AttachReloadWatchdogOptions and ReloadWatchdogState. Added null-session guard with early return.",
+      "linesChanged": { "insertions": 49, "deletions": 10 }
+    },
+    {
+      "step": 5,
+      "commit": "d9f40533",
+      "message": "fix(cdp): wire session pool through Studio inspect + reload watchdog callers [phase5-step5]",
+      "files": [
+        "src/main/ipc/studio-ipc.ts",
+        "src/main/ipc/index.ts",
+        "src/main/cdp/cdp-fanout.ts",
+        "src/main/services/contracts.ts",
+        "src/main/agent-engine-service.ts",
+        "src/main/services/contracts.test.ts"
+      ],
+      "description": "Threaded the CdpSessionPool reference from AgentEngineService through to all consumers: (1) Added getCdpSessionPool() to AgentEngineServiceApi interface and concrete implementation. (2) Added optional pool parameter to registerStudioIpc deps and passed it to startInspect. (3) Wired ctx.core.getCdpSessionPool() in ipc/index.ts. (4) Passed deps.sessions (pool) to attachReloadWatchdog in cdp-fanout.ts hardeningPass. (5) Updated AgentEngineServiceApi structural contract test to include getCdpSessionPool key.",
+      "linesChanged": { "insertions": 21, "deletions": 0 }
+    }
+  ],
+  "invariants": {
+    "noNewDependencies": true,
+    "spdxHeadersPreserved": true,
+    "pathPollutionCheck": "clean — no temporary files created",
+    "backwardCompat": "all pool parameters are optional; callers without a pool fall back to one-shot connect-then-close behavior"
+  },
+  "keyFiles": {
+    "sessionPool": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\session-pool.ts",
+    "applyBaseline": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\apply-baseline.ts",
+    "inspectSession": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\inspect-session.ts",
+    "reloadWatchdog": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\reload-watchdog.ts",
+    "studioIpc": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\ipc\\studio-ipc.ts",
+    "ipcIndex": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\ipc\\index.ts",
+    "cdpFanout": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\cdp-fanout.ts",
+    "contracts": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\services\\contracts.ts",
+    "contractsTest": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\services\\contracts.test.ts",
+    "agentEngineService": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\agent-engine-service.ts",
+    "themeApplyFlow": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\theme-apply-flow.ts"
+  }
+}

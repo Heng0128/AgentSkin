@@ -1,0 +1,217 @@
+/* ============================================================
+   ENGINE: workbuddy — Layer 2: Cosmetic Enhancement
+   ------------------------------------------------------------
+   Visual polish that enhances the theme but is NOT critical.
+   If any rule here fails (agent renames a class, removes an
+   element), the theme still works — just with slightly less
+   visual flair.
+
+   Stability: LOW — these target visual details that agents
+   change frequently. All rules use !important but are designed
+   to fail silently (no layout breakage if selector misses).
+   ============================================================ */
+
+/* === Selection: accent tint === */
+html.agentskin-host-workbuddy ::selection {
+  background: color-mix(in srgb, var(--agentskin-accent) 28%, transparent) !important;
+}
+
+/* === Scrollbars: accent gradient thumb === */
+html.agentskin-host-workbuddy ::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+html.agentskin-host-workbuddy ::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+html.agentskin-host-workbuddy ::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 30%, transparent) 100%
+  ) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+html.agentskin-host-workbuddy ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 50%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 50%, transparent) 100%
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* === Reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+  html.agentskin-host-workbuddy *,
+  html.agentskin-host-workbuddy *::before,
+  html.agentskin-host-workbuddy *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+/* ============================================================
+   ENGINE: workbuddy — Layer 4-5: Structural (migrated from adapter-config.mjs)
+   ============================================================ */
+
+/* === Art layer on #root::before === */
+#root {
+  background: transparent !important;
+}
+#root::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background: var(--agentskin-art, none) right center / cover no-repeat !important;
+}
+
+/* === teams-container opaque base → transparent === */
+.teams-container,
+.teams-container.is-mac {
+  background: transparent !important;
+}
+.teams-container > div {
+  background: transparent !important;
+}
+
+/* === Grid item containers === */
+[class*="_gridViewItem_"] > div,
+[class*="_gridView_"] > div > div {
+  background: transparent !important;
+}
+
+/* === Inner content layers === */
+.conversation-list,
+.chat-container,
+.wb-cb-chat,
+.chat-main,
+.message-list,
+.main-content,
+.main-content--welcome,
+.sidebar-next,
+.teams-content-wrapper,
+.teams-main-content {
+  background: transparent !important;
+}
+
+/* === Topbar: menubar + window controls — fully transparent === */
+#workbuddy-menubar-container,
+.codebuddy-menubar,
+#workbuddy-window-controls-container,
+.workbuddy-window-controls {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  border-bottom: none !important;
+}
+.workbuddy-window-control-button {
+  background: transparent !important;
+  color: var(--agentskin-text) !important;
+}
+.workbuddy-window-control-button:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+}
+.workbuddy-window-control-button.close:hover {
+  background: #e53935 !important;
+  color: #ffffff !important;
+}
+
+/* === Chat dialog top bar — fully transparent === */
+.workbuddy-topbar {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  border-bottom: none !important;
+}
+
+/* === Composer main area === */
+[class*="_mainArea_"] {
+  background: color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-lg), transparent) !important;
+  border: 1px solid var(--ag-glass-border) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
+}
+
+/* === Sidebar section labels === */
+.conversation-section-label,
+.collapsible-section-header[class*="_header_"][class*="_headerSticky_"],
+[class*="_headerTopPadding_"][class*="collapsible"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* === Sidebar search box === */
+.my-files-search {
+  background: color-mix(in srgb, var(--agentskin-surface) 30%, transparent) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+/* === Kill unnecessary borders/shadows across UI === */
+.sidebar-next-main-header,
+.my-files-flat-header {
+  border-bottom: none !important;
+}
+[class*="_dropdownRoot_"],
+[class*="_dropdown_"][class*="view-selector"],
+.my-files-filter-dropdown,
+.my-files-filter-btn {
+  border: none !important;
+  box-shadow: none !important;
+}
+.my-files-tab {
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+.my-files-tab.active {
+  border-bottom: 2px solid var(--agentskin-accent) !important;
+}
+
+/* === Sidebar: frosted glass === */
+.conversation-sidebar,
+.sidebar-next {
+  background: color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-md), transparent) !important;
+  backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  border-right: 1px solid var(--ag-glass-border) !important;
+}
+
+/* === Main content: transparent for art punch-through === */
+.teams-main-content,
+.chat-container {
+  background: transparent !important;
+}
+
+/* === Detail panel: frosted glass === */
+.detail-panel {
+  background: color-mix(in srgb, var(--agentskin-surface) 72%, transparent) !important;
+}
+
+/* === Popovers / modals: frosted glass === */
+[role="dialog"],
+[role="menu"] {
+  background: color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent) !important;
+  border: none !important;
+}
+
+/* === Recommendation chips above input: kill side shadows === */
+.quick-actions,
+.quick-actions__list,
+[class*="quick-action"]:not(.quick-actions__item) {
+  box-shadow: none !important;
+}
+.quick-actions *,
+.quick-actions__list * {
+  box-shadow: none !important;
+}
+
+/* === Tencent docs auth strip === */
+.tencent-docs-auth-guide__permissions {
+  background: transparent !important;
+}

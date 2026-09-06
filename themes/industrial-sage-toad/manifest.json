@@ -1,0 +1,58 @@
+{
+  "id": "industrial-sage-toad",
+  "name": "industrial-sage-toad",
+  "displayName": "Industrial Sage Toad",
+  "version": "2.0.0",
+  "description": "White-haired sage atop a toad in a ruined industrial wasteland.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "fantasy",
+    "postapoc",
+    "monster"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#6d906a",
+    "secondary": "#8aa688",
+    "background": "#11120d",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#272822",
+    "surfaceElevated": "#353631",
+    "border": "#2c2c27",
+    "codeBackground": "#10100c",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#22231d",
+    "buttonBackground": "#6d906a",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#6d906a60"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

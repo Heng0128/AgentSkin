@@ -1,0 +1,23 @@
+{
+  "fixes": [
+    {
+      "file": "src/main/scene/pkg-parser.ts",
+      "description": "Fix V0001 headerSize validation: changed lower bound from < 8 to < 0 to allow headerSize=0 (V0001 format)",
+      "commit": "4f7c7381fa562bc2e070ebcee215547266b7ba4f"
+    },
+    {
+      "file": "50 files across src/ and scripts/",
+      "description": "Applied biome check --write auto-fixes: organizeImports, noUnusedImports, noUnusedVariables, useTemplate, useOptionalChain",
+      "commit": "cdd8a3f4e9420299330a4f766becf749237d2feb"
+    }
+  ],
+  "testResults": {
+    "pkg-parser": "PASS (24 tests, 24 passed)"
+  },
+  "biomeResults": {
+    "filesFixed": 50,
+    "remainingErrors": 57,
+    "remainingErrorsNote": "Remaining errors are noAssignInExpressions (requires --unsafe) and pre-existing issues in scripts/ beyond the scope of --write auto-fix"
+  },
+  "summary": "Fixed V0001 headerSize regression in pkg-parser (headerSize=0 now accepted) and applied biome auto-fixes across 50 files. All 24 pkg-parser tests pass. Remaining biome errors require --unsafe flag and are pre-existing."
+}

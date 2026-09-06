@@ -1,0 +1,59 @@
+{
+  "id": "galactic-garden",
+  "name": "galactic-garden",
+  "displayName": "Galactic Garden",
+  "version": "2.0.0",
+  "description": "Horned winged girl with mechanical limbs hovering above the Earth.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "anime",
+    "fantasy",
+    "space",
+    "mecha"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#566d99",
+    "secondary": "#778aad",
+    "background": "#110a0f",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#271f25",
+    "surfaceElevated": "#352e33",
+    "border": "#2c242a",
+    "codeBackground": "#10090e",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#221b20",
+    "buttonBackground": "#566d99",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#566d9960"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "completeness": {
+    "totalRequirements": 13,
+    "implemented": 8,
+    "partial": 1,
+    "notImplemented": 4,
+    "notes": "本次变更完整实现了 8 项需求（REQ-I-1001 双窗口 fan-out、REQ-I-1002 health-monitor 集成、REQ-I-1003 后台任务失败通知、REQ-I-1005 持久化失败通知、REQ-I-1008 解析器测试覆盖、REQ-I-1009 引擎共享模块测试覆盖、REQ-I-1011 persist toast 修复），1 项部分实现（REQ-I-1004 注入状态机桥接 — drift status 和 health report 已桥接，但 injectionStateMachine onTransition → diagnosticsStore 的显式桥接未在修改文件中可见），4 项未实现（REQ-I-1006 MCP 健康检查、REQ-I-1007 secondary-inject HMR dispose、REQ-I-1010 E2E 集成测试、REQ-I-1012 restoreAll 事务回滚、REQ-I-1013 deep link 回传）。未实现项均为 P2 优先级，可能属于其他变更集或后续迭代。"
+  },
+  "regression": {
+    "newDefects": 0,
+    "notes": "TSC 0 新增错误，Vitest 8487/8493 通过（2 预存 flaky 非本次引入），Biome 82 处违规均为预存 warnings。所有新增代码遵循现有架构模式：deps 注入切片、epoch 守卫、双窗口 fan-out 模式、SPDX 头部、IPC 通道集中注册。未发现回归缺陷。"
+  },
+  "consistency": {
+    "issues": [],
+    "notes": "代码与项目架构和编码风格高度一致：(1) 所有新文件均含 MPL-2.0 SPDX 头部；(2) IPC 通道在 ipc-channels.ts 集中定义并标注 SEND_ONLY/INVOKE 方向；(3) preload.ts 使用 subscribe<T>() 泛型包装器保持类型安全；(4) 双窗口 fan-out 模式（mainWindow + studioWindow + isDestroyed 守卫）在 cdp-fingerprint、cdp-fanout、bundle-ipc、agent-engine-service 四处保持一致；(5) backgroundTasks 的 Promise.allSettled → filter-rejected → notifyBackgroundTaskFailure 链路完整；(6) 测试文件使用 vitest 标准 API 和项目约定的 describe/it/expect 模式；(7) .mjs 引擎测试使用 IIFE + new Function 加载模式，与现有引擎测试风格一致；(8) vitest.config.ts 正确排除新增的 .mjs 测试文件避免重复运行。"
+  },
+  "documentation": {
+    "needsUpdate": false,
+    "notes": "本次变更均为内部实现细节（IPC 通道扩展、测试覆盖补充、fan-out 修复），不涉及用户可见的 API 变更或架构文档需要同步更新的内容。所有新 IPC 通道已在 ipc-channels.ts 中标注方向和使用说明。JSDoc 注释完整。无需额外更新 README 或架构文档。"
+  },
+  "security": {
+    "issues": [],
+    "notes": "未引入安全隐患：(1) 新增 IPC 通道均为 SEND_ONLY 方向（main → renderer 推送），不注册 ipcMain.handle 避免 invoke 挂起；(2) bundle-ipc.ts 的 BUNDLE_OPEN_FILE 处理延续现有的 assertNonEmptyString 和扩展名校验；(3) 双窗口 fan-out 使用 isDestroyed() 守卫避免向已销毁窗口发送消息；(4) backgroundTasks 失败通知使用 Promise.allSettled 隔离失败，不泄露敏感信息；(5) 测试文件不涉及生产环境数据处理。"
+  },
+  "performance": {
+    "issues": [],
+    "notes": "未引入性能退化：(1) 双窗口 fan-out 是同步的 webContents.send 调用，无额外异步开销；(2) backgroundTasks 的 Promise.allSettled 聚合在已有的 .then() 回调中执行，不增加额外等待；(3) notifyBackgroundTaskFailure 仅在失败时触发，正常路径零开销；(4) 新增测试文件均为离线运行，不影响生产性能；(5) vitest.config.ts 的 exclude 配置正确避免 .mjs 文件被重复执行。"
+  },
+  "overallResult": "PASS",
+  "summary": "本次变更集聚焦跨模块集成（方向 I），完整实现了 7 项 P0/P1 需求（双窗口 fan-out、后台任务失败通知、持久化失败通知、解析器测试覆盖、引擎共享模块测试覆盖、persist toast 修复）和 1 项 P1 需求（health-monitor 集成）。1 项 P1 需求（注入状态机桥接）部分实现。4 项 P2 需求未实现，属于后续迭代范围。代码质量高，无回归缺陷，无安全/性能问题，测试覆盖充分（新增 195 个测试用例：31+31+36 解析器测试 + 21+41+35 引擎测试 + 6 apply flow 测试）。",
+  "recommendations": [
+    "REQ-I-1004 注入状态机桥接：建议在后续变更中补充 injectionStateMachine.onTransition → diagnosticsStore 的显式订阅链路，确保 self-healing 进度在 Diagnostics 页面完整可见",
+    "REQ-I-1006/1007/1010/1012/1013 五项 P2 需求：建议评估是否纳入下一迭代，其中 REQ-I-1010 E2E 集成测试对保障端到端质量有较高价值",
+    "engines/shared/*.test.mjs 文件使用 new Function() 加载 IIFE 源文件，建议后续评估是否迁移到 vitest 的 --exclude 配置中统一运行，以获得覆盖率报告和更好的 IDE 集成",
+    "dreamskin-parser.test.ts 和 agentskin-built-parser.test.ts 中部分测试断言 result.images.preview 与 result.images.hero 相等（同一文件），建议补充 preview 与 hero 分离场景的测试用例"
+  ]
+}

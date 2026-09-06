@@ -1,0 +1,34 @@
+# qoderwork 脆弱性分级（sdk-fragility）
+
+> 与 [architecture.md](./architecture.md) 配套。依赖点按[升级崩溃概率]分级；
+> 动态层数据来自 `agents-raw-data/qoderwork-full-extract.json`（CDP 全量快照）。
+
+## 1. 依赖点分级
+
+| 等级 | 依赖点 | 崩溃概率 | 说明 |
+|------|--------|---------|------|
+| Low | `file://` 渲染面身份 | Unlikely | scheme 稳定，决定 CDP 暴露面 |
+| Medium | 变量聚合策略（inline style + 样式表 :root/body） | Sometimes | VS Code 家族分布式变量，结构会演化 |
+| Medium | `rootVars` 计算的 `__host` 形态 | Sometimes | `aggregated-inline-or-rules` 依赖组件 inline style 分布 |
+| Medium | 变量命名空间分布 | Sometimes | 变量前缀及声明位置随版本变 |
+| High | 非 hash class 语义选择器 | Very likely | 非公开 API，随组件重构变化 |
+| High | 组件 DOM 结构（div 层级） | Very likely | 布局重构即崩 |
+| Medium | DOM 树节点数 / 锚点集合 | Sometimes | 惰性渲染与空态影响采集 |
+
+## 2. 反模式与铁律
+
+- ❌ 不依赖 minified JS 变量名 / hash css-module class（`_pk7td_1`）——每次构建都变。
+- ✅ 可依赖字符串字面量：`data-*`、稳定的 `id`、命名空间变量前缀。
+- ⚠️ 谨慎依赖运行时对象结构（fiber walk 发现）——名字不变但 shape 会变。
+- ⚠️ 分布式变量：采集必须聚合 inline style + 样式表规则，禁止只读 `documentElement`。
+
+## 3. 升级检查清单
+
+- [ ] 重新跑 CDP 全量快照：`node scripts/cdp-full-extract.mjs --agent qoderwork`
+- [ ] 与上一版 diff：`node scripts/snapshot-compare.mjs <旧> <新> --out docs/apps/qoderwork/raw/upgrade-diff.md`
+- [ ] 检查变量命名空间是否消失/改名（尤其默认 scheme）。
+- [ ] 检查语义锚点新增/消失（stable id / class）。
+- [ ] 若为分布式变量家族，确认 `rootVars` 聚合策略仍命中（非 0）。
+- [ ] 跑 E2E 注入验证，确认主题注入生效且内部控件无意外命中。
+- [ ] 更新本文件与 architecture.md 的快照时间/版本行。
+

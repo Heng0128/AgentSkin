@@ -1,0 +1,828 @@
+/* ============================================================
+   ENGINE: doubao — Layer 0: Token Override
+   ------------------------------------------------------------
+   Pure design-token overrides. NO class selectors, NO structural
+   rules. Every value derives from --agentskin-* custom properties
+   so this file is theme-agnostic and never needs regeneration.
+
+   Selector: html.agentskin-host-doubao:root  (specificity 0,2,1)
+   beats both :root[data-theme="dark"] (0,1,1) and light selectors.
+
+   Stability: HIGH — agent token names (--dbx-*, --s-color-*, --ffc-*)
+   are internal API and rarely rename. If they do, adapter.mjs L4
+   auto-discovery compensates at runtime.
+   ============================================================ */
+
+html.agentskin-host-doubao:root {
+  /* --- Backgrounds --- */
+  --dbx-bg-body-web: transparent !important;
+  --dbx-bg-base-web: var(--agentskin-bg) !important;
+  --dbx-bg-base-2: color-mix(in srgb, var(--agentskin-surface) 55%, var(--agentskin-bg)) !important;
+  --dbx-bg-base-5: var(--agentskin-surface) !important;
+  --dbx-bg-float: var(--agentskin-surface-elevated) !important;
+  --dbx-bg-body-overlay-web: var(--agentskin-surface) !important;
+  --dbx-bg-body-white: var(--agentskin-bg) !important;
+  --dbx-bg-body-mac: color-mix(in srgb, var(--agentskin-bg) 85%, transparent) !important;
+  --dbx-bg-base-mac: color-mix(in srgb, var(--agentskin-text) 3%, transparent) !important;
+  --dbx-bg-browser-win: var(--agentskin-bg) !important;
+  --dbx-bg-browser-mac: color-mix(in srgb, var(--agentskin-bg) 70%, transparent) !important;
+  --dbx-bg-body-launcher: color-mix(in srgb, var(--agentskin-surface) 80%, transparent) !important;
+  --dbx-bg-body-overlay-launcher: color-mix(in srgb, var(--agentskin-surface) 45%, transparent) !important;
+  --dbx-bg-float-launcher: color-mix(in srgb, var(--agentskin-surface-elevated) 60%, transparent) !important;
+  --dbx-bg-body-overlay-mac: color-mix(in srgb, var(--agentskin-surface) 60%, transparent) !important;
+  --dbx-bg-body-overlay-white: color-mix(in srgb, var(--agentskin-surface) 60%, transparent) !important;
+  --dbx-bg-base-1-overlay-mobile: var(--agentskin-bg) !important;
+  --dbx-bg-base-2-mobile: var(--agentskin-surface) !important;
+  --dbx-bg-base-2-overlay-mobile: var(--agentskin-surface) !important;
+  --dbx-bg-base-3-mobile: var(--agentskin-surface-elevated) !important;
+  --dbx-bg-base-3-enterprisebubble: var(--agentskin-surface-elevated) !important;
+  --dbx-bg-base-4-action: var(--agentskin-text) !important;
+  --dbx-bg-mask: rgba(0, 0, 0, 0.4) !important;
+
+  /* --- Text hierarchy --- */
+  --dbx-text-primary: var(--agentskin-text) !important;
+  --dbx-text-secondary: var(--agentskin-muted) !important;
+  --dbx-text-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --dbx-text-disable: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+  --dbx-text-markdown: color-mix(in srgb, var(--agentskin-text) 95%, transparent) !important;
+
+  /* n00 = "on neutral-00" (inverted text for badges/pills) */
+  --dbx-text-n00-primary: var(--agentskin-bg) !important;
+  --dbx-text-n00-secondary: color-mix(in srgb, var(--agentskin-bg) 80%, transparent) !important;
+  --dbx-text-n00-tertiary: color-mix(in srgb, var(--agentskin-bg) 60%, transparent) !important;
+  --dbx-text-n00-disable: color-mix(in srgb, var(--agentskin-bg) 30%, transparent) !important;
+
+  /* Highlight (accent-driven) */
+  --dbx-text-highlight: var(--agentskin-accent) !important;
+  --dbx-text-highlight-secondary: color-mix(in srgb, var(--agentskin-accent) 60%, transparent) !important;
+  --dbx-text-highlight-hover: color-mix(in srgb, var(--agentskin-accent) 75%, #fff) !important;
+  --dbx-text-highlight-disable: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
+
+  /* --- Brand / Fill --- */
+  --dbx-brand-default: var(--agentskin-accent) !important;
+  --dbx-fill-highlight: var(--agentskin-accent) !important;
+  --dbx-fill-highlight-hover: color-mix(in srgb, var(--agentskin-accent) 80%, #fff) !important;
+  --dbx-fill-highlight-disable: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
+  --dbx-fill-highlight-trans-10: color-mix(in srgb, var(--agentskin-accent) 6%, transparent) !important;
+  --dbx-fill-highlight-trans-10-blank: color-mix(in srgb, var(--agentskin-accent) 6%, transparent) !important;
+  --dbx-fill-primary-50: var(--agentskin-accent) !important;
+  --dbx-fill-primary-60: color-mix(in srgb, var(--agentskin-accent) 85%, #000) !important;
+  --dbx-fill-primary-transparent-1: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --dbx-fill-banner: var(--agentskin-surface-elevated) !important;
+
+  /* Translucent fills (text-derived for contrast) */
+  --dbx-fill-trans-10: color-mix(in srgb, var(--agentskin-text) 3%, transparent) !important;
+  --dbx-fill-trans-10-hover: color-mix(in srgb, var(--agentskin-text) 5%, transparent) !important;
+  --dbx-fill-trans-10-disable: color-mix(in srgb, var(--agentskin-text) 3%, transparent) !important;
+  --dbx-fill-trans-20: color-mix(in srgb, var(--agentskin-text) 5%, transparent) !important;
+  --dbx-fill-trans-20-hover: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
+  --dbx-fill-trans-20-disable: color-mix(in srgb, var(--agentskin-text) 5%, transparent) !important;
+  --dbx-fill-trans-30: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
+  --dbx-fill-trans-30-hover: color-mix(in srgb, var(--agentskin-text) 12%, transparent) !important;
+  --dbx-fill-trans-30-disable: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
+
+  /* --- Lines / Borders --- */
+  --dbx-line-divider-5: color-mix(in srgb, var(--agentskin-border) 50%, transparent) !important;
+  --dbx-line-divider-10: var(--agentskin-border) !important;
+  --dbx-line-7: color-mix(in srgb, var(--agentskin-border) 70%, transparent) !important;
+  --dbx-line-10: var(--agentskin-border) !important;
+  --dbx-line-15: color-mix(in srgb, var(--agentskin-border) 80%, var(--agentskin-text) 20%) !important;
+  --dbx-line-20-hover: color-mix(in srgb, var(--agentskin-border) 60%, var(--agentskin-text) 40%) !important;
+  --dbx-line-highlight: color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
+
+  /* --- Code block --- */
+  --dbx-code-text: var(--agentskin-code-fg) !important;
+  --dbx-code-doc: var(--agentskin-muted) !important;
+  --dbx-code-link: var(--agentskin-accent) !important;
+
+  /* --- Function: info tied to accent --- */
+  --dbx-function-info: var(--agentskin-accent) !important;
+  --dbx-function-info-hover: color-mix(in srgb, var(--agentskin-accent) 80%, #fff) !important;
+  --dbx-function-info-disable: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
+
+  /* --- Switch / symbol --- */
+  --dbx-symbol-switch-toggle-disable: color-mix(in srgb, var(--agentskin-muted) 30%, transparent) !important;
+}
+
+/* ===== Body-level token overrides ===== */
+html.agentskin-host-doubao:root body {
+  --dbx-bg-body-web: transparent !important;
+  --chat-bg-color: transparent !important;
+
+  /* --s-color-bg-* (surfaces) */
+  --s-color-bg-body: transparent !important;
+  --s-color-bg-body-raw: 0, 0, 0 !important;
+  --s-color-bg-primary: var(--agentskin-surface) !important;
+  --s-color-bg-secondary: color-mix(in srgb, var(--agentskin-surface) 92%, transparent) !important;
+  --s-color-bg-tertiary: color-mix(in srgb, var(--agentskin-surface) 85%, transparent) !important;
+  --s-color-bg-trans: color-mix(in srgb, var(--agentskin-text) 5%, transparent) !important;
+  --s-color-bg-trans-raw: var(--agentskin-text-raw) !important;
+  --s-color-bg-trans-tertiary: color-mix(in srgb, var(--agentskin-text) 3%, transparent) !important;
+  --s-color-bg-trans-tertiary-raw: var(--agentskin-text-raw) !important;
+  --s-color-bg-trans-primary: color-mix(in srgb, var(--agentskin-text) 6%, transparent) !important;
+  --s-color-bg-trans-primary-raw: var(--agentskin-text-raw) !important;
+  --s-color-bg-trans-secondary: color-mix(in srgb, var(--agentskin-text) 10%, transparent) !important;
+  --s-color-bg-trans-secondary-raw: var(--agentskin-text-raw) !important;
+  --s-color-bg-float: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-dialogs: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-dialogs-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-dialogs-grey: var(--agentskin-surface) !important;
+  --s-color-bg-tip: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-tip-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-dm-fill: transparent !important;
+  --s-color-bg-dm-fill-raw: var(--agentskin-text-raw) !important;
+  --s-color-bg-toolbox-item: var(--agentskin-surface) !important;
+  --s-color-bg-toolbox-item-hover: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-guide-btn: var(--agentskin-surface) !important;
+  --s-color-bg-guide-btn-hover: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+
+  /* --s-color-text-* */
+  --s-color-text-primary: var(--agentskin-text) !important;
+  --s-color-text-primary-raw: var(--agentskin-text-raw) !important;
+  --s-color-text-secondary: var(--agentskin-muted) !important;
+  --s-color-text-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --s-color-text-quaternary: color-mix(in srgb, var(--agentskin-muted) 50%, transparent) !important;
+  --s-color-text-disable: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+
+  /* --s-color-border-* */
+  --s-color-border-tertiary: var(--agentskin-border) !important;
+  --s-color-border-secondary: color-mix(in srgb, var(--agentskin-accent) 25%, transparent) !important;
+  --s-color-alert-raw: var(--agentskin-accent-raw) !important;
+
+  /* --ffc-* component tokens */
+  --ffc-text-primary: var(--agentskin-text) !important;
+  --ffc-text-secondary: var(--agentskin-muted) !important;
+  --ffc-text-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --ffc-text-disabled: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+  --ffc-text-highlight: var(--agentskin-accent) !important;
+  --ffc-text-highlight-hover: color-mix(in srgb, var(--agentskin-accent) 80%, #fff) !important;
+  --ffc-bg-float: var(--agentskin-surface-elevated) !important;
+  --ffc-bg-subtle: color-mix(in srgb, var(--agentskin-surface) 90%, transparent) !important;
+  --ffc-fill-trans-10: color-mix(in srgb, var(--agentskin-text) 3%, transparent) !important;
+  --ffc-fill-trans-10-hover: color-mix(in srgb, var(--agentskin-text) 5%, transparent) !important;
+  --ffc-fill-trans-20: color-mix(in srgb, var(--agentskin-text) 5%, transparent) !important;
+  --ffc-fill-trans-20-hover: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
+  --ffc-fill-highlight: var(--agentskin-accent) !important;
+  --ffc-fill-highlight-hover: color-mix(in srgb, var(--agentskin-accent) 80%, #fff) !important;
+  --ffc-fill-highlight-subtle: color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
+  --ffc-fill-highlight-trans-10-blank: color-mix(in srgb, var(--agentskin-accent) 6%, transparent) !important;
+  --ffc-line-10: var(--agentskin-border) !important;
+  --ffc-line-15: color-mix(in srgb, var(--agentskin-border) 80%, var(--agentskin-text) 20%) !important;
+  --ffc-line-highlight: color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
+  --ffc-scrollbar-color: color-mix(in srgb, var(--agentskin-accent) 25%, transparent) !important;
+  --ffc-scrollbar-hover-color: color-mix(in srgb, var(--agentskin-accent) 45%, transparent) !important;
+  --ffc-color-brand-primary-default: var(--agentskin-accent) !important;
+  --ffc-color-accents-blue: var(--agentskin-accent) !important;
+  --ffc-color-text-disable: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+  --ffc-button-brand-icon-bg: var(--agentskin-accent) !important;
+  --ffc-button-brand-icon-hover-bg: color-mix(in srgb, var(--agentskin-accent) 80%, #fff) !important;
+  --ffc-button-brand-icon-disabled-bg: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --ffc-button-brand-icon-disabled-color: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+  --ffc-fill-disabled: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --ffc-textarea-color: var(--agentskin-text) !important;
+  --ffc-textarea-placeholder-color: color-mix(in srgb, var(--agentskin-muted) 55%, transparent) !important;
+  --ffc-textarea-disabled-color: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+  --ffc-ai-edit-textarea-color: var(--agentskin-text) !important;
+  --ffc-ai-edit-textarea-placeholder-color: color-mix(in srgb, var(--agentskin-muted) 55%, transparent) !important;
+  --ffc-text-primary-0085: color-mix(in srgb, var(--agentskin-text) 85%, transparent) !important;
+
+  /* --s-color-brand-primary-* (drives ALL primary buttons, links, active states) */
+  --s-color-brand-primary-default: var(--agentskin-accent) !important;
+  --s-color-brand-primary-default-raw: var(--agentskin-accent-raw) !important;
+  --s-color-brand-primary-hover: color-mix(in srgb, var(--agentskin-accent) 85%, black) !important;
+  --s-color-brand-primary-hover-raw: var(--agentskin-accent-raw) !important;
+  --s-color-brand-primary-pressed: color-mix(in srgb, var(--agentskin-accent) 70%, black) !important;
+  --s-color-brand-primary-pressed-raw: var(--agentskin-accent-raw) !important;
+  --s-color-brand-primary-disable: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
+  --s-color-brand-primary-transparent-1: color-mix(in srgb, var(--agentskin-accent) 6%, transparent) !important;
+  --s-color-brand-primary-transparent-2: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+  --s-color-brand-primary-transparent-3: color-mix(in srgb, var(--agentskin-accent) 15%, transparent) !important;
+
+  /* --s-color-ai-* (AI button gradients) */
+  --s-color-ai-button: radial-gradient(105.79% 117.52% at 9.98% 22.03%, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 80%, black) 100%) !important;
+  --s-color-ai-button-fill: radial-gradient(125.81% 83.73% at 21.13% 50%, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 85%, black) 100%) !important;
+  --s-color-ai-text: linear-gradient(301deg, color-mix(in srgb, var(--agentskin-accent) 70%, #fff) 23.93%, var(--agentskin-accent) 92.76%) !important;
+  --s-color-ai-solid: radial-gradient(125.81% 83.73% at 21.13% 50%, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 85%, black) 100%) !important;
+  --s-color-ai-solid-disable: radial-gradient(125.81% 83.73% at 21.13% 50%, color-mix(in srgb, var(--agentskin-accent) 40%, transparent) 0%, color-mix(in srgb, var(--agentskin-accent) 34%, transparent) 100%) !important;
+  --s-color-ai-button-fill-disable: radial-gradient(163.38% 139.31% at 19.33% 22.04%, color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 0%, color-mix(in srgb, var(--agentskin-accent) 24%, transparent) 100%) !important;
+  --s-color-ai-line: linear-gradient(301deg, color-mix(in srgb, var(--agentskin-accent) 65%, #fff) 23.93%, var(--agentskin-accent) 92.76%) !important;
+  --s-color-ai-line-disable: linear-gradient(301deg, color-mix(in srgb, var(--agentskin-accent) 20%, transparent) 23.93%, color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 92.76%) !important;
+
+  /* System / accent colors */
+  --s-color-system-info: var(--agentskin-accent) !important;
+  --s-color-system-info-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-info-lighten: color-mix(in srgb, var(--agentskin-accent) 15%, var(--agentskin-bg)) !important;
+  --s-color-system-info-lighten-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-info-darken: color-mix(in srgb, var(--agentskin-accent) 80%, black) !important;
+  --s-color-system-info-darken-raw: var(--agentskin-accent-raw) !important;
+  --s-color-accents-blue: var(--agentskin-accent) !important;
+  --s-color-accents-blue-raw: var(--agentskin-accent-raw) !important;
+  --s-color-suggest: color-mix(in srgb, var(--agentskin-accent) 70%, #fff) !important;
+  --s-color-suggest-raw: var(--agentskin-accent-raw) !important;
+
+  /* Backgrounds (surfaces) */
+  --s-color-bg-quaternary: color-mix(in srgb, var(--agentskin-surface) 80%, var(--agentskin-bg)) !important;
+  --s-color-bg-quaternary-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-base: color-mix(in srgb, var(--agentskin-surface) 88%, var(--agentskin-bg)) !important;
+  --s-color-bg-base-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-content-base: color-mix(in srgb, var(--agentskin-surface) 94%, var(--agentskin-bg)) !important;
+  --s-color-bg-content-base-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-disable: color-mix(in srgb, var(--agentskin-muted) 35%, var(--agentskin-surface)) !important;
+  --s-color-bg-disable-raw: var(--agentskin-muted-raw) !important;
+  --s-color-bg-outlined-btn: var(--agentskin-surface) !important;
+  --s-color-bg-outlined-btn-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-outlined-btn-hover: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-outlined-btn-hover-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-native-dialog: color-mix(in srgb, var(--agentskin-surface) 92%, var(--agentskin-bg)) !important;
+  --s-color-bg-native-dialog-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-native-spotlight: color-mix(in srgb, var(--agentskin-surface) 60%, transparent) !important;
+  --s-color-bg-native-spotlight-raw: var(--agentskin-surface-raw) !important;
+
+  /* PC-specific backgrounds */
+  --s-bg-pc-base-grey: color-mix(in srgb, var(--agentskin-surface) 90%, var(--agentskin-bg)) !important;
+  --s-bg-pc-base-grey-raw: var(--agentskin-surface-raw) !important;
+  --s-bg-pc-base-systemblur: color-mix(in srgb, var(--agentskin-surface) 60%, transparent) !important;
+  --s-bg-pc-base-systemblur-raw: var(--agentskin-surface-raw) !important;
+  --s-bg-pc-body: color-mix(in srgb, var(--agentskin-surface) 50%, transparent) !important;
+  --s-bg-pc-body-raw: var(--agentskin-surface-raw) !important;
+  --s-bg-pc-tabbar: color-mix(in srgb, var(--agentskin-surface) 78%, var(--agentskin-bg)) !important;
+  --s-bg-pc-tabbar-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-PC-base-grey: color-mix(in srgb, var(--agentskin-surface) 90%, var(--agentskin-bg)) !important;
+  --s-color-bg-PC-base-systemblur: color-mix(in srgb, var(--agentskin-surface) 60%, transparent) !important;
+  --s-color-bg-pc-body: color-mix(in srgb, var(--agentskin-surface) 50%, transparent) !important;
+  --s-color-bg-pc-body-active: color-mix(in srgb, var(--agentskin-surface) 70%, transparent) !important;
+
+  /* Borders */
+  --s-color-border-primary: color-mix(in srgb, var(--agentskin-border) 60%, transparent) !important;
+  --s-color-border-primary-raw: var(--agentskin-accent-raw) !important;
+  --s-color-border-card: var(--agentskin-border) !important;
+  --s-color-border-card-raw: var(--agentskin-accent-raw) !important;
+  --s-color-border-quaternary: color-mix(in srgb, var(--agentskin-border) 30%, transparent) !important;
+  --s-color-border-quaternary-raw: var(--agentskin-accent-raw) !important;
+
+  /* Fills */
+  --s-color-fill-secondary: color-mix(in srgb, var(--agentskin-border) 50%, var(--agentskin-surface)) !important;
+
+  /* Invert/inverse backgrounds */
+  --s-color-bg-invert-primary: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-invert-primary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-invert-secondary: color-mix(in srgb, var(--agentskin-surface-elevated) 88%, var(--agentskin-bg)) !important;
+  --s-color-bg-invert-secondary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-invert-tertiary: color-mix(in srgb, var(--agentskin-surface-elevated) 80%, var(--agentskin-bg)) !important;
+  --s-color-bg-invert-tertiary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-invert-quaternary: color-mix(in srgb, var(--agentskin-surface-elevated) 70%, var(--agentskin-bg)) !important;
+  --s-color-bg-invert-quaternary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-inverse-primary: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-inverse-primary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-inverse-secondary: color-mix(in srgb, var(--agentskin-surface-elevated) 88%, var(--agentskin-bg)) !important;
+  --s-color-bg-inverse-secondary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-inverse-tertiary: color-mix(in srgb, var(--agentskin-surface-elevated) 80%, var(--agentskin-bg)) !important;
+  --s-color-bg-inverse-tertiary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-inverse-quarternary: color-mix(in srgb, var(--agentskin-surface-elevated) 70%, var(--agentskin-bg)) !important;
+  --s-color-bg-inverse-quarternary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-inverse-disable: color-mix(in srgb, var(--agentskin-muted) 40%, var(--agentskin-surface)) !important;
+  --s-color-bg-inverse-disable-raw: var(--agentskin-muted-raw) !important;
+  --s-color-bg-inverse-trans: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --s-color-bg-inverse-trans-tertiary: color-mix(in srgb, var(--agentskin-text) 3%, transparent) !important;
+  --s-color-bg-inverse-trans-quarternary: color-mix(in srgb, var(--agentskin-text) 2%, transparent) !important;
+
+  /* Invert/intact text */
+  --s-color-text-invert-primary: var(--agentskin-text) !important;
+  --s-color-text-invert-primary-raw: var(--agentskin-text-raw) !important;
+  --s-color-text-invert-secondary: color-mix(in srgb, var(--agentskin-text) 85%, transparent) !important;
+  --s-color-text-invert-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --s-color-text-invert-quaternary: color-mix(in srgb, var(--agentskin-muted) 50%, transparent) !important;
+  --s-color-text-invert-disable: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+  --s-color-text-intact-primary: var(--agentskin-text) !important;
+  --s-color-text-intact-primary-raw: var(--agentskin-text-raw) !important;
+  --s-color-text-intact-secondary: color-mix(in srgb, var(--agentskin-text) 85%, transparent) !important;
+  --s-color-text-intact-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --s-color-text-intact-quaternary: color-mix(in srgb, var(--agentskin-muted) 50%, transparent) !important;
+  --s-color-text-intact-disable: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+
+  /* Raw background values */
+  --s-color-bg-primary-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-secondary-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-tertiary-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-float-raw: var(--agentskin-surface-elevated-raw) !important;
+
+  /* Invert borders */
+  --s-color-border-invert-primary: color-mix(in srgb, var(--agentskin-border) 60%, transparent) !important;
+  --s-color-border-invert-primary-raw: var(--agentskin-accent-raw) !important;
+  --s-color-border-invert-tertiary: color-mix(in srgb, var(--agentskin-border) 30%, transparent) !important;
+  --s-color-border-invert-tertiary-raw: var(--agentskin-accent-raw) !important;
+  --s-color-border-secondary-raw: var(--agentskin-accent-raw) !important;
+  --s-color-border-tertiary-raw: var(--agentskin-accent-raw) !important;
+
+  /* System status colors */
+  --s-color-system-success: color-mix(in srgb, var(--agentskin-accent) 70%, #fff) !important;
+  --s-color-system-success-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-success-lighten: color-mix(in srgb, var(--agentskin-accent) 12%, var(--agentskin-bg)) !important;
+  --s-color-system-success-lighten-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-success-darken: color-mix(in srgb, var(--agentskin-accent) 80%, black) !important;
+  --s-color-system-success-darken-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-alert: var(--agentskin-accent) !important;
+  --s-color-system-alert-lighten: color-mix(in srgb, var(--agentskin-accent) 12%, var(--agentskin-bg)) !important;
+  --s-color-system-alert-lighten-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-alert-darken: color-mix(in srgb, var(--agentskin-accent) 80%, black) !important;
+  --s-color-system-alert-darken-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-warning: color-mix(in srgb, var(--agentskin-accent) 85%, #fff) !important;
+  --s-color-system-warning-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-warning-lighten: color-mix(in srgb, var(--agentskin-accent) 12%, var(--agentskin-bg)) !important;
+  --s-color-system-warning-lighten-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-warning-darken: color-mix(in srgb, var(--agentskin-accent) 85%, black) !important;
+  --s-color-system-warning-darken-raw: var(--agentskin-accent-raw) !important;
+
+  /* Accent palette — all tied to theme accent/secondary */
+  --s-color-accents-grey-pale: color-mix(in srgb, var(--agentskin-muted) 15%, var(--agentskin-surface)) !important;
+  --s-color-accents-grey-pale-raw: var(--agentskin-muted-raw) !important;
+  --s-color-accents-grey: var(--agentskin-muted) !important;
+  --s-color-accents-grey-raw: var(--agentskin-muted-raw) !important;
+  --s-color-accents-green: color-mix(in srgb, var(--agentskin-accent) 80%, #fff) !important;
+  --s-color-accents-green-raw: var(--agentskin-accent-raw) !important;
+  --s-color-accents-yellow: color-mix(in srgb, var(--agentskin-accent) 60%, #fff) !important;
+  --s-color-accents-yellow-raw: var(--agentskin-accent-raw) !important;
+  --s-color-accents-red: color-mix(in srgb, var(--agentskin-accent) 80%, black) !important;
+  --s-color-accents-red-raw: var(--agentskin-accent-raw) !important;
+  --s-color-accents-purple: var(--agentskin-secondary) !important;
+  --s-color-accents-purple-raw: var(--agentskin-secondary-raw) !important;
+  --s-color-accents-orange: color-mix(in srgb, var(--agentskin-accent) 90%, black) !important;
+  --s-color-accents-orange-raw: var(--agentskin-accent-raw) !important;
+
+  /* Alert/warning/success semantic */
+  --s-color-alert: var(--agentskin-accent) !important;
+  --s-color-warning: color-mix(in srgb, var(--agentskin-accent) 85%, #fff) !important;
+  --s-color-warning-raw: var(--agentskin-accent-raw) !important;
+  --s-color-success: color-mix(in srgb, var(--agentskin-accent) 70%, #fff) !important;
+  --s-color-success-raw: var(--agentskin-accent-raw) !important;
+  --s-color-element-comment: color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
+  --s-color-element-comment-raw: var(--agentskin-accent-raw) !important;
+
+  /* Chat-level token overrides */
+  --chat-bg-color: transparent !important;
+  --chat-md-codeblock-bg-color: var(--agentskin-code-bg) !important;
+  --chat-md-codeblock-header-bg-color: var(--agentskin-surface) !important;
+  --chat-task-card-container-bg-color: color-mix(in srgb, var(--agentskin-surface) 88%, var(--agentskin-bg)) !important;
+
+  /* FFC static/neutral tokens */
+  --ffc-text-static-white: var(--agentskin-text) !important;
+  --ffc-static-black: var(--agentskin-bg) !important;
+  --ffc-button-brand-icon-color: var(--agentskin-bg) !important;
+  --ffc-neutral-00-60: color-mix(in srgb, var(--agentskin-text) 60%, transparent) !important;
+  --ffc-neutral-1000-5: color-mix(in srgb, var(--agentskin-muted) 5%, transparent) !important;
+  --ffc-skeleton-start: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --ffc-skeleton-middle: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
+
+  /* Brand shadows — disabled to prevent jarring line above input area */
+  --s-shadow-lv1-brand: none !important;
+  --s-shadow-lv2-brand: none !important;
+  --s-shadow-lv3-brand: none !important;
+  --s-shadow-lv4-brand: none !important;
+  --s-shadow-lv5-brand: none !important;
+  --s-shadow-level0-brand: none !important;
+  --s-shadow-level1-brand: none !important;
+  --s-shadow-level2-brand: none !important;
+  --s-shadow-level3-brand: none !important;
+  --s-shadow-level4-brand: none !important;
+  --s-shadow-level5-brand: none !important;
+
+  /* Input guidance tokens */
+  --input-guidance-input-container-background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 78%, var(--agentskin-accent) 22%) 45%, transparent) !important;
+  --input-guidance-input-container-border: color-mix(in srgb, var(--agentskin-accent) 15%, transparent) !important;
+  --input-guidance-input-editor-color: var(--agentskin-text) !important;
+  --input-guidance-input-editor-placeholder-color: color-mix(in srgb, var(--agentskin-muted) 60%, transparent) !important;
+  --left-side: var(--agentskin-surface) !important;
+}
+
+/* ===== REAL Doubao token system: Semi Design (--semi-color-*) =====
+   Probe (2026-07-23) confirmed Doubao ships 268 --semi-* tokens + 12 --gray*
+   + 64 semantic vars. These are the tokens that ACTUALLY drive the UI.
+   The --dbx-*/--s-color-*/--ffc-* above are dead/legacy but kept for safety.
+   Selector: html.agentskin-host-doubao:root (0,2,1) + adoptedStyleSheets
+   cascade position beats Doubao's own :root[data-theme] rules. */
+html.agentskin-host-doubao:root {
+  /* Background layers */
+  --semi-color-bg-0: var(--agentskin-bg) !important;
+  --semi-color-bg-1: var(--agentskin-surface) !important;
+  --semi-color-bg-2: var(--agentskin-surface-elevated) !important;
+  --semi-color-bg-3: var(--agentskin-surface-elevated) !important;
+  --semi-color-bg-4: color-mix(in srgb, var(--agentskin-surface-elevated) 92%, #fff) !important;
+
+  /* Text hierarchy — CRITICAL: these control actual text color */
+  --semi-color-text-0: var(--agentskin-text) !important;
+  --semi-color-text-1: var(--agentskin-muted) !important;
+  --semi-color-text-2: color-mix(in srgb, var(--agentskin-muted) 75%, transparent) !important;
+  --semi-color-text-3: color-mix(in srgb, var(--agentskin-muted) 45%, transparent) !important;
+
+  /* Primary / brand */
+  --semi-color-primary: var(--agentskin-accent) !important;
+  --semi-color-primary-hover: color-mix(in srgb, var(--agentskin-accent) 88%, black) !important;
+  --semi-color-primary-active: color-mix(in srgb, var(--agentskin-accent) 76%, black) !important;
+  --semi-color-primary-light-default: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --semi-color-primary-light-hover: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --semi-color-primary-light-active: color-mix(in srgb, var(--agentskin-accent) 24%, transparent) !important;
+  --semi-color-primary-disabled: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
+
+  /* Secondary / tertiary */
+  --semi-color-secondary: var(--agentskin-secondary) !important;
+  --semi-color-secondary-hover: color-mix(in srgb, var(--agentskin-secondary) 88%, black) !important;
+  --semi-color-secondary-active: color-mix(in srgb, var(--agentskin-secondary) 76%, black) !important;
+  --semi-color-secondary-light-default: color-mix(in srgb, var(--agentskin-secondary) 12%, transparent) !important;
+  --semi-color-secondary-light-hover: color-mix(in srgb, var(--agentskin-secondary) 18%, transparent) !important;
+  --semi-color-tertiary: color-mix(in srgb, var(--agentskin-text) 6%, transparent) !important;
+  --semi-color-tertiary-hover: color-mix(in srgb, var(--agentskin-text) 10%, transparent) !important;
+  --semi-color-tertiary-light-default: color-mix(in srgb, var(--agentskin-text) 6%, transparent) !important;
+
+  /* Fills */
+  --semi-color-fill-0: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --semi-color-fill-1: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
+  --semi-color-fill-2: color-mix(in srgb, var(--agentskin-text) 12%, transparent) !important;
+
+  /* Border / disabled */
+  --semi-color-border: var(--agentskin-border) !important;
+  --semi-color-disabled-bg: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --semi-color-disabled-border: color-mix(in srgb, var(--agentskin-border) 50%, transparent) !important;
+  --semi-color-disabled-fill: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --semi-color-disabled-text: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+
+  /* Links / highlight / shadow / nav */
+  --semi-color-link: var(--agentskin-accent) !important;
+  --semi-color-link-hover: color-mix(in srgb, var(--agentskin-accent) 88%, black) !important;
+  --semi-color-link-active: color-mix(in srgb, var(--agentskin-accent) 76%, black) !important;
+  --semi-color-link-visited: color-mix(in srgb, var(--agentskin-accent) 70%, transparent) !important;
+  --semi-color-highlight: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --semi-color-highlight-bg: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+  --semi-color-shadow: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --semi-color-nav-bg: var(--agentskin-surface) !important;
+  --semi-color-overlay-bg: color-mix(in srgb, var(--agentskin-bg) 60%, transparent) !important;
+
+  /* Gray ramp (gray1 lightest → gray12 darkest in dark mode) */
+  --gray1: var(--agentskin-text) !important;
+  --gray2: color-mix(in srgb, var(--agentskin-text) 90%, var(--agentskin-bg)) !important;
+  --gray3: color-mix(in srgb, var(--agentskin-text) 80%, var(--agentskin-bg)) !important;
+  --gray4: color-mix(in srgb, var(--agentskin-text) 70%, var(--agentskin-bg)) !important;
+  --gray5: color-mix(in srgb, var(--agentskin-text) 60%, var(--agentskin-bg)) !important;
+  --gray6: color-mix(in srgb, var(--agentskin-text) 50%, var(--agentskin-bg)) !important;
+  --gray7: color-mix(in srgb, var(--agentskin-text) 40%, var(--agentskin-bg)) !important;
+  --gray8: color-mix(in srgb, var(--agentskin-text) 30%, var(--agentskin-bg)) !important;
+  --gray9: color-mix(in srgb, var(--agentskin-text) 22%, var(--agentskin-bg)) !important;
+  --gray10: color-mix(in srgb, var(--agentskin-text) 15%, var(--agentskin-bg)) !important;
+  --gray11: color-mix(in srgb, var(--agentskin-text) 8%, var(--agentskin-bg)) !important;
+  --gray12: var(--agentskin-bg) !important;
+
+  /* Semantic vars (verified via CDP probe 2026-07-23) */
+  --normal-bg: var(--agentskin-surface) !important;
+  --normal-bg-hover: var(--agentskin-surface-elevated) !important;
+  --normal-text: var(--agentskin-text) !important;
+  --normal-border: var(--agentskin-border) !important;
+  --hover-bg-color: color-mix(in srgb, var(--agentskin-text) 6%, transparent) !important;
+  --active-bg-color: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+  --static-bg-color: var(--agentskin-bg) !important;
+  --error-bg: rgba(255, 77, 79, 0.12) !important;
+  --error-border: rgba(255, 77, 79, 0.4) !important;
+  --error-text: rgb(255, 99, 101) !important;
+  --warning-bg: rgba(255, 168, 0, 0.12) !important;
+  --warning-border: rgba(255, 168, 0, 0.4) !important;
+  --warning-text: rgb(255, 183, 77) !important;
+  --success-bg: rgba(0, 184, 96, 0.12) !important;
+  --success-border: rgba(0, 184, 96, 0.4) !important;
+  --success-text: rgb(38, 200, 120) !important;
+  --info-bg: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --info-border: color-mix(in srgb, var(--agentskin-accent) 40%, transparent) !important;
+  --info-text: var(--agentskin-accent) !important;
+  --scrollbar-color-active: color-mix(in srgb, var(--agentskin-accent) 50%, transparent) !important;
+  --scrollbar-color-hover: color-mix(in srgb, var(--agentskin-accent) 40%, transparent) !important;
+  --scrollthumbcolor: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
+}
+
+/* ===== Body-level --semi-color-* mirror =====
+   Doubao's own CSS redeclares the ENTIRE --semi-color-* family (the REAL Semi
+   Design token system that drives the UI — confirmed via CDP probe) directly
+   on `body` via `body, body[theme-mode="dark"] .semi-always-light { ... }`
+   (non-important, body segment 0,0,1). A direct declaration on body beats the
+   inherited :root override above, so every Semi component (dropdown, tooltip,
+   modal, date-picker, button, notification) was silently falling back to
+   Doubao's stock palette instead of our theme.
+   This body-level block (0,2,2) !important wins on the same element and
+   re-establishes themed values for body and all normal descendants.
+   Mirrors the :root block's --semi-color-* definitions 1:1. */
+html.agentskin-host-doubao:root body {
+  /* Background layers */
+  --semi-color-bg-0: var(--agentskin-bg) !important;
+  --semi-color-bg-1: var(--agentskin-surface) !important;
+  --semi-color-bg-2: var(--agentskin-surface-elevated) !important;
+  --semi-color-bg-3: var(--agentskin-surface-elevated) !important;
+  --semi-color-bg-4: color-mix(in srgb, var(--agentskin-surface-elevated) 92%, #fff) !important;
+
+  /* Text hierarchy */
+  --semi-color-text-0: var(--agentskin-text) !important;
+  --semi-color-text-1: var(--agentskin-muted) !important;
+  --semi-color-text-2: color-mix(in srgb, var(--agentskin-muted) 75%, transparent) !important;
+  --semi-color-text-3: color-mix(in srgb, var(--agentskin-muted) 45%, transparent) !important;
+
+  /* Primary / brand */
+  --semi-color-primary: var(--agentskin-accent) !important;
+  --semi-color-primary-hover: color-mix(in srgb, var(--agentskin-accent) 88%, black) !important;
+  --semi-color-primary-active: color-mix(in srgb, var(--agentskin-accent) 76%, black) !important;
+  --semi-color-primary-light-default: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --semi-color-primary-light-hover: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --semi-color-primary-light-active: color-mix(in srgb, var(--agentskin-accent) 24%, transparent) !important;
+  --semi-color-primary-disabled: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
+
+  /* Secondary / tertiary */
+  --semi-color-secondary: var(--agentskin-secondary) !important;
+  --semi-color-secondary-hover: color-mix(in srgb, var(--agentskin-secondary) 88%, black) !important;
+  --semi-color-secondary-active: color-mix(in srgb, var(--agentskin-secondary) 76%, black) !important;
+  --semi-color-secondary-light-default: color-mix(in srgb, var(--agentskin-secondary) 12%, transparent) !important;
+  --semi-color-secondary-light-hover: color-mix(in srgb, var(--agentskin-secondary) 18%, transparent) !important;
+  --semi-color-tertiary: color-mix(in srgb, var(--agentskin-text) 6%, transparent) !important;
+  --semi-color-tertiary-hover: color-mix(in srgb, var(--agentskin-text) 10%, transparent) !important;
+  --semi-color-tertiary-light-default: color-mix(in srgb, var(--agentskin-text) 6%, transparent) !important;
+
+  /* Fills */
+  --semi-color-fill-0: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --semi-color-fill-1: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
+  --semi-color-fill-2: color-mix(in srgb, var(--agentskin-text) 12%, transparent) !important;
+
+  /* Border / disabled */
+  --semi-color-border: var(--agentskin-border) !important;
+  --semi-color-disabled-bg: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --semi-color-disabled-border: color-mix(in srgb, var(--agentskin-border) 50%, transparent) !important;
+  --semi-color-disabled-fill: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --semi-color-disabled-text: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+
+  /* Links / highlight / shadow / nav */
+  --semi-color-link: var(--agentskin-accent) !important;
+  --semi-color-link-hover: color-mix(in srgb, var(--agentskin-accent) 88%, black) !important;
+  --semi-color-link-active: color-mix(in srgb, var(--agentskin-accent) 76%, black) !important;
+  --semi-color-link-visited: color-mix(in srgb, var(--agentskin-accent) 70%, transparent) !important;
+  --semi-color-highlight: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --semi-color-highlight-bg: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+  --semi-color-shadow: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --semi-color-nav-bg: var(--agentskin-surface) !important;
+  --semi-color-overlay-bg: color-mix(in srgb, var(--agentskin-bg) 60%, transparent) !important;
+
+  /* ===== Semi semantic color family (2026-08-19) =====
+     Reverse blind-spot scan (63551) found the semantic states
+     (info/success/warning/danger/black/white/default + hover/active/disabled)
+     + md-box-samantha markdown kit + color-link-text were unthemed.
+     Semantic hues kept native (info/success/warning/danger) — only surface/
+     text/neutral/links themed, mirroring the palette contract. */
+  --semi-color-info: color-mix(in srgb, var(--agentskin-accent) 88%, black) !important;
+  --semi-color-info-hover: color-mix(in srgb, var(--agentskin-accent) 82%, black) !important;
+  --semi-color-info-active: color-mix(in srgb, var(--agentskin-accent) 74%, black) !important;
+  --semi-color-info-disabled: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
+  --semi-color-success: #2ea043 !important;
+  --semi-color-success-hover: #3fb950 !important;
+  --semi-color-success-active: #2ea043 !important;
+  --semi-color-success-disabled: color-mix(in srgb, #2ea043 30%, transparent) !important;
+  --semi-color-warning: #f5a524 !important;
+  --semi-color-warning-hover: #f7b53d !important;
+  --semi-color-warning-active: #f5a524 !important;
+  --semi-color-warning-disabled: color-mix(in srgb, #f5a524 30%, transparent) !important;
+  --semi-color-danger: #e5484d !important;
+  --semi-color-danger-hover: #ed5f63 !important;
+  --semi-color-danger-active: #e5484d !important;
+  --semi-color-danger-disabled: color-mix(in srgb, #e5484d 30%, transparent) !important;
+  --semi-color-black: var(--agentskin-bg) !important;
+  --semi-color-white: var(--agentskin-text) !important;
+  --semi-color-default: var(--agentskin-surface) !important;
+  --semi-color-default-hover: color-mix(in srgb, var(--agentskin-surface) 90%, var(--agentskin-accent) 10%) !important;
+  --semi-color-default-active: color-mix(in srgb, var(--agentskin-surface) 80%, var(--agentskin-accent) 20%) !important;
+
+  /* Markdown kit */
+  --md-box-samantha-normal-text-color: var(--agentskin-text) !important;
+  --md-box-samantha-deep-text-color: var(--agentskin-text) !important;
+  --md-box-samantha-li-maker-color: var(--agentskin-accent) !important;
+  --md-box-samantha-split-line-color: var(--agentskin-border) !important;
+  --md-box-samantha-blockquote-left-border-color: color-mix(in srgb, var(--agentskin-accent) 55%, transparent) !important;
+
+  /* Links */
+  --color-link-text: var(--agentskin-accent) !important;
+  --color-link-text-active: color-mix(in srgb, var(--agentskin-accent) 80%, black) !important;
+}
+
+/* ===== scrollbar thumb shadowing patch =====
+   Doubao's CSS-module scrollbar thumb (show-scrollbar-thumb-<hash>) declares
+   --scrollbar-color-hover / --scrollbar-color-active directly on the scroller
+   (0,1,0), shadowing the :root values with Doubao's stock gray-blue (#7a8a99).
+   The [class*="show-scrollbar-thumb"] substring selector (0,2,1) !important is
+   stable across CSS-module hash rotations, beats the (0,1,0) hash class, and
+   covers all hash variants (active + lazy), restoring our accent-tinted
+   scrollbar. */
+html.agentskin-host-doubao:root [class*="show-scrollbar-thumb"] {
+  --scrollbar-color-hover: color-mix(in srgb, var(--agentskin-accent) 40%, transparent) !important;
+  --scrollbar-color-active: color-mix(in srgb, var(--agentskin-accent) 50%, transparent) !important;
+}
+
+/* ===== .semi-popupview-* shadowing patch =====
+   Doubao's own CSS redefines --s-color-* (417 dark / 276 light) directly on
+   .semi-popupview-dark / .semi-popupview-light with !important, which shadows
+   the body-level overrides above inside lazy-loaded pop-up layers (tooltips,
+   dropdowns, context menus). These selectors (0,2,2) beat the popupview's own
+   !important declarations (0,1,0) so our themed values stay applied in popups.
+   Mirrors the body block's --s-color-* definitions 1:1. */
+html.agentskin-host-doubao:root .semi-popupview-dark,
+html.agentskin-host-doubao:root .semi-popupview-light {
+  /* --s-color-bg-* (surfaces) */
+  --s-color-bg-body: transparent !important;
+  --s-color-bg-body-raw: 0, 0, 0 !important;
+  --s-color-bg-primary: var(--agentskin-surface) !important;
+  --s-color-bg-secondary: color-mix(in srgb, var(--agentskin-surface) 92%, transparent) !important;
+  --s-color-bg-tertiary: color-mix(in srgb, var(--agentskin-surface) 85%, transparent) !important;
+  --s-color-bg-trans: color-mix(in srgb, var(--agentskin-text) 5%, transparent) !important;
+  --s-color-bg-trans-raw: var(--agentskin-text-raw) !important;
+  --s-color-bg-trans-tertiary: color-mix(in srgb, var(--agentskin-text) 3%, transparent) !important;
+  --s-color-bg-trans-tertiary-raw: var(--agentskin-text-raw) !important;
+  --s-color-bg-trans-primary: color-mix(in srgb, var(--agentskin-text) 6%, transparent) !important;
+  --s-color-bg-trans-primary-raw: var(--agentskin-text-raw) !important;
+  --s-color-bg-trans-secondary: color-mix(in srgb, var(--agentskin-text) 10%, transparent) !important;
+  --s-color-bg-trans-secondary-raw: var(--agentskin-text-raw) !important;
+  --s-color-bg-float: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-dialogs: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-dialogs-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-dialogs-grey: var(--agentskin-surface) !important;
+  --s-color-bg-tip: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-tip-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-dm-fill: transparent !important;
+  --s-color-bg-dm-fill-raw: var(--agentskin-text-raw) !important;
+  --s-color-bg-toolbox-item: var(--agentskin-surface) !important;
+  --s-color-bg-toolbox-item-hover: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-guide-btn: var(--agentskin-surface) !important;
+  --s-color-bg-guide-btn-hover: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+
+  /* --s-color-text-* */
+  --s-color-text-primary: var(--agentskin-text) !important;
+  --s-color-text-primary-raw: var(--agentskin-text-raw) !important;
+  --s-color-text-secondary: var(--agentskin-muted) !important;
+  --s-color-text-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --s-color-text-quaternary: color-mix(in srgb, var(--agentskin-muted) 50%, transparent) !important;
+  --s-color-text-disable: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+
+  /* --s-color-border-* */
+  --s-color-border-tertiary: var(--agentskin-border) !important;
+  --s-color-border-secondary: color-mix(in srgb, var(--agentskin-accent) 25%, transparent) !important;
+  --s-color-alert-raw: var(--agentskin-accent-raw) !important;
+
+  /* --s-color-brand-primary-* (primary buttons, links, active states) */
+  --s-color-brand-primary-default: var(--agentskin-accent) !important;
+  --s-color-brand-primary-default-raw: var(--agentskin-accent-raw) !important;
+  --s-color-brand-primary-hover: color-mix(in srgb, var(--agentskin-accent) 85%, black) !important;
+  --s-color-brand-primary-hover-raw: var(--agentskin-accent-raw) !important;
+  --s-color-brand-primary-pressed: color-mix(in srgb, var(--agentskin-accent) 70%, black) !important;
+  --s-color-brand-primary-pressed-raw: var(--agentskin-accent-raw) !important;
+  --s-color-brand-primary-disable: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
+  --s-color-brand-primary-transparent-1: color-mix(in srgb, var(--agentskin-accent) 6%, transparent) !important;
+  --s-color-brand-primary-transparent-2: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+  --s-color-brand-primary-transparent-3: color-mix(in srgb, var(--agentskin-accent) 15%, transparent) !important;
+
+  /* --s-color-ai-* (AI button gradients) */
+  --s-color-ai-button: radial-gradient(105.79% 117.52% at 9.98% 22.03%, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 80%, black) 100%) !important;
+  --s-color-ai-button-fill: radial-gradient(125.81% 83.73% at 21.13% 50%, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 85%, black) 100%) !important;
+  --s-color-ai-text: linear-gradient(301deg, color-mix(in srgb, var(--agentskin-accent) 70%, #fff) 23.93%, var(--agentskin-accent) 92.76%) !important;
+  --s-color-ai-solid: radial-gradient(125.81% 83.73% at 21.13% 50%, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 85%, black) 100%) !important;
+  --s-color-ai-solid-disable: radial-gradient(125.81% 83.73% at 21.13% 50%, color-mix(in srgb, var(--agentskin-accent) 40%, transparent) 0%, color-mix(in srgb, var(--agentskin-accent) 34%, transparent) 100%) !important;
+  --s-color-ai-button-fill-disable: radial-gradient(163.38% 139.31% at 19.33% 22.04%, color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 0%, color-mix(in srgb, var(--agentskin-accent) 24%, transparent) 100%) !important;
+  --s-color-ai-line: linear-gradient(301deg, color-mix(in srgb, var(--agentskin-accent) 65%, #fff) 23.93%, var(--agentskin-accent) 92.76%) !important;
+  --s-color-ai-line-disable: linear-gradient(301deg, color-mix(in srgb, var(--agentskin-accent) 20%, transparent) 23.93%, color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 92.76%) !important;
+
+  /* System / accent colors */
+  --s-color-system-info: var(--agentskin-accent) !important;
+  --s-color-system-info-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-info-lighten: color-mix(in srgb, var(--agentskin-accent) 15%, var(--agentskin-bg)) !important;
+  --s-color-system-info-lighten-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-info-darken: color-mix(in srgb, var(--agentskin-accent) 80%, black) !important;
+  --s-color-system-info-darken-raw: var(--agentskin-accent-raw) !important;
+  --s-color-accents-blue: var(--agentskin-accent) !important;
+  --s-color-accents-blue-raw: var(--agentskin-accent-raw) !important;
+  --s-color-suggest: color-mix(in srgb, var(--agentskin-accent) 70%, #fff) !important;
+  --s-color-suggest-raw: var(--agentskin-accent-raw) !important;
+
+  /* Backgrounds (surfaces) */
+  --s-color-bg-quaternary: color-mix(in srgb, var(--agentskin-surface) 80%, var(--agentskin-bg)) !important;
+  --s-color-bg-quaternary-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-base: color-mix(in srgb, var(--agentskin-surface) 88%, var(--agentskin-bg)) !important;
+  --s-color-bg-base-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-content-base: color-mix(in srgb, var(--agentskin-surface) 94%, var(--agentskin-bg)) !important;
+  --s-color-bg-content-base-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-disable: color-mix(in srgb, var(--agentskin-muted) 35%, var(--agentskin-surface)) !important;
+  --s-color-bg-disable-raw: var(--agentskin-muted-raw) !important;
+  --s-color-bg-outlined-btn: var(--agentskin-surface) !important;
+  --s-color-bg-outlined-btn-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-outlined-btn-hover: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-outlined-btn-hover-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-native-dialog: color-mix(in srgb, var(--agentskin-surface) 92%, var(--agentskin-bg)) !important;
+  --s-color-bg-native-dialog-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-native-spotlight: color-mix(in srgb, var(--agentskin-surface) 60%, transparent) !important;
+  --s-color-bg-native-spotlight-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-PC-base-grey: color-mix(in srgb, var(--agentskin-surface) 90%, var(--agentskin-bg)) !important;
+  --s-color-bg-PC-base-systemblur: color-mix(in srgb, var(--agentskin-surface) 60%, transparent) !important;
+  --s-color-bg-pc-body: color-mix(in srgb, var(--agentskin-surface) 50%, transparent) !important;
+  --s-color-bg-pc-body-active: color-mix(in srgb, var(--agentskin-surface) 70%, transparent) !important;
+
+  /* Borders */
+  --s-color-border-primary: color-mix(in srgb, var(--agentskin-border) 60%, transparent) !important;
+  --s-color-border-primary-raw: var(--agentskin-accent-raw) !important;
+  --s-color-border-card: var(--agentskin-border) !important;
+  --s-color-border-card-raw: var(--agentskin-accent-raw) !important;
+  --s-color-border-quaternary: color-mix(in srgb, var(--agentskin-border) 30%, transparent) !important;
+  --s-color-border-quaternary-raw: var(--agentskin-accent-raw) !important;
+
+  /* Fills */
+  --s-color-fill-secondary: color-mix(in srgb, var(--agentskin-border) 50%, var(--agentskin-surface)) !important;
+
+  /* Invert/inverse backgrounds */
+  --s-color-bg-invert-primary: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-invert-primary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-invert-secondary: color-mix(in srgb, var(--agentskin-surface-elevated) 88%, var(--agentskin-bg)) !important;
+  --s-color-bg-invert-secondary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-invert-tertiary: color-mix(in srgb, var(--agentskin-surface-elevated) 80%, var(--agentskin-bg)) !important;
+  --s-color-bg-invert-tertiary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-invert-quaternary: color-mix(in srgb, var(--agentskin-surface-elevated) 70%, var(--agentskin-bg)) !important;
+  --s-color-bg-invert-quaternary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-inverse-primary: var(--agentskin-surface-elevated) !important;
+  --s-color-bg-inverse-primary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-inverse-secondary: color-mix(in srgb, var(--agentskin-surface-elevated) 88%, var(--agentskin-bg)) !important;
+  --s-color-bg-inverse-secondary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-inverse-tertiary: color-mix(in srgb, var(--agentskin-surface-elevated) 80%, var(--agentskin-bg)) !important;
+  --s-color-bg-inverse-tertiary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-inverse-quarternary: color-mix(in srgb, var(--agentskin-surface-elevated) 70%, var(--agentskin-bg)) !important;
+  --s-color-bg-inverse-quarternary-raw: var(--agentskin-surface-elevated-raw) !important;
+  --s-color-bg-inverse-disable: color-mix(in srgb, var(--agentskin-muted) 40%, var(--agentskin-surface)) !important;
+  --s-color-bg-inverse-disable-raw: var(--agentskin-muted-raw) !important;
+  --s-color-bg-inverse-trans: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --s-color-bg-inverse-trans-tertiary: color-mix(in srgb, var(--agentskin-text) 3%, transparent) !important;
+  --s-color-bg-inverse-trans-quarternary: color-mix(in srgb, var(--agentskin-text) 2%, transparent) !important;
+
+  /* Invert/intact text */
+  --s-color-text-invert-primary: var(--agentskin-text) !important;
+  --s-color-text-invert-primary-raw: var(--agentskin-text-raw) !important;
+  --s-color-text-invert-secondary: color-mix(in srgb, var(--agentskin-text) 85%, transparent) !important;
+  --s-color-text-invert-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --s-color-text-invert-quaternary: color-mix(in srgb, var(--agentskin-muted) 50%, transparent) !important;
+  --s-color-text-invert-disable: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+  --s-color-text-intact-primary: var(--agentskin-text) !important;
+  --s-color-text-intact-primary-raw: var(--agentskin-text-raw) !important;
+  --s-color-text-intact-secondary: color-mix(in srgb, var(--agentskin-text) 85%, transparent) !important;
+  --s-color-text-intact-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --s-color-text-intact-quaternary: color-mix(in srgb, var(--agentskin-muted) 50%, transparent) !important;
+  --s-color-text-intact-disable: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+
+  /* Raw background values */
+  --s-color-bg-primary-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-secondary-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-tertiary-raw: var(--agentskin-surface-raw) !important;
+  --s-color-bg-float-raw: var(--agentskin-surface-elevated-raw) !important;
+
+  /* Invert borders */
+  --s-color-border-invert-primary: color-mix(in srgb, var(--agentskin-border) 60%, transparent) !important;
+  --s-color-border-invert-primary-raw: var(--agentskin-accent-raw) !important;
+  --s-color-border-invert-tertiary: color-mix(in srgb, var(--agentskin-border) 30%, transparent) !important;
+  --s-color-border-invert-tertiary-raw: var(--agentskin-accent-raw) !important;
+  --s-color-border-secondary-raw: var(--agentskin-accent-raw) !important;
+  --s-color-border-tertiary-raw: var(--agentskin-accent-raw) !important;
+
+  /* System status colors */
+  --s-color-system-success: color-mix(in srgb, var(--agentskin-accent) 70%, #fff) !important;
+  --s-color-system-success-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-success-lighten: color-mix(in srgb, var(--agentskin-accent) 12%, var(--agentskin-bg)) !important;
+  --s-color-system-success-lighten-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-success-darken: color-mix(in srgb, var(--agentskin-accent) 80%, black) !important;
+  --s-color-system-success-darken-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-alert: var(--agentskin-accent) !important;
+  --s-color-system-alert-lighten: color-mix(in srgb, var(--agentskin-accent) 12%, var(--agentskin-bg)) !important;
+  --s-color-system-alert-lighten-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-alert-darken: color-mix(in srgb, var(--agentskin-accent) 80%, black) !important;
+  --s-color-system-alert-darken-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-warning: color-mix(in srgb, var(--agentskin-accent) 85%, #fff) !important;
+  --s-color-system-warning-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-warning-lighten: color-mix(in srgb, var(--agentskin-accent) 12%, var(--agentskin-bg)) !important;
+  --s-color-system-warning-lighten-raw: var(--agentskin-accent-raw) !important;
+  --s-color-system-warning-darken: color-mix(in srgb, var(--agentskin-accent) 85%, black) !important;
+  --s-color-system-warning-darken-raw: var(--agentskin-accent-raw) !important;
+
+  /* Accent palette — all tied to theme accent/secondary */
+  --s-color-accents-grey-pale: color-mix(in srgb, var(--agentskin-muted) 15%, var(--agentskin-surface)) !important;
+  --s-color-accents-grey-pale-raw: var(--agentskin-muted-raw) !important;
+  --s-color-accents-grey: var(--agentskin-muted) !important;
+  --s-color-accents-grey-raw: var(--agentskin-muted-raw) !important;
+  --s-color-accents-green: color-mix(in srgb, var(--agentskin-accent) 80%, #fff) !important;
+  --s-color-accents-green-raw: var(--agentskin-accent-raw) !important;
+  --s-color-accents-yellow: color-mix(in srgb, var(--agentskin-accent) 60%, #fff) !important;
+  --s-color-accents-yellow-raw: var(--agentskin-accent-raw) !important;
+  --s-color-accents-red: color-mix(in srgb, var(--agentskin-accent) 80%, black) !important;
+  --s-color-accents-red-raw: var(--agentskin-accent-raw) !important;
+  --s-color-accents-purple: var(--agentskin-secondary) !important;
+  --s-color-accents-purple-raw: var(--agentskin-secondary-raw) !important;
+  --s-color-accents-orange: color-mix(in srgb, var(--agentskin-accent) 90%, black) !important;
+  --s-color-accents-orange-raw: var(--agentskin-accent-raw) !important;
+
+  /* Alert/warning/success semantic */
+  --s-color-alert: var(--agentskin-accent) !important;
+  --s-color-warning: color-mix(in srgb, var(--agentskin-accent) 85%, #fff) !important;
+  --s-color-warning-raw: var(--agentskin-accent-raw) !important;
+  --s-color-success: color-mix(in srgb, var(--agentskin-accent) 70%, #fff) !important;
+  --s-color-success-raw: var(--agentskin-accent-raw) !important;
+  --s-color-element-comment: color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
+  --s-color-element-comment-raw: var(--agentskin-accent-raw) !important;
+}

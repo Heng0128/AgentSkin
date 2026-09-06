@@ -1,0 +1,58 @@
+{
+  "id": "exploding-tag-storm",
+  "name": "exploding-tag-storm",
+  "displayName": "Exploding Tag Storm",
+  "version": "2.0.0",
+  "description": "Blue-haired girl in an Akatsuki cloak amid a swirling blizzard of paper tags.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "anime",
+    "ninja",
+    "storm"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#83a39a",
+    "secondary": "#9cb5ae",
+    "background": "#131214",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#29282a",
+    "surfaceElevated": "#373637",
+    "border": "#2d2c2e",
+    "codeBackground": "#111012",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#242325",
+    "buttonBackground": "#83a39a",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#83a39a60"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

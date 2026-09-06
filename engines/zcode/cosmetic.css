@@ -1,0 +1,233 @@
+/* ============================================================
+   ENGINE: zcode — Layer 2: Cosmetic Enhancement
+   ============================================================ */
+
+/* === Selection === */
+html.agentskin-host-zcode ::selection {
+  background: var(
+    --agentskin-selection,
+    color-mix(in srgb, var(--agentskin-accent) 32%, transparent)
+  ) !important;
+}
+
+/* === Scrollbars === */
+html.agentskin-host-zcode ::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+html.agentskin-host-zcode ::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+html.agentskin-host-zcode ::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 30%, transparent) 100%
+  ) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+html.agentskin-host-zcode ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 50%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 50%, transparent) 100%
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* === Links === */
+html.agentskin-host-zcode a {
+  color: var(--agentskin-accent) !important;
+}
+
+/* === Composer / input focus === */
+html.agentskin-host-zcode [contenteditable="true"]:focus,
+html.agentskin-host-zcode textarea:focus,
+html.agentskin-host-zcode input:focus {
+  outline: none !important;
+  border-color: var(--agentskin-accent) !important;
+  box-shadow: 0 0 0 2px
+    var(--agentskin-focus-ring, color-mix(in srgb, var(--agentskin-accent) 38%, transparent)) !important;
+}
+
+/* === Code blocks === */
+html.agentskin-host-zcode pre {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+}
+html.agentskin-host-zcode code {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+}
+html.agentskin-host-zcode pre code {
+  border: none !important;
+  background: transparent !important;
+}
+
+/* === Reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+  html.agentskin-host-zcode *,
+  html.agentskin-host-zcode *::before,
+  html.agentskin-host-zcode *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+/* ============================================================
+   ENGINE: zcode — Layer 4-5: Structural (migrated from adapter-config.mjs)
+   ============================================================ */
+
+/* === Art layer: body::before fixed hero === */
+html.agentskin-host-zcode body {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+html.agentskin-host-zcode body::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background: var(--agentskin-art, none) cover no-repeat !important;
+  background-position:
+    calc(var(--ag-art-focus-x, 100%) + var(--ag-art-offset-x, 0px))
+    calc(var(--ag-art-focus-y, 50%) + var(--ag-art-offset-y, 0px)) !important;
+}
+
+/* === App root surface: transparent for art punch-through === */
+html.agentskin-host-zcode #root {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* === Main app surface === */
+html.agentskin-host-zcode main,
+html.agentskin-host-zcode [role="main"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* === Sidebar: frosted glass (scoped to sidebar anchor via [data-agentskin-sidebar], CV-06) === */
+html.agentskin-host-zcode [data-agentskin-sidebar] {
+  background: var(--sidebar-bg, color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-md), transparent)) !important;
+  backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  border: 1px solid var(--ag-glass-border) !important;
+}
+html.agentskin-host-zcode [data-agentskin-sidebar] a:hover,
+html.agentskin-host-zcode [data-agentskin-sidebar] button:hover {
+  background: var(--bg-hover, color-mix(in srgb, var(--agentskin-accent) 10%, transparent)) !important;
+}
+html.agentskin-host-zcode [data-agentskin-sidebar] a[aria-current="true"],
+html.agentskin-host-zcode [data-agentskin-sidebar] a[aria-current="page"] {
+  background: var(--bg-active, color-mix(in srgb, var(--agentskin-accent) 16%, transparent)) !important;
+}
+
+/* === Composer: frosted glass (scoped to composer anchor via [data-agentskin-composer], CV-07) === */
+html.agentskin-host-zcode [data-agentskin-composer] [contenteditable="true"],
+html.agentskin-host-zcode [data-agentskin-composer] textarea {
+  background: var(--input-bg, color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-lg), transparent)) !important;
+  border: 1px solid var(--ag-glass-border) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
+  color: var(--agentskin-text) !important;
+  caret-color: var(--agentskin-accent) !important;
+}
+html.agentskin-host-zcode [data-agentskin-composer] [contenteditable="true"]:focus,
+html.agentskin-host-zcode [data-agentskin-composer] textarea:focus,
+html.agentskin-host-zcode [data-agentskin-composer] input:focus {
+  outline: none !important;
+  border-color: var(--agentskin-accent) !important;
+  box-shadow: 0 0 0 2px var(--agentskin-focus-ring, color-mix(in srgb, var(--agentskin-accent) 38%, transparent)) !important;
+}
+
+/* === Buttons: accent-tinted === */
+html.agentskin-host-zcode button[class*="primary"],
+html.agentskin-host-zcode button[class*="send"],
+html.agentskin-host-zcode button[class*="submit"] {
+  background: var(--button-primary-bg, var(--agentskin-accent)) !important;
+  color: var(--button-primary-fg, #ffffff) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+html.agentskin-host-zcode button[class*="primary"]:hover,
+html.agentskin-host-zcode button[class*="send"]:hover,
+html.agentskin-host-zcode button[class*="submit"]:hover {
+  background: var(--button-primary-hover, color-mix(in srgb, var(--agentskin-accent) 85%, white)) !important;
+}
+
+/* === Code blocks === */
+html.agentskin-host-zcode pre {
+  background: var(--code-bg, var(--agentskin-code-bg)) !important;
+  color: var(--code-fg, var(--agentskin-code-fg)) !important;
+}
+html.agentskin-host-zcode code {
+  background: var(--code-bg, var(--agentskin-code-bg)) !important;
+  color: var(--code-fg, var(--agentskin-code-fg)) !important;
+}
+html.agentskin-host-zcode pre code { border: none !important; background: transparent !important; }
+
+
+/* === Popovers / modals / dialogs: frosted glass === */
+html.agentskin-host-zcode [role="dialog"],
+html.agentskin-host-zcode [role="menu"],
+html.agentskin-host-zcode [role="tooltip"],
+html.agentskin-host-zcode [role="listbox"],
+html.agentskin-host-zcode [class*="popover"],
+html.agentskin-host-zcode [class*="modal"],
+html.agentskin-host-zcode [class*="tooltip"] {
+  background: color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent) !important;
+  backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
+  border: 1px solid var(--ag-glass-border) !important;
+}
+
+/* === PDF.js viewer: container transparent, pages stay white === */
+html.agentskin-host-zcode .pdfViewer,
+html.agentskin-host-zcode .pdf-viewer,
+html.agentskin-host-zcode [class*="pdfViewer"],
+html.agentskin-host-zcode [class*="pdf-viewer"] { background: transparent !important; }
+html.agentskin-host-zcode .pdfViewer .page,
+html.agentskin-host-zcode .pdf-viewer .page { background: #ffffff !important; box-shadow: none !important; }
+html.agentskin-host-zcode #toolbarViewer,
+html.agentskin-host-zcode [class*="pdfToolbar"],
+html.agentskin-host-zcode [class*="pdf-toolbar"] {
+  background: color-mix(in srgb, var(--agentskin-surface) 88%, transparent) !important;
+  backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  border-bottom: 1px solid var(--ag-glass-border) !important;
+  color: var(--agentskin-text) !important;
+}
+html.agentskin-host-zcode #sidebarContainer,
+html.agentskin-host-zcode #sidebarContent,
+html.agentskin-host-zcode [class*="pdfSidebar"],
+html.agentskin-host-zcode [class*="pdf-sidebar"],
+html.agentskin-host-zcode [class*="pdfSidebarContainer"] {
+  background: color-mix(in srgb, var(--agentskin-surface) 92%, transparent) !important;
+  backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  border-right: 1px solid var(--ag-glass-border) !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* === KaTeX: formula color follows theme === */
+html.agentskin-host-zcode .katex,
+html.agentskin-host-zcode .katex-display,
+html.agentskin-host-zcode [class*="katex"] {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+html.agentskin-host-zcode .katex-display { background: transparent !important; margin: 0.5em auto !important; }
+html.agentskin-host-zcode .katex .katex-html,
+html.agentskin-host-zcode .katex-mathml,
+html.agentskin-host-zcode [class*="katex-html"] { color: var(--agentskin-text) !important; }
+html.agentskin-host-zcode .katex svg,
+html.agentskin-host-zcode .katex path { fill: currentColor !important; stroke: currentColor !important; }

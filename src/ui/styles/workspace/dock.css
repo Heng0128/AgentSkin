@@ -1,0 +1,134 @@
+﻿/* =================================================================
+ * AgentSkin Workspace — Bottom Dock
+ *
+ * Fixed overlay dock with draggable height and tabs.
+ * ================================================================= */
+
+/* -------------------------------------------------------------------
+ * Bottom Dock (fixed overlay, draggable height)
+ * ------------------------------------------------------------------- */
+
+.ws-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--h-status);
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  z-index: var(--z-dock);
+  height: 0;
+  transition: height var(--dur-mid) var(--ease-out);
+  box-shadow: var(--ws-shadow-float);
+}
+
+.ws-dock[data-open="true"] {
+  height: var(--dock-h-open, 260px);
+}
+
+.ws-dock__drag-handle {
+  height: 5px;
+  cursor: row-resize;
+  position: relative;
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.ws-dock__drag-handle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 3px;
+  background: var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.ws-dock__drag-handle:hover::after {
+  background: var(--muted-foreground);
+}
+
+.ws-dock__tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 32px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.ws-dock__tab {
+  height: 28px;
+  padding: 0 16px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  position: relative;
+}
+
+.ws-dock__tab[data-active="true"] {
+  color: var(--foreground);
+}
+
+.ws-dock__tab[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+}
+
+.ws-dock__content {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ws-dock-toggle {
+  position: relative;
+  width: 28px;
+  height: 16px;
+  border-radius: var(--radius-md);
+  background: var(--border);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--dur-fast);
+}
+
+.ws-dock-toggle[data-on="true"] {
+  background: var(--primary);
+}
+
+.ws-dock-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  transition: left var(--dur-fast);
+}
+
+.ws-dock-toggle[data-on="true"]::after {
+  left: 14px;
+}
+
+.ws-dock-toggle:not([data-on="true"])::after {
+  left: 2px;
+}

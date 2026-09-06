@@ -1,0 +1,58 @@
+{
+  "id": "crimson-horned-mecha",
+  "name": "crimson-horned-mecha",
+  "displayName": "Crimson Horned Mecha",
+  "version": "2.0.0",
+  "description": "Horned girl and her crimson mecha over a burning city.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "anime",
+    "mecha",
+    "scifi"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#d0594f",
+    "secondary": "#aa594f",
+    "background": "#1b1436",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#322a4e",
+    "surfaceElevated": "#3f375a",
+    "border": "#362e52",
+    "codeBackground": "#191231",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#2d254b",
+    "buttonBackground": "#d0594f",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#d0594f60"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

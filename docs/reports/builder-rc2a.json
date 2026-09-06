@@ -1,0 +1,108 @@
+{
+  "schema": "builder-report/v1",
+  "plan": "RC2-A",
+  "title": "Trace Pipeline Consistency Fix + Push Channel",
+  "branch": "main",
+  "startedAt": "2026-08-26T10:19:00+08:00",
+  "completedAt": "2026-08-26T10:48:00+08:00",
+  "status": "complete",
+  "summary": {
+    "totalCommits": 6,
+    "totalFilesChanged": 15,
+    "totalInsertions": 284,
+    "totalDeletions": 197,
+    "tscClean": true,
+    "testsPass": true,
+    "testSummary": "4636 passed, 4 skipped, 0 failed"
+  },
+  "phases": [
+    {
+      "step": 1,
+      "commit": "f7182884c",
+      "message": "fix(cdp): align connectEventCdp failure-path step name with success path [phase5-step1]",
+      "file": "src/main/cdp/cdp-client.ts",
+      "description": "Changed catch block step name from 'connectCdp' to 'connectEventCdp' so failure-path step name matches the then-path (line 399).",
+      "linesChanged": { "insertions": 1, "deletions": 1 }
+    },
+    {
+      "step": 2,
+      "commit": "2596e6a4",
+      "message": "refactor(performance): per-agent trace map + unified clock, eliminate ShadowTrace [phase5-step2]",
+      "files": [
+        "src/main/services/performance/performance-recorder.ts",
+        "src/main/services/performance/types.ts",
+        "src/main/app-discovery.ts",
+        "src/main/cdp/cdp-client.ts",
+        "src/main/cdp/injection/shared.ts",
+        "src/main/services/performance/performance-recorder.test.ts",
+        "src/main/services/performance/performance-logger.test.ts",
+        "src/shared/types/ipc.ts",
+        "src/preload.ts",
+        "src/ui/components/diagnostics/PerformancePanel.tsx"
+      ],
+      "description": "Replaced static singleton 'active' with per-agent Map<traces>. Unified clock source: finishedAt = wallClockStart + duration (both monotonic-derived, no separate Date.now()). Eliminated ShadowTrace class. Updated recordNamedStep signature to (agentId, name, duration, success?, error?). Updated all callers.",
+      "linesChanged": { "insertions": 163, "deletions": 177 }
+    },
+    {
+      "step": 3,
+      "commit": "22d6f77d",
+      "message": "fix(theme-apply): move finishTrace after backgroundTasks settle [phase5-step3]",
+      "file": "src/main/theme-apply-flow.ts",
+      "description": "Moved finishTrace() call from before the return statement to inside Promise.allSettled(backgroundTasks).then() callback so the trace captures the full apply duration including hardening, wallpaper injection, and scheme sync. Also updated trace parameter type to ApplyTraceBuilder (ShadowTrace removed).",
+      "linesChanged": { "insertions": 9, "deletions": 3 }
+    },
+    {
+      "step": 4,
+      "commit": "5d97757b",
+      "message": "fix(performance-logger): periodic overflow warning instead of one-shot [phase5-step4]",
+      "file": "src/main/services/performance/performance-logger.ts",
+      "description": "Added OVERFLOW_WARN_INTERVAL=100 constant. Replaced one-shot overflowWarned flag with nextOverflowWarnAt counter that re-warns every 100 discards with cumulative count. Updated clear() to reset nextOverflowWarnAt.",
+      "linesChanged": { "insertions": 14, "deletions": 6 }
+    },
+    {
+      "step": 5,
+      "commit": "2554a3ab",
+      "message": "feat(performance-ipc): add push channel for new trace records [phase5-step5]",
+      "files": [
+        "src/main/services/performance/performance-logger.ts",
+        "src/shared/ipc-channels.ts",
+        "src/main/ipc/performance-ipc.ts",
+        "src/main/ipc/index.ts",
+        "src/main/ipc/performance-ipc.test.ts",
+        "src/preload.ts"
+      ],
+      "description": "Added subscribeTrace(listener) to PerformanceLoggerApi. Added PERFORMANCE_NEW_TRACE IPC channel (SEND_ONLY, main→renderer). Wired registerPerformanceIpc(ctx) to subscribe and fan-out to mainWindow + studioWindow via webContents.send. Exposed onPerformanceNewTrace in preload bridge.",
+      "linesChanged": { "insertions": 74, "deletions": 9 }
+    },
+    {
+      "step": 6,
+      "commit": "b9ee8dfa",
+      "message": "test(performance): align tests with periodic warning + API changes [phase5-step6]",
+      "files": [
+        "src/main/services/performance/performance-logger.test.ts",
+        "src/main/services/performance/performance-logger-edge.test.ts",
+        "src/shared/types/ipc.ts"
+      ],
+      "description": "Updated tests for new overflow behavior: warn fires at 100 overflows (not 1). Added beforeEach clear() for test isolation. Added onPerformanceNewTrace to AgentSkinApi interface.",
+      "linesChanged": { "insertions": 34, "deletions": 12 }
+    }
+  ],
+  "invariants": {
+    "noNewDependencies": true,
+    "usesBuiltInWebContentsSend": true,
+    "spdxHeadersPreserved": true,
+    "pathPollutionCheck": "clean - no temporary files created"
+  },
+  "keyFiles": {
+    "cdpClient": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\cdp-client.ts",
+    "performanceRecorder": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\services\\performance\\performance-recorder.ts",
+    "performanceLogger": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\services\\performance\\performance-logger.ts",
+    "themeApplyFlow": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\theme-apply-flow.ts",
+    "performanceIpc": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\ipc\\performance-ipc.ts",
+    "ipcChannels": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\shared\\ipc-channels.ts",
+    "ipcIndex": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\ipc\\index.ts",
+    "preload": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\preload.ts",
+    "ipcTypes": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\shared\\types\\ipc.ts",
+    "performancePanel": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\ui\\components\\diagnostics\\PerformancePanel.tsx"
+  }
+}

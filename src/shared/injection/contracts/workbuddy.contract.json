@@ -1,0 +1,129 @@
+{
+  "$schema": "../verification-contract.schema.json",
+  "targets": {
+    "workbuddy": {
+      "verification": {
+        "required": [
+          {
+            "name": "host-class-present",
+            "any": ["html.agentskin-host-workbuddy"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "palette-accent-applied",
+            "any": [":root[style*='--agentskin-accent']", "html[style*='--agentskin-accent']"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "recommended": [
+          {
+            "name": "adapter-marker-present",
+            "any": ["body"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "tokens-layer-present",
+            "any": [
+              ":root[style*='--agentskin-background']",
+              "html[style*='--agentskin-background']"
+            ],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "contexts": [
+          {
+            "name": "chat-panel-visible",
+            "when": { "any": ["[class*='chat']", "[class*='Chat']", "[class*='conversation']"] },
+            "required": [
+              {
+                "name": "chat-panel-themed",
+                "any": [
+                  "[class*='chat'] [style*='--agentskin']",
+                  "[class*='chat'][style*='--agentskin']"
+                ],
+                "provenance": {
+                  "source": "reporter",
+                  "strength": "medium",
+                  "knownGaps": ["chat panel class selector may vary across workbuddy versions"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "webview-sandbox",
+            "when": { "any": ["iframe[title*='workbuddy']", "html[webview]"] },
+            "required": [
+              {
+                "name": "webview-host-class",
+                "any": ["html.agentskin-host-workbuddy"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "strong",
+                  "knownGaps": ["webview sandbox may restrict injectedStyleSheets"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "pwa-service-worker-active",
+            "when": { "any": ["script[src*='workbox']", "link[href*='manifest']"] },
+            "required": [
+              {
+                "name": "sw-cache-bust-active",
+                "any": ["html.agentskin-host-workbuddy[data-sw-protected]"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["SW cache bust depends on navigator.serviceWorker availability"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "localstorage-theme",
+            "when": { "any": [":root[data-wb-theme]"] },
+            "required": [
+              {
+                "name": "theme-persistence-aware",
+                "any": ["html.agentskin-host-workbuddy[data-storage-aware]"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["WorkBuddy uses localStorage for theme persistence"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

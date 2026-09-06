@@ -1,0 +1,496 @@
+﻿/* =================================================================
+ * AgentSkin Workspace — Layout System
+ *
+ * Grid layout on .ws-root plus all structural regions:
+ *   · topbar    52px fixed
+ *   · drawer    200px  → collapsible to 48px
+ *   · stage     flex-1 (preview canvas)
+ *   · inspector 240px  → collapsible to 4px
+ *   · status    24px fixed
+ * ================================================================= */
+
+/* -------------------------------------------------------------------
+ * Layout root
+ * ------------------------------------------------------------------- */
+
+.ws-root {
+  display: grid;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--background);
+
+  grid-template-areas:
+    "topbar    topbar   topbar"
+    "drawer    stage    inspector"
+    "status    status   status";
+
+  grid-template-rows: var(--h-topbar) 1fr var(--h-status);
+  grid-template-columns: var(--w-drawer) 1fr var(--w-inspector);
+}
+
+/* -------------------------------------------------------------------
+ * Top Bar (52px fixed)
+ * ------------------------------------------------------------------- */
+
+.ws-topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  gap: 8px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  z-index: var(--z-topbar);
+}
+
+.ws-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ws-topbar__center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ws-topbar__brand-icon {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.ws-topbar__brand-name {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.ws-topbar__project-name {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  margin-left: 4px;
+}
+
+/* -------------------------------------------------------------------
+ * Left Drawer (200px → 48px collapsed)
+ * ------------------------------------------------------------------- */
+
+.ws-drawer {
+  grid-area: drawer;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  transition: grid-template-columns var(--dur-mid) var(--ease-out);
+}
+
+.ws-root[data-drawer-collapsed="true"] {
+  grid-template-columns: var(--w-drawer-collapsed) 1fr var(--w-inspector);
+}
+
+.ws-drawer__scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+}
+
+.ws-drawer__section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--space-4);
+}
+
+.ws-drawer__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  transition: background var(--dur-fast);
+}
+
+.ws-drawer__section-header:hover {
+  background: var(--card2);
+}
+
+.ws-drawer__section-header .dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+
+/* Drawer icon rail (collapsed state) */
+
+.ws-drawer-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.ws-drawer-rail__btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  font-size: 14px;
+  transition:
+    background var(--dur-fast),
+    color var(--dur-fast);
+}
+
+.ws-drawer-rail__btn:hover {
+  background: var(--card2);
+  color: var(--foreground);
+}
+
+/* -------------------------------------------------------------------
+ * Stage (flex-1, preview canvas)
+ * ------------------------------------------------------------------- */
+
+.ws-stage {
+  grid-area: stage;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--background);
+  overflow: hidden;
+}
+
+.ws-stage__inner {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: var(--space-4);
+}
+
+/* View-mode layouts, toggled on .ws-stage__inner */
+
+.ws-stage__inner[data-view="single"] {
+  /* default — one window centered */
+}
+
+.ws-stage__inner[data-view="dual"] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 0;
+  align-items: stretch;
+}
+
+.ws-stage__inner[data-view="triple"] {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 0;
+  align-items: stretch;
+}
+
+.ws-stage__inner[data-view="quad"] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 4px;
+  padding: 0;
+  align-items: stretch;
+}
+
+.ws-stage__inner[data-view="focus"] {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 4px;
+  padding: 0;
+  align-items: stretch;
+}
+
+.ws-stage__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  min-height: 280px;
+}
+
+.ws-stage__placeholder-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  font-size: 24px;
+  color: var(--muted-foreground);
+}
+
+.ws-stage__placeholder-title {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.ws-stage__placeholder-hint {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  max-width: 280px;
+  line-height: 1.6;
+}
+
+/* -------------------------------------------------------------------
+ * Preview Window (.pw)
+ * ------------------------------------------------------------------- */
+
+.pw {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  overflow: hidden;
+  transition:
+    border-color var(--dur-fast),
+    box-shadow var(--dur-fast);
+}
+
+.pw[data-active="true"] {
+  border-color: var(--primary);
+  box-shadow: var(--ws-shadow-float);
+}
+
+.pw__header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 8px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.pw__app-mark {
+  width: 14px;
+  height: 14px;
+}
+
+.pw__title {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pw__spacer {
+  flex: 1;
+}
+
+.pw__icon-btn {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.pw__icon-btn:hover {
+  background: var(--card2);
+  color: var(--foreground);
+}
+
+.pw__body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background: #fff;
+}
+
+.pw__body iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.pw__footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 20px;
+  padding: 0 8px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.pw__footer-sep {
+  color: var(--border);
+}
+
+/* -------------------------------------------------------------------
+ * Floating Toolbar (Stage bottom-center overlay)
+ * ------------------------------------------------------------------- */
+
+.ws-float-toolbar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: color-mix(in srgb, var(--card) 95%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  z-index: var(--z-toolbar);
+}
+
+/* -------------------------------------------------------------------
+ * Right Inspector (240px → 4px collapsed)
+ * ------------------------------------------------------------------- */
+
+.ws-inspector {
+  grid-area: inspector;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border-left: 1px solid var(--border);
+  overflow: hidden;
+  transition: grid-template-columns var(--dur-mid) var(--ease-out);
+}
+
+.ws-root[data-inspector-collapsed="true"] {
+  grid-template-columns: var(--w-drawer) 1fr var(--w-inspector-collapsed);
+}
+
+.ws-inspector__scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.ws-inspector__win-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.ws-inspector__tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ws-inspector__tab {
+  height: 28px;
+  padding: 0 16px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  position: relative;
+  transition: color var(--dur-fast);
+}
+
+.ws-inspector__tab[data-active="true"] {
+  color: var(--foreground);
+}
+
+.ws-inspector__tab[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+}
+
+/* -------------------------------------------------------------------
+ * Status Bar (24px fixed bottom)
+ * ------------------------------------------------------------------- */
+
+.ws-statusbar {
+  grid-area: status;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 8px;
+  height: var(--h-status);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  z-index: var(--z-status);
+}
+
+.ws-statusbar .sep {
+  color: var(--border);
+}
+.ws-statusbar .val {
+  color: var(--foreground);
+}

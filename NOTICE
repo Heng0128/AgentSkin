@@ -1,0 +1,14 @@
+This product contains portions derived from CodeDrobe Desktop.
+
+Original project: CodeDrobe Desktop
+License: Mozilla Public License 2.0
+
+AgentSkin introduces substantial changes including:
+- New product positioning (AI Agent Environment Runtime)
+- Redesigned adapter architecture
+- Wallpaper runtime with Wallpaper Engine integration
+- Scene PKG parsing pipeline
+- Environment bundle system
+- Complete UI redesign
+
+CodeDrobe trademarks and visual assets are not used.

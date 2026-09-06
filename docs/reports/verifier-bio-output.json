@@ -1,0 +1,119 @@
+{
+  "totalViolations": 116,
+  "errors": 35,
+  "warnings": 71,
+  "infos": 10,
+  "autoFixable": 55,
+  "manualFixRequired": 56,
+  "autoFixed": false,
+  "result": "FAIL",
+  "summary": "Biome check found 116 violations across 933 files (35 errors, 71 warnings, 10 infos). 55 violations are auto-fixable via 'biome --write', but 56 require manual intervention (primarily noExplicitAny type annotations and a11y semantic issues). Top violation: lint/suspicious/noExplicitAny (39 occurrences, all in launchd-manager.test.ts). Auto-fix alone cannot resolve all issues.",
+  "violations": [
+    {
+      "rule": "lint/suspicious/noExplicitAny",
+      "count": 39,
+      "severity": "error",
+      "fixable": false,
+      "primaryFile": "src/main/platform/macos/launchd-manager.test.ts",
+      "description": "Unexpected any. Specify a different type."
+    },
+    {
+      "rule": "assist/source/organizeImports",
+      "count": 23,
+      "severity": "warning",
+      "fixable": true,
+      "primaryFile": "multiple files",
+      "description": "Sort these imports."
+    },
+    {
+      "rule": "lint/correctness/noUnusedImports",
+      "count": 14,
+      "severity": "warning",
+      "fixable": true,
+      "primaryFile": "multiple files",
+      "description": "Several of these imports are unused."
+    },
+    {
+      "rule": "lint/correctness/noUnusedVariables",
+      "count": 13,
+      "severity": "warning",
+      "fixable": true,
+      "primaryFile": "multiple test files",
+      "description": "This variable/function is unused."
+    },
+    {
+      "rule": "lint/a11y/noStaticElementInteractions",
+      "count": 6,
+      "severity": "error",
+      "fixable": false,
+      "primaryFile": "src/ui/components/",
+      "description": "Static elements should not have interaction handlers."
+    },
+    {
+      "rule": "lint/a11y/useKeyWithClickEvents",
+      "count": 6,
+      "severity": "error",
+      "fixable": false,
+      "primaryFile": "src/ui/components/",
+      "description": "Keyboard event handlers should be accompanied by click handlers."
+    },
+    {
+      "rule": "lint/a11y/useSemanticElements",
+      "count": 4,
+      "severity": "error",
+      "fixable": false,
+      "primaryFile": "src/ui/components/",
+      "description": "Use semantic elements instead of div with role."
+    },
+    {
+      "rule": "lint/complexity/useOptionalChain",
+      "count": 2,
+      "severity": "warning",
+      "fixable": true,
+      "primaryFile": "multiple files",
+      "description": "Use optional chain expression instead."
+    },
+    {
+      "rule": "lint/complexity/noUselessSwitchCase",
+      "count": 1,
+      "severity": "warning",
+      "fixable": true,
+      "primaryFile": "src/adapters/domestic/zcode.ts",
+      "description": "Useless case clause (covered by default)."
+    },
+    {
+      "rule": "lint/style/useConst",
+      "count": 1,
+      "severity": "warning",
+      "fixable": true,
+      "primaryFile": "multiple files",
+      "description": "This variable should be const."
+    },
+    {
+      "rule": "lint/style/useImportType",
+      "count": 1,
+      "severity": "warning",
+      "fixable": true,
+      "primaryFile": "multiple files",
+      "description": "Use import type for type-only imports."
+    },
+    {
+      "rule": "lint/style/useTemplate",
+      "count": 1,
+      "severity": "warning",
+      "fixable": true,
+      "primaryFile": "src/shared/cdp/devtools-active-port.test.ts",
+      "description": "Template literals are preferred over string concatenation."
+    }
+  ],
+  "topAffectedFiles": [
+    { "file": "src/main/platform/macos/launchd-manager.test.ts", "violations": 36 },
+    { "file": "src/shared/cdp/port-manager.test.ts", "violations": 3 },
+    { "file": "src/shared/injection/selector-candidate-scorer.ts", "violations": 3 },
+    { "file": "src/shared/cdp/devtools-active-port.test.ts", "violations": 3 },
+    { "file": "src/ui/components/wallpaper/ImageCropDialog.tsx", "violations": 3 },
+    { "file": "src/main/services/scanner/index.test.ts", "violations": 3 },
+    { "file": "src/main/scene/static-frame-extractor.test.ts", "violations": 3 }
+  ],
+  "recommendation": "Run 'npx biome check --write' to auto-fix 55 violations (organizeImports, noUnusedImports, noUnusedVariables, useOptionalChain, noUselessSwitchCase, useConst, useImportType, useTemplate). Then manually address: 39 noExplicitAny in launchd-manager.test.ts (replace 'any' with proper types), 6 noStaticElementInteractions, 6 useKeyWithClickEvents, and 4 useSemanticElements in UI components."
+}

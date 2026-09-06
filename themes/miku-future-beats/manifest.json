@@ -1,0 +1,59 @@
+{
+  "id": "miku-future-beats",
+  "name": "miku-future-beats",
+  "displayName": "初音未来 · Future Beats",
+  "version": "1.2.0",
+  "description": "和初音未来一起，让灵感、代码与旋律同频闪耀。Miku Future Beats ♫ — Codex × WorkBuddy × QoderWork × TRAE 未来节拍工作台。",
+  "author": {
+    "name": "Codedrobe"
+  },
+  "mode": "light",
+  "category": "anime",
+  "tags": [
+    "light",
+    "anime",
+    "miku",
+    "teal",
+    "cyber-pop",
+    "future-beats"
+  ],
+  "icon": "icon.png",
+  "preview": "preview.png",
+  "hero": "hero.png",
+  "colors": {
+    "accent": "#0d9aa0",
+    "secondary": "#74dce4",
+    "background": "#f0f8fa",
+    "foreground": "#163f4b",
+    "muted": "#557480",
+    "surface": "#ffffff",
+    "surfaceElevated": "#ffffff",
+    "border": "rgba(13, 154, 160, .24)",
+    "codeBackground": "#eefbff",
+    "codeForeground": "#163f4b",
+    "inputBackground": "#f7fdff",
+    "buttonBackground": "#0d9aa0",
+    "buttonForeground": "#ffffff",
+    "focusRing": "rgba(13, 154, 160, .6)"
+  },
+  "license": "MPL-2.0",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

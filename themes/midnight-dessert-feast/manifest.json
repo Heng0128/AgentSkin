@@ -1,0 +1,58 @@
+{
+  "id": "midnight-dessert-feast",
+  "name": "midnight-dessert-feast",
+  "displayName": "Midnight Dessert Feast",
+  "version": "2.0.0",
+  "description": "Pale boy surrounded by an endless midnight dessert table.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "anime",
+    "horror",
+    "stilllife"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#8cbf9c",
+    "secondary": "#a3ccb0",
+    "background": "#020302",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#161716",
+    "surfaceElevated": "#252625",
+    "border": "#1b1c1b",
+    "codeBackground": "#020202",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#111211",
+    "buttonBackground": "#8cbf9c",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#8cbf9c60"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

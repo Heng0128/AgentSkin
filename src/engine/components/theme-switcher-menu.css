@@ -1,0 +1,372 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+
+/**
+ * Theme Switcher Menu — companion styles.
+ *
+ * Design goals:
+ *   - Self-contained: no external font/asset dependencies.
+ *   - Context-aware: inherits the agent's color tokens via CSS custom
+ *     properties, falling back to neutral greys when absent.
+ *   - Non-intrusive: fixed-position, pointer-events scoped, z-index below
+ *     modals but above app chrome.
+ *   - Accessible: visible focus rings, reduced-motion support.
+ *
+ * The menu is tagged with `data-agentskin-menu` so the engine's
+ * AdaptiveMutationObserver treats it as excluded infrastructure.
+ */
+
+/* -------------------------------------------------------------------------
+   Custom properties — the menu reads these from the active theme when
+   present, otherwise uses the fallback values defined on :host-like rule.
+   ------------------------------------------------------------------------- */
+.agentskin-menu {
+  --asm-font-family: var(--agentskin-font, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  --asm-bg: var(--agentskin-surface, #ffffff);
+  --asm-bg-elevated: var(--agentskin-surface-elevated, #f8f9fa);
+  --asm-text: var(--agentskin-text, #1a1a1a);
+  --asm-text-muted: var(--agentskin-muted, #6b7280);
+  --asm-border: var(--agentskin-border, #e2e8f0);
+  --asm-accent: var(--agentskin-accent, #6366f1);
+  --asm-accent-contrast: #ffffff;
+  --asm-radius: 12px;
+  --asm-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  --asm-item-hover: var(--agentskin-surface-elevated, #f1f5f9);
+  --asm-focus-ring: var(--agentskin-focus-ring, #6366f1);
+
+  font-family: var(--asm-font-family);
+  color: var(--asm-text);
+  line-height: 1.5;
+  font-size: 14px;
+
+  /* Positioning: top-right, above app chrome but below modals. */
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2147483646;
+
+  /* Isolation from host page styles. */
+  all: initial;
+  font-family: var(--asm-font-family);
+  color: var(--asm-text);
+}
+
+/* -------------------------------------------------------------------------
+   Trigger button
+   ------------------------------------------------------------------------- */
+.agentskin-menu-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--asm-border);
+  background: var(--asm-bg);
+  box-shadow: var(--asm-shadow);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  padding: 0;
+  outline: none;
+  position: relative;
+}
+
+.agentskin-menu-trigger:hover {
+  transform: scale(1.06);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: var(--asm-bg-elevated);
+}
+
+.agentskin-menu-trigger:active {
+  transform: scale(0.96);
+}
+
+.agentskin-menu-trigger:focus-visible {
+  box-shadow: var(--asm-shadow), 0 0 0 3px var(--asm-focus-ring);
+}
+
+.agentskin-menu-trigger-icon {
+  font-size: 20px;
+  line-height: 1;
+  display: block;
+}
+
+/* -------------------------------------------------------------------------
+   Panel
+   ------------------------------------------------------------------------- */
+.agentskin-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: var(--asm-bg);
+  border: 1px solid var(--asm-border);
+  border-radius: var(--asm-radius);
+  box-shadow: var(--asm-shadow);
+  display: flex;
+  flex-direction: column;
+  animation: agentskin-menu-enter 0.18s ease;
+  transform-origin: top right;
+}
+
+.agentskin-menu-panel[hidden] {
+  display: none;
+}
+
+@keyframes agentskin-menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Header
+   ------------------------------------------------------------------------- */
+.agentskin-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--asm-border);
+  flex-shrink: 0;
+}
+
+.agentskin-menu-heading {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--asm-text);
+  letter-spacing: 0.01em;
+}
+
+.agentskin-menu-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--asm-text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1;
+  transition: background 0.12s ease, color 0.12s ease;
+  padding: 0;
+  outline: none;
+}
+
+.agentskin-menu-close:hover {
+  background: var(--asm-item-hover);
+  color: var(--asm-text);
+}
+
+.agentskin-menu-close:focus-visible {
+  box-shadow: 0 0 0 2px var(--asm-focus-ring);
+}
+
+/* -------------------------------------------------------------------------
+   Theme list
+   ------------------------------------------------------------------------- */
+.agentskin-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.agentskin-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  user-select: none;
+  outline: none;
+}
+
+.agentskin-menu-item:hover {
+  background: var(--asm-item-hover);
+}
+
+.agentskin-menu-item:focus-visible {
+  background: var(--asm-item-hover);
+  box-shadow: inset 2px 0 0 var(--asm-focus-ring);
+}
+
+.agentskin-menu-item[aria-selected="true"] {
+  background: color-mix(in srgb, var(--asm-accent) 8%, transparent);
+}
+
+/* --- Swatch chip --- */
+.agentskin-menu-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  border: 1px solid var(--asm-border);
+  background:
+    linear-gradient(135deg, var(--ms-surface, #888) 0%, var(--ms-surface, #888) 50%),
+    linear-gradient(45deg, var(--ms-accent, #555) 50%, var(--ms-accent, #555) 100%);
+  background-blend-mode: overlay, normal;
+  background-size: 100% 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.agentskin-menu-swatch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--ms-accent, #555) 0%, transparent 60%);
+  opacity: 0.6;
+}
+
+/* --- Label --- */
+.agentskin-menu-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--asm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Check mark --- */
+.agentskin-menu-check {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--asm-accent);
+  color: var(--asm-accent-contrast);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.agentskin-menu-item[aria-selected="true"] .agentskin-menu-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* --- Empty state --- */
+.agentskin-menu-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--asm-text-muted);
+  font-size: 13px;
+}
+
+/* -------------------------------------------------------------------------
+   Footer (upload + restore)
+   ------------------------------------------------------------------------- */
+.agentskin-menu-footer {
+  border-top: 1px solid var(--asm-border);
+  padding: 4px 0;
+  flex-shrink: 0;
+}
+
+.agentskin-menu-upload,
+.agentskin-menu-restore {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--asm-text);
+  user-select: none;
+  outline: none;
+}
+
+.agentskin-menu-upload:hover,
+.agentskin-menu-restore:hover {
+  background: var(--asm-item-hover);
+}
+
+.agentskin-menu-upload:focus-visible,
+.agentskin-menu-restore:focus-visible {
+  background: var(--asm-item-hover);
+  box-shadow: inset 2px 0 0 var(--asm-focus-ring);
+}
+
+.agentskin-menu-upload {
+  color: var(--asm-accent);
+}
+
+.agentskin-menu-restore {
+  color: var(--asm-text-muted);
+}
+
+/* --- Upload input (visually hidden, label covers it) --- */
+.agentskin-menu-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  cursor: pointer;
+  position: relative;
+}
+
+.agentskin-menu-upload-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 0;
+}
+
+/* -------------------------------------------------------------------------
+   Reduced motion
+   ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .agentskin-menu-trigger,
+  .agentskin-menu-panel,
+  .agentskin-menu-check {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Scrollbar (subtle)
+   ------------------------------------------------------------------------- */
+.agentskin-menu-panel::-webkit-scrollbar,
+.agentskin-menu-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.agentskin-menu-panel::-webkit-scrollbar-track,
+.agentskin-menu-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.agentskin-menu-panel::-webkit-scrollbar-thumb,
+.agentskin-menu-list::-webkit-scrollbar-thumb {
+  background: var(--asm-border);
+  border-radius: 3px;
+}
+
+.agentskin-menu-panel::-webkit-scrollbar-thumb:hover,
+.agentskin-menu-list::-webkit-scrollbar-thumb:hover {
+  background: var(--asm-text-muted);
+}

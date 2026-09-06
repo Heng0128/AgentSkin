@@ -1,0 +1,156 @@
+{
+  "$schema": "../verification-contract.schema.json",
+  "targets": {
+    "codex": {
+      "verification": {
+        "required": [
+          {
+            "name": "host-class-present",
+            "any": ["html.agentskin-host-codex"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "palette-accent-applied",
+            "any": [":root[style*='--agentskin-accent']", "html[style*='--agentskin-accent']"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "recommended": [
+          {
+            "name": "adapter-marker-present",
+            "any": ["body"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "tokens-layer-present",
+            "any": [
+              ":root[style*='--agentskin-background']",
+              "html[style*='--agentskin-background']"
+            ],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "contexts": [
+          {
+            "name": "prompt-area-visible",
+            "when": {
+              "any": [
+                "[class*='prompt']",
+                "[class*='input']",
+                "textarea",
+                "[contenteditable='true']"
+              ]
+            },
+            "required": [
+              {
+                "name": "prompt-themed",
+                "any": [
+                  "[class*='prompt'] [style*='--agentskin']",
+                  "textarea[style*='--agentskin']",
+                  "[contenteditable][style*='--agentskin']"
+                ],
+                "provenance": {
+                  "source": "reporter",
+                  "strength": "medium",
+                  "knownGaps": ["selector may vary across codex versions"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "extreme-csp",
+            "when": { "any": ["meta[http-equiv='Content-Security-Policy']"] },
+            "required": [
+              {
+                "name": "csp-bypass-active",
+                "any": ["html.agentskin-host-codex[data-csp-mode]"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "strong",
+                  "knownGaps": ["default-src 'none' requires style-element fallback"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "webview-container",
+            "when": { "any": ["html[webview]", "body.webview"] },
+            "required": [
+              {
+                "name": "webview-host-class",
+                "any": ["html.agentskin-host-codex.agentskin-webview"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "strong",
+                  "knownGaps": ["Codex uses webview/ directory for isolated container"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "sandbox-protocol",
+            "when": {
+              "any": ["iframe[src*='codex-sandbox']", "[data-sandbox-src*='codex-sandbox']"]
+            },
+            "required": [
+              {
+                "name": "sandbox-themed",
+                "any": ["html.agentskin-host-codex[data-sandbox-aware]"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["codex-sandbox:// protocol is custom and may change"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "i18n-menu-locales",
+            "when": { "any": ["[data-locale]", "html[lang]"] },
+            "required": [
+              {
+                "name": "locale-aware",
+                "any": ["html.agentskin-host-codex[lang]"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "weak",
+                  "knownGaps": ["60+ native-menu-locales available"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

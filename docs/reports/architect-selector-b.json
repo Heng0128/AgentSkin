@@ -1,0 +1,949 @@
+{
+  "meta": {
+    "project": "AgentSkin",
+    "version": "desktop-main",
+    "generatedBy": "Architect + Selector Agent",
+    "timestamp": "2025-07-18",
+    "rootCauseCount": 5,
+    "candidateSchemesPerRC": 4
+  },
+  "candidateSchemes": {
+    "RC1": [
+      {
+        "id": "RC1-A",
+        "name": "Pool-Passthrough Gateway",
+        "summary": "抽出一个薄的 CdpSessionGateway 层，所有 CDP 连接必须经过它（包括 apply-baseline、inspect-session、reload-watchdog），不再允许直接调用 connectCdp/connectEventCdp。Gateway 内部委托给 pool，并在 open() 之前做容量守卫，同时设一个全局安全阀定时扫描退休+长生命周期会话强制回收。",
+        "approach": "将 session-pool 从一个可选的优化层提升为强制的连接网关，所有外部调用者不再直接 import connectCdp；gateway 统一负责容量检查、强制回收、key 规范化。",
+        "impact": {
+          "files": [
+            "src/main/cdp/cdp-client.ts",
+            "src/main/cdp/session-pool.ts",
+            "src/main/cdp/apply-baseline.ts",
+            "src/main/cdp/inspect-session.ts",
+            "src/main/cdp/reload-watchdog.ts",
+            "src/main/cdp/cdp-fanout.ts",
+            "src/main/cdp/injection/shared.ts"
+          ],
+          "moduleBoundaries": [
+            "cdp → session-pool (新增 gateway 层)",
+            "apply-baseline → 移除直接 connectCdp 调用",
+            "inspect-session → 改为通过 gateway 获取 session",
+            "reload-watchdog → 改为通过 gateway 获取 session"
+          ]
+        },
+        "pros": [
+          "从根本上消除绕过 pool 的直接连接，所有 CDP 会话生命周期统一管控",
+          "容量守卫前置到 open() 之前，彻底修复 B-02 缺陷",
+          "targetKeyFor 规范化集中在 gateway，消除 'unknown-target' key 冲突",
+          "安全阀机制集中管理，长生命周期会话不会泄漏"
+        ],
+        "cons": [
+          "改动面大（7 文件），需要仔细协调各模块的迁移",
+          "gateway 成为单点故障源——gateway bug 会导致所有 CDP 操作不可用",
+          "inspect-session 和 reload-watchdog 的模块边界需要调整，可能影响现有测试"
+        ],
+        "risks": [
+          "gateway 层引入额外间接层，可能增加 1-2ms 连接延迟（首次连接后无影响，因为 pool 缓存）",
+          "如果 gateway 的生命周期管理不当，可能引入新的竞态条件（gateway 关闭时仍有 in-flight 操作）"
+        ],
+        "cost": {
+          "estimatedFiles": 7,
+          "estimatedLines": 350,
+          "complexity": "L"
+        },
+        "longTermValue": "高——统一管控连接生命周期，后续任何新的 CDP 消费者自动获得 pool 保护和强制回收能力，无需额外工作",
+        "verification": "运行全量 check + 手动验证 apply/restore/inspect/reload-watchdog 四条路径；单元测试覆盖 gateway 层所有边界条件（容量上限、key 冲突、退休安全阀触发）",
+        "rollback": "gateway 提供 bypass 开关（环境变量 agentskin.cdp.no_gateway=true），回到直接 connectCdp 模式；改动可增量合入，每文件独立回滚"
+      },
+      {
+        "id": "RC1-B",
+        "name": "Fix-in-Place 渐进修复",
+        "summary": "保持 pool 可选架构不变，逐个修复五个缺陷：(1) 容量守卫前置到 open() 调用之前；(2) session-pool 增加全局安全阀 setInterval 定期扫描超龄退休会话强制回收；(3) inspect-session 和 apply-baseline 改为走 pool；(4) reload-watchdog 走 pool；(5) targetKeyFor 返回确定 key 或在 key='unknown-target' 时启用 fallback 索引分配。",
+        "approach": "不对现有架构做层级重构，而是在各缺陷文件内精准修复每个 bug。",
+        "impact": {
+          "files": [
+            "src/main/cdp/session-pool.ts",
+            "src/main/cdp/apply-baseline.ts",
+            "src/main/cdp/inspect-session.ts",
+            "src/main/cdp/reload-watchdog.ts"
+          ],
+          "moduleBoundaries": [
+            "session-pool：内部修复（前置守卫 + 安全阀）",
+            "apply-baseline：调用方修复（移除直接 connectCdp 改为 pool.acquire）",
+            "inspect-session：调用方修复（connectEventCdp 改为 pool.acquire + event 委托）",
+            "reload-watchdog：调用方修复（connectEventCdp 改为 pool.acquire + event 委托）"
+          ]
+        },
+        "pros": [
+          "改动面最小（4 文件，~200 行），每个 bug 独立修复可独立验证",
+          "保持现有架构不变，不引入新的层级间接",
+          "回滚粒度最细——每个 commit 对应一个 bug 修复"
+        ],
+        "cons": [
+          "pool 仍然是\"可选的\"——未来新的 CDP 消费者可能继续绕过 pool，问题会复发",
+          "targetKeyFor 的 'unknown-target' 问题需要用 fallback 索引 workaround，不够优雅",
+          "安全阀逻辑嵌入 session-pool 内部，增加单文件复杂度（但 pool 已经 ~400 行）"
+        ],
+        "risks": [
+          "安全阀 setTimeout 可能与 scanIdleEntries 干扰（两者都是定时扫描），需要合并或串行化",
+          "inspect-session 和 reload-watchdog 改造为走 pool 后，acquire/release 语义需要仔细处理——它们是长生命周期会话，和 pool 的短生命周期语义不完全匹配"
+        ],
+        "cost": {
+          "estimatedFiles": 4,
+          "estimatedLines": 200,
+          "complexity": "M"
+        },
+        "longTermValue": "中——修复当下问题但 pool 仍然是可选的，长期来看新的 CDP 消费者仍需要手动集成 pool",
+        "verification": "针对每个 bug 编写独立测试用例（容量守卫前置、安全阀回收、targetKeyFor key 冲突）；集成测试验证 inspect/reload/watchdog 走 pool 后的行为正确",
+        "rollback": "每个修复独立 commit，可 cherry-pick 回滚；不引入新公共 API，不影响外部调用者"
+      },
+      {
+        "id": "RC1-C",
+        "name": "Pool 语义分层：短期 vs 长期会话",
+        "summary": "将 pool 内部按会话生命周期分为两个子池：短生命周期子池（apply/fanout 场景，target-key 索引 + TTL + 容量守卫）和长生命周期子池（watchdog/inspect 场景，URL 索引 + 手动释放 + 超时安全阀）。两个子池共享同一个 PhysicalSocket 层，但应用不同的生命周期策略。",
+        "approach": "按使用场景拆分 pool 语义，而非按使用方式（是否可选）拆分。",
+        "impact": {
+          "files": [
+            "src/main/cdp/session-pool.ts",
+            "src/main/cdp/inspect-session.ts",
+            "src/main/cdp/reload-watchdog.ts",
+            "src/main/cdp/apply-baseline.ts"
+          ],
+          "moduleBoundaries": [
+            "session-pool：分为 ShortLifecyclePool 和 LongLifecyclePool 两个子模块",
+            "短池：容量守卫 + target-key 索引 + TTL + 扫描回收",
+            "长池：URL 索引 + 手动 release + 安全阀超时强制回收"
+          ]
+        },
+        "pros": [
+          "语义清晰——短池和长池各自独立优化，不存在跨场景的策略干扰",
+          "长池的安全阀只在长池子模块生效，不影响短池的高频 acquire/release 性能",
+          "为未来的 CDP 消费者提供明确的接入点选择（短/长）"
+        ],
+        "cons": [
+          "两个子池需要各自管理 WebSocket 连接，可能导致同一 target 被连接两次（短池+长池各一次）",
+          "代码量增加（~300 行），pool 模块从 400 行增长到 ~700 行",
+          "需要新的 API 区分 acquireShort vs acquireLong"
+        ],
+        "risks": [
+          "短池+长池共享同一 WebSocket 时，discard 操作可能导致另一端的使用者收到关闭事件——需要仔细处理 shared socket close 语义",
+          "两个子池的 safe-guard/heartbeat 定时器各自独立，增加 CPU 开销（但量级微小）"
+        ],
+        "cost": {
+          "estimatedFiles": 4,
+          "estimatedLines": 300,
+          "complexity": "L"
+        },
+        "longTermValue": "高——语义分层后为不同类型的 CDP 消费者提供精确的生命周期策略，避免一刀切带来的 trade-off",
+        "verification": "单元测试验证短池和长池各自的容量守卫、TTL、安全阀；集成测试验证同一 target 被短池+长池同时使用时的正确性",
+        "rollback": "保留旧 pool API 作为 fallback；新的分层 pool 可渐进启用（feature flag: agentskin.cdp.pool.v2=true）"
+      },
+      {
+        "id": "RC1-D",
+        "name": "外部 Safe-Guard 监控服务",
+        "summary": "不修改 pool 和 caller，而是引入一个独立的 SafeGuardService 注册表，所有 connectCdp/connectEventCdp 调用必须在这个注册表里记录 session（弱引用 + 元数据）。SafeGuardService 定时扫描所有已注册 session，对超龄/无主的会话执行强制回收。capacity 守卫则connectCdp 入口处前置检查。",
+        "approach": "通过装饰器/代理模式将可观测性和安全阀外化为独立服务，不侵入现有 pool 和 caller。",
+        "impact": {
+          "files": [
+            "src/main/cdp/session-pool.ts",
+            "src/main/cdp/cdp-client.ts",
+            "src/main/cdp/safe-guard-service.ts (新增)"
+          ],
+          "moduleBoundaries": [
+            "safe-guard-service：独立的监控服务，弱引用追踪所有 CDP 会话",
+            "cdp-client：connectCdp/connectEventCdp 入口注册到 safe-guard",
+            "session-pool：可选地向 safe-guard 注册（pool 自身的生命周期仍然自管）"
+          ]
+        },
+        "pros": [
+          "不侵入现有架构，作为独立层叠加在上方，可在任何阶段部署",
+          "safe-guard 不仅管 pool 的会话，也管所有绕过 pool 的直接连接——无盲区",
+          "safe-guard 是可观测性的天然集成点（诊断/日志）"
+        ],
+        "cons": [
+          "弱引用在 GC 后消失，可能导致 safe-guard 无法追踪已断开但未 close 的 session（虽然 gc 后自然释放，但日志/诊断信号可能丢失）",
+          "增加一个新的服务进程内对象，增加内存占用",
+          "safe-guard 的定时扫描频率难以调优——太频繁浪费 CPU，太稀疏可能漏检"
+        ],
+        "risks": [
+          "safe-guard 和 pool 的回收逻辑可能冲突——safe-guard 强制回收一个正在被 pool 使用的 session（refCount > 0）会导致 CDP 命令失败",
+          "WeakRef + FinalizationRegistry 在 Electron 的 Node 版本中存在性能问题（ FinalizationRegistry 回调时间不确定）"
+        ],
+        "cost": {
+          "estimatedFiles": 3,
+          "estimatedLines": 250,
+          "complexity": "M"
+        },
+        "longTermValue": "中——作为独立监控层有价值，但不解决核心问题（pool 仍然可选、B-02 的前置守卫未修复）；适合作为 RC1-B 的补充而非替代",
+        "verification": "单元 test 验证 safe-guard 对 pool/非 pool 会话的追踪和强制回收；压力测试验证 safe-guard 与 pool 回收逻辑无冲突",
+        "rollback": "safe-guard 可热插拔——移除注册逻辑即回到原始行为"
+      }
+    ],
+    "RC2": [
+      {
+        "id": "RC2-A",
+        "name": "Trace 管线一致性修复 + 推送通道",
+        "summary": "三步走：(1) 修正 connectEventCdp 的 step name（'connectCdp' → 'connectEventCdp'）；(2) 将 PerformanceRecorder 的单迹模型改为 per-agent 关联 tracemap（Record<string, ApplyTraceBuilder>），使用 process.hrtime.bigint() 统一时钟源；(3) finishTrace 改为在 backgroundTasks settled 后才调用；(4) IpcPerformanceBroadcast 在每次 log(trace) 时推送给 renderer。",
+        "approach": "从时钟源、单迹并发、trace 截断、拉取→推送四个维度系统修复 trace 管线。",
+        "impact": {
+          "files": [
+            "src/main/cdp/cdp-client.ts",
+            "src/main/services/performance/performance-recorder.ts",
+            "src/main/theme-apply-flow.ts",
+            "src/main/services/performance/performance-logger.ts",
+            "src/main/ipc/performance-ipc.ts"
+          ],
+          "moduleBoundaries": [
+            "cdp-client：一字符 fix",
+            "performance-recorder：单迹 → per-agent map",
+            "theme-apply-flow：finishTrace 迁移到 background settle 之后",
+            "performance-ipc：新增 push 通道"
+          ]
+        },
+        "pros": [
+          "修复 M-01 step name（trivial 但必须确保 trace 字段正确）",
+          "per-agent trace map 消除 shadow-trace fallback，并发 apply 不再丢失 trace",
+          "finishTrace 语义正确化——trace 精确覆盖从 cdpDiscovery 到所有后台任务完成",
+          "push 通道消除 5s 轮询延迟，诊断数据近实时更新"
+        ],
+        "cons": [
+          "per-agent trace map 需要在服务 dispose 时清理，否则内存泄漏",
+          "push 通道需要管理 webContents 生命期——窗口关闭后推送会抛错（需 try-catch 或监听 closed 事件）",
+          "改动涉及性能核心路径（apply 流程），需要回归测试确认无性能退化"
+        ],
+        "risks": [
+          "per-agent map 在异常退出时可能残留——需要在 AgentEngineService dispose 中显式清理所有 trace builder",
+          "push 通道如果 renderer 的 IPC 处理器阻塞，可能反压到 main 进程——需要异步发送 + drop-on-overflow 策略"
+        ],
+        "cost": {
+          "estimatedFiles": 5,
+          "estimatedLines": 200,
+          "complexity": "M"
+        },
+        "longTermValue": "高——trace 管线是诊断基础设施的核心组件，修复并发模型和时钟源一致性后为后续性能优化提供可靠基础",
+        "verification": "并发 apply 压力测试（4 线程并发 apply 不同 agent）确认 per-agent trace 完整；时间精度测试对比 hrtime.bigint 和 Date.now 在高频 step 下的偏差；手动验证 IPC push 触发",
+        "rollback": "per-agent map 可 feature-flag 切换（回退到单迹 + shadow）；push 通道可禁用（回到 5s 轮询）"
+      },
+      {
+        "id": "RC2-B",
+        "name": "双时钟统一 + 溢出告警增强",
+        "summary": "聚焦内部一致性：(1) 使用 process.hrtime.bigint() 替换所有 performanceRecorder 和 apply 流程中的 Date.now()/performance.now() 调用；(2) 完善 performance-logger 的环形缓冲区溢出告警——改为每次溢出计数 + 最近丢弃时间戳数组；(3) finishTrace 调用位置通过 Promise 链式截断修正（不放在 background 前）。",
+        "approach": "只做时钟源统一和溢出告警，不动单迹模型或推送通道。",
+        "impact": {
+          "files": [
+            "src/main/services/performance/performance-recorder.ts",
+            "src/main/services/performance/performance-logger.ts",
+            "src/main/theme-apply-flow.ts",
+            "src/main/cdp/cdp-client.ts"
+          ],
+          "moduleBoundaries": [
+            "统一时钟源到 hrtime.bigint()",
+            "溢出告警增强（log 中报告连续溢出）"
+          ]
+        },
+        "pros": [
+          "改动面最小（~150 行），精准修复 M-06/B-10/B-11 三个缺陷",
+          "时钟统一后 trace duration 计算无偏差",
+          "溢出告警增强帮助运维定位 buffer 容量不足"
+        ],
+        "cons": [
+          "不解决并发 apply 的 shadow-trace 问题（M-06 的单迹并发仍存在）",
+          "不解决 step name 错误（M-01 的 connectEventCdp 问题仍在，除非顺带修）",
+          "finishTrace 在 background 前截断的问题虽修复，但 trace 不含后台任务信息——诊断价值有限"
+        ],
+        "risks": [
+          "hrtime.bigint 转换到毫秒时如果精度截断（/ 1_000_000n）可能丢失亚毫秒精度——需要确认所有消费者接受整数毫秒",
+          "无显著风险——修复倾向于保守的精简改动"
+        ],
+        "cost": {
+          "estimatedFiles": 4,
+          "estimatedLines": 150,
+          "complexity": "S"
+        },
+        "longTermValue": "中——修复时钟一致性和溢出告警，但不解决单迹并发问题，后续补充 RC2-A 的 per-agent map 后价值更大",
+        "verification": "高频 step 的精度压力测试对比；溢出场景下验证告警频率和日志正确性",
+        "rollback": "纯内部实现变更，回滚只需替换回去；finishTrace 位置修正如果引入 bug 可只恢复下一行"
+      },
+      {
+        "id": "RC2-C",
+        "name": "Event Sourcing Trace 模型",
+        "summary": "将 PerformanceRecorder 的 step-builder 模型改为 append-only Event Log：每个 step 是一个 event { type: 'step_start'|'step_end', name, agentId, ts(hrtime.bigint) }，trace finish 时按 step_start/step_end 配对生成最终 ThemeApplyTrace 结构。并发 apply 不再互斥——每个 apply 往自己的 event stream 写，不影响他人。",
+        "approach": "从\"一次只能有一个 trace\"的互斥模型改为\"每个 agent 独立 event stream\"的无锁模型。",
+        "impact": {
+          "files": [
+            "src/main/services/performance/performance-recorder.ts (重写)",
+            "src/main/theme-apply-flow.ts",
+            "src/main/cdp/cdp-client.ts"
+          ],
+          "moduleBoundances": [
+            "performance-recorder：从 singleton agent trace 改为 per-agent event stream",
+            "删掉 ShadowTrace 类",
+            "step() 返回 JSX-style 的 event handle 而非直接 mutate builder"
+          ]
+        },
+        "pros": [
+          "彻底消除 shadow-trace——所有 apply 无论并发还是串行都有完整 trace",
+          "event sourcing 模型天然支持 reconstruction 和 replay（调试价值高）",
+          "无锁设计——并发 apply 之间完全独立，无竞态条件"
+        ],
+        "cons": [
+          "重写 PerformanceRecorder（~200 行 → ~350 行），测试需要全部更新",
+          "event stream 的 event 配对逻辑比 step builder 的 array.push 复杂",
+          "apply 流程中的 step 调用代码需要适配新的 event-handle 语义"
+        ],
+        "risks": [
+          "event 配对异常（step_start 没有对应的 step_end）可能导致 finish 时 trace 结构损坏",
+          "per-agent event stream 的生命周期管理复杂——必须确保 dispose 时清理"
+        ],
+        "cost": {
+          "estimatedFiles": 3,
+          "estimatedLines": 350,
+          "complexity": "L"
+        },
+        "longTermValue": "极高——event sourcing 模型从根本上解决了单迹互斥问题，且为后续 OpenTelemetry/结构化 trace 导出提供了扩展基础",
+        "verification": "并发 apply 压力测试（6 线程并发）确认 event stream 无交叉污染；异常路径测试（step_start 后 agent dispose）确认 event 配对安全",
+        "rollback": "保留旧 PerformanceRecorder 作为 fallback 模块；通过 feature flag 切换"
+      },
+      {
+        "id": "RC2-D",
+        "name": "Telemetry SDK 集成",
+        "summary": "引入一个轻量级的 Telemetry 抽象层（不依赖外部 SDK），统一处理 trace 的生命周期、推送和环形缓冲区。Telemetry 层提供 startTrace(agentId)、recordStep(traceId, name, duration)、finishTrace(traceId) API。内部使用 per-agent map 和 hrtime.bigint 时钟。",
+        "approach": "将 trace 基础设施封装为独立的 Telemetry 服务，所有 trace 消费者（apply flow, cdp-client, baseline）统一通过 Telemetry API 交互。",
+        "impact": {
+          "files": [
+            "src/main/services/performance/telemetry.ts (新增)",
+            "src/main/services/performance/performance-recorder.ts (重构为 Telemetry 的包装)",
+            "src/main/services/performance/performance-logger.ts (重构为 Telemetry 的 consumer)",
+            "src/main/services/performance/performance-ipc.ts",
+            "src/main/theme-apply-flow.ts",
+            "src/main/cdp/cdp-client.ts"
+          ],
+          "moduleBoundaries": [
+            "telemetry：核心 trace 引擎",
+            "PerformanceRecorder： telemetry 的 legacy 适配层（保留 API 兼容）",
+            "performanceLogger：telemetry 的 ring buffer consumer",
+            "所有 trace 步骤通过 telemetry API 而非直接调 recorder"
+          ]
+        },
+        "pros": [
+          "trace 基础设施解耦为独立服务——可独立测试、独立演进",
+          "Telemetry 层可替换底层实现（如从 event sourcing 改为 batch dispatch）而不影响消费者",
+          "统一的 per-agent map、时钟源、溢出告警、推送策略"
+        ],
+        "cons": [
+          "改动面最大（6 文件 + 新增 1 文件）",
+          "Telemetry 抽象层增加间接调用——如果设计不当会影响可读性",
+          "PerformanceRecorder 类的\"静态单例\"语义需要保留为 legacy 兼容"
+        ],
+        "risks": [
+          "Telemetry 层的 singleton 生命周期与 Electron app 生命周期的集成需要谨慎处理",
+          "Legacy 适配层可能导致部分代码走 recorder 部分走 telemetry——需要严格的 code owner 协议"
+        ],
+        "cost": {
+          "estimatedFiles": 7,
+          "estimatedLines": 450,
+          "complexity": "XL"
+        },
+        "longTermValue": "极高——Telemetry 作为独立服务后，后续集成 OTLP export、结构化日志、remote diagnostics 都成为可能",
+        "verification": "单元测试覆盖 Telemetry 层所有 API；集成测试确认 PerformanceRecorder 包装层行为等价；并发测试确认 per-agent map 无竞态",
+        "rollback": "PerformanceRecorder 保留为 fallback——Telemetry 失败时降级使用旧代码路径"
+      }
+    ],
+    "RC3": [
+      {
+        "id": "RC3-A",
+        "name": "RAII Session Guard 模式",
+        "summary": "引入 CdpSessionGuard<T>——一个 RAII 风格的守卫对象，在 acquire 时持有 session 引用计数，在 dispose/release 时自动归还。所有 fanout 中的手动 releaseSession/close 替换为 guard 的 dispose 调用（try/finally 语义不变但确保不遗漏）。特别修复 firstSession 双重 release 问题：firstSession 作为 guard 持有，不再由外部调用 release。",
+        "approach": "用 RAII 守卫替代手动的 acquire/release 配对，消除人为的重复释放。",
+        "impact": {
+          "files": [
+            "src/main/cdp/cdp-fanout.ts",
+            "src/main/cdp/session-pool.ts"
+          ],
+          "moduleBoundaries": [
+            "cdp-fanout：用 CdpSessionGuard 重写所有 acquire/release 调用",
+            "session-pool：暴露 createGuard API 而非分开的 acquire/release"
+          ]
+        },
+        "pros": [
+          "RAII 从根本上消除双重 release——guard 只能 dispose 一次",
+          "代码量减少（消除了 fanout 中每个 target 的 try/finally release 样板）",
+          "firstSession 生命周期由 guard 管理，不可能被多次 release"
+        ],
+        "cons": [
+          "Guard 模式在 TS 中没有 using/dispose 语法糖（TC39 Explicit Resource Management 仍在 stage3），需要手动 try/finally 或 helper函数",
+          "Guard API 提高了学习曲线——新贡献者需要理解 CdpSessionGuard 的生命周期语义"
+        ],
+        "risks": [
+          "如果 guard session 和 pool 内部的 entry 不同步（例如 pool 主动 discard 了 entry 但 guard 仍持有引用计数），可能延迟 entry 回收",
+          "需要确保 guard 的 dispose 是幂等的——多次调用 dispose 不会 underflow refCount"
+        ],
+        "cost": {
+          "estimatedFiles": 2,
+          "estimatedLines": 120,
+          "complexity": "M"
+        },
+        "longTermValue": "高——RAII 守卫模式是通用的资源管理模式，可以扩展到 baseline capture、watchdog session 等场景",
+        "verification": "单元测试验证 CdpSessionGuard 的 dispose 幂等性；集成测试确认 fanout 中没有 firstSession 双重 release（注入模拟 session 跟踪 release 调用次数）",
+        "rollback": "Guard 是对现有 acquire/release 的包装——移除 guard 回到手动调用即可，pool API 不变"
+      },
+      {
+        "id": "RC3-B",
+        "name": "计数器安全审计 + pending Map 防护",
+        "summary": "聚焦防御性编程：(1) releaseSession 在 refCount 已经为 0 时不再 decrement（Math.max(0, ...) 已经有了，但加上 warning log 帮助追踪泄露来源）；(2) pending.get(message.id) 的非空断言替换为 null-guard（如果不在 pending 中被 reject SilentCloseError）；(3) firstSession 的 release 逻辑改为\"所有权转移\"语义——firstSession 的所有权从 fanout 的 for 循环 transfer 到 health-check 的 finally 块。",
+        "approach": "不引入新的抽象，而是通过严格的 null-guard、所有权语义和审计日志消除 use-after-free 类问题。",
+        "impact": {
+          "files": [
+            "src/main/cdp/session-pool.ts",
+            "src/main/cdp/cdp-client.ts",
+            "src/main/cdp/cdp-fanout.ts"
+          ],
+          "moduleBoundaries": [
+            "session-pool：增强 release 审计和 refCount 防护",
+            "cdp-client：pending Map 操作加 null-guard",
+            "cdp-fanout：firstSession 所有权显式转移"
+          ]
+        },
+        "pros": [
+          "改动量最小（~80 行），精准度高",
+          "不引入新的概念层——所有修改都是现有 API 的防御性增强",
+          "firstSession 所有权转移是精确的语义 fix，对应 B-04 根因"
+        ],
+        "cons": [
+          "所有权转移需要仔细注释，否则后续维护者可能重新引入双重 release",
+          "pending Map 的 null-guard 可能掩盖真正的 bug——沉默丢消息不如 throw early"
+        ],
+        "risks": [
+          "firstSession 所有权转移如果实现有 bug（例如在 epoch-abort 路径上 firstSession 未被 release），可能引发 leak",
+          "无显著风险——修改倾向保守的防御性增强"
+        ],
+        "cost": {
+          "estimatedFiles": 3,
+          "estimatedLines": 80,
+          "complexity": "S"
+        },
+        "longTermValue": "中——修复当前缺陷但不改变交互模式；未来如果 pool 重构（RC1-A/C），这些防御性代码可以保留",
+        "verification": "针对 pending Map null-guard 的单元测试（发送 id 不存在的 response）；refCount 审计日志的触发测试；firstSession 所有权转移的集成测试",
+        "rollback": "每个修复独立 commit——pending null-guard 可独立回滚，firstSession 所有权转移可独立回滚"
+      },
+      {
+        "id": "RC3-C",
+        "name": "AsyncDisposable + using 声明",
+        "summary": "采用 TC39 Explicit Resource Management 提案的 using 声明（TypeScript 5.2+ 支持），让所有 CDP session 和 guard 对象实现 Symbol.disposable。fanout 中的代码变为：{ using guard = await pool.guard(...) } —— 作用域结束时自动 dispose，不需要 try/finally。",
+        "approach": "利用最新的 TS 原生资源管理语法消除手动 try/finally 样板。",
+        "impact": {
+          "files": [
+            "src/main/cdp/cdp-fanout.ts",
+            "src/main/cdp/session-pool.ts"
+          ],
+          "moduleBoundaries": [
+            "session-pool：CdpGuard 实现 Symbol.disposable",
+            "cdp-fanout：所有 session acquire 改为 using 声明"
+          ]
+        },
+        "pros": [
+          "using 声明是 TC39 标准——代码意图最清晰",
+          "彻底消除手写 finally 遗漏的可能性",
+          "tsconfig 的 lib 配置只需 target esnext.disposable"
+        ],
+        "cons": [
+          "TypeScript 5.2+ 需要——Electron 37 的 Node 22 支持没问题，但 CI/CD 的 tsc 版本需确认",
+          "using 声明在 catch 块中的行为需要仔细验证——异常退出时是否仍然 dispose",
+          "学习曲线：团队成员可能不熟悉 Symbol.dispose 模式"
+        ],
+        "risks": [
+          "using 在 for-of 循环中可能有意外的语义（循环结束后才 dispose 还是每次迭代 dispose？需要确认语义）",
+          "如果 pool.acquire 返回 null（连接失败），using null 是否报错——需要 null-guard"
+        ],
+        "cost": {
+          "estimatedFiles": 2,
+          "estimatedLines": 100,
+          "complexity": "M"
+        },
+        "longTermValue": "高——TC39 using 声明是资源管理的未来方向；如果团队接受，可用于后续所有需要Dispose 模式的场景（文件句柄、子进程等）",
+        "verification": "E2E 测试验证 using 声明在异常路径上的 dispose 行为；循环中 using 语义的确认测试",
+        "rollback": "using 声明可逐个 session 回退到 try/finally；pool API 不变"
+      },
+      {
+        "id": "RC3-D",
+        "name": "操作幂等性合约 + 追踪 token",
+        "summary": "为每个 connectCdp/fanout 操作分配一个 operationId，session 释放时附带 operationId。Pool 记录每个 operationId 的 session 释放状态——如果同一 operationId 尝试 release 两次，记录 warning 并忽略第二次。同时 pending Map 的 lookup 也用 operationId 标记，unknown operationId 的 response 但不 reject。",
+        "approach": "通过幂等性合约追踪所有 session 操作和 CDP 命令，从系统层面防止重复释放和幽灵响应。",
+        "impact": {
+          "files": [
+            "src/main/cdp/cdp-fanout.ts",
+            "src/main/cdp/session-pool.ts",
+            "src/main/cdp/cdp-client.ts"
+          ],
+          "moduleBoundaries": [
+            "session-pool：operationId registry 追踪 release 操作",
+            "cdp-client：pending Map value 附带 operationId",
+            "cdp-fanout：每个 acquire Session 和 releaseSession 使用同一 operationId"
+          ]
+        },
+        "pros": [
+          "幂等性合约对所有重复操作健壮——不仅解决 B-04，也防御未来类似 bug",
+          "追踪 token 提供运行时诊断能力——可以精确回答\"这个 release 是谁调的？\"",
+          "pending Map 的 operationId 标记消除了 unknown id 的幽灵响应风险"
+        ],
+        "cons": [
+          "operationId registry 需要内存管理（操作完成后清理），增加复杂度",
+          "每个 acquire/release 调用附带 operationId 参数，API 签名变长"
+        ],
+        "risks": [
+          "operationId 的 UUID 生成（crypto.randomUUID）在 hot path 上有微乎其微的成本",
+          "如果 registry 大小无界增长（异常场景下 acquire 后 pool 被 dispose），可能内存泄漏——需要 clear 机制"
+        ],
+        "cost": {
+          "estimatedFiles": 3,
+          "estimatedLines": 180,
+          "complexity": "M"
+        },
+        "longTermValue": "高——幂等性合约是分布式系统/资源管理的核心模式，一旦建立后可复用于其他 IPC 命令和请求-响应协议",
+        "verification": "故意触发重复 release 调用确认第二次被安全忽略；pending Map ghost id 测试确认不 throw",
+        "rollback": "operationId 机制对现有 API 是纯增量（新参数可选），移除时只需去掉 tracking 逻辑"
+      }
+    ],
+    "RC4": [
+      {
+        "id": "RC4-A",
+        "name": "三层验证降级模型",
+        "summary": "将 isThemeFullyApplied 的返回值从 boolean 改为三级：'full'（accent + sheets + layers 全通过）、'partial'（有 accent 但 layers 不全）、'failed'（无 accent 或 无 sheets）。调用者根据三级结果做不同决策：'full' → 跳过注入；'partial' → 补注入缺失层；'failed' → 全量重注入。同时 waitForTheme 在 timeout 时返回最后一个非 null 结果而非 null。",
+        "approach": "从二值 boolean 降级为三值判定模型，让调用者获得更精确的验证信息并做出分级响应。",
+        "impact": {
+          "files": [
+            "src/shared/injection-runtime.ts",
+            "src/main/cdp/cdp-fanout.ts",
+            "src/main/cdp/injection/shared.ts",
+            "src/main/cdp/reload-watchdog.ts"
+          ],
+          "moduleBoundaries": [
+            "injection-runtime：isThemeFullyApplied → 返回 'full'|'partial'|'failed'",
+            "cdp-fanout：watchdog 对 partial 做补注入而非 skip",
+            "injection/shared：waitForTheme timeout 时返回 last verification 而非 null",
+            "reload-watchdog：wd 对 partial 做补注入而非 skip"
+          ]
+        },
+        "pros": [
+          "彻底修复 β-04——layers 缺失不再降级为 boolean false，而是精确的 partial 状态",
+          "修复 β-09——waitForTheme timeout 返回有用结果而非 null，调用者不再需要重新 evaluate",
+          "watchdog/verify 决策更加智能——部分应用的场景得到补注入而非全跳或全注入",
+          "对调用者更友好——boolean 的 isThemeFullyApplied 保留作为快捷检查，新的增强版本作为 ThemeApplyVerdict export"
+        ],
+        "cons": [
+          "API 类型签名变更（boolean → string literal union）可能影响其他编译单元需要适配",
+          "三值判定需要更详细的文档——\"partial\"的含义对不同调用者可能解读不同"
+        ],
+        "risks": [
+          "如果部分调用者仍使用旧的 boolean 版本，新旧代码的行为不同——需要一次性全量迁移或提供 compat 层",
+          "过于精细的验证可能引入 false negative——某些合法的安装后 DOM 状态（如 agent 自身的 empty layer）被误判为 partial"
+        ],
+        "cost": {
+          "estimatedFiles": 4,
+          "estimatedLines": 120,
+          "complexity": "M"
+        },
+        "longTermValue": "高——分级判定模型是 DOM 验证的正确抽象，后续可扩展为更细粒度的 per-layer 状态报告",
+        "verification": "构造 partial 场景的集成测试（手动 remove 一层 adoptedStyleSheet）确认 watchdog 补注入；waitForTheme timeout 场景测试确认非 null 返回",
+        "rollback": "保留旧的 isThemeFullyApplied 签名作为 isThemeFullyAppliedStrict（全通过才 true）；新代码使用 ThemeApplyVerdict 枚举版本"
+      },
+      {
+        "id": "RC4-B",
+        "name": "waitForTheme 结果缓存 + null-safe 返回",
+        "summary": "聚焦修复 β-09（waitForTheme 超时后无返回）：在轮询过程中记录最后一次非 null 的 ThemeVerification，timeout 时返回该值而非 null。同时修复 β-04（isThemeFullyApplied layers 降级）：当 layers 为空对象 {} 时（区分 undefined 和空 map），不回退到 count-only，而是返回 false（因为确实没有任何 layer）。",
+        "approach": "最小侵入的两个独立 fix：(1) waitForTheme 维护 lastResult 变量；(2) isThemeFullyApplied 中区分 undefined（unknown client）和 {}（known client but no layers）。",
+        "impact": {
+          "files": [
+            "src/main/cdp/injection/shared.ts",
+            "src/shared/injection-runtime.ts"
+          ],
+          "moduleBoundaries": [
+            "injection/shared：waitForTheme 逻辑修正",
+            "injection-runtime：undefined vs {} 判别"
+          ]
+        },
+        "pros": [
+          "改动面最小（2 文件，~30 行）",
+          "无架构变更——纯 bug fix",
+          "语义精确——undefined = 旧客户端协议不支持 layers 查询，{} = 新客户端但无 layer"
+        ],
+        "cons": [
+          "不解决根本问题——boolean 二值仍然不足以表达 partial 状态",
+          "对调用者的调用方式改变最小，但调用者仍然不知道\"哪些 layer 缺失\""
+        ],
+        "risks": [
+          "极低——纯行为修正，不引入新代码路径（除了 lastResult 赋值）"
+        ],
+        "cost": {
+          "estimatedFiles": 2,
+          "estimatedLines": 30,
+          "complexity": "S"
+        },
+        "longTermValue": "低——最小可行修复，但验证模型的根本限制仍在；后续扩展时建议迁移到 RC4-A 的三级模型",
+        "verification": "单元测试：waitForTheme timeout 时返回 lastResult；isThemeFullyApplied 对 {} 返回 false 而非 true",
+        "rollback": "trivial——回退两文件中的 diff 即可"
+      },
+      {
+        "id": "RC4-C",
+        "name": "Verification Pipeline 模式",
+        "summary": "引入 VerificationPipeline 类——将验证拆分为独立的 probe step：accent probe、sheet count probe、layer probe、hero probe。Pipeline 顺序执行各 step，每个 step 独立通过/失败/未执行。最终 ThemeVerification 汇总所有 step 结果，调用者可以精确判断哪一层失败。",
+        "approach": "从单一大而全的 verifyTheme evaluate 改为分步探测的 pipeline。",
+        "impact": {
+          "files": [
+            "src/main/cdp/injection/shared.ts",
+            "src/main/cdp/injection-pipeline.ts (新增)",
+            "src/shared/injection-runtime.ts",
+            "src/main/cdp/cdp-fanout.ts",
+            "src/main/cdp/reload-watchdog.ts"
+          ],
+          "moduleBoundaries": [
+            "injection-pipeline：VerificationPipeline 类 + ProbeStep 接口",
+            "shared.ts：verifyTheme 委托给 pipeline",
+            "cdp-fanout/reload-watchdog：按 pipeline 结果做细粒度决策"
+          ]
+        },
+        "pros": [
+          "高度可扩展——未来新增验证步骤（如 adapter marker 检测、CSS 变量注入检测）只需添加 ProbeStep 实现",
+          "失败定位精确——每个 step 独立记录 pass/fail/未执行",
+          "可重入/可重置——支持并发验证和取消"
+        ],
+        "cons": [
+          "Pipeline 展开为多次 CDP evaluate 调用（除非合并为单次 evaluate 返回 JSON），增加 0-5 次 round-trip",
+          "极大增加代码量（~300 行新增 + ~150 行修改），但价值集中在可扩展性",
+          "合并单次 evaluate 会退回 RC4-A 的方案"
+        ],
+        "risks": [
+          "多次 evaluate 的延迟叠加——需要确保 pipeline 在 AgentEngineService 的 CDP 超时窗口内完成",
+          "pipeline 的 step 注册和生命周期与 Electron IPC 生命周期的集成需要仔细处理（支持 dispose）"
+        ],
+        "cost": {
+          "estimatedFiles": 4,
+          "estimatedLines": 400,
+          "complexity": "L"
+        },
+        "longTermValue": "极高——pipeline 模式是复杂验证逻辑的标准架构，特别适合 DOM 验证这种可能持续增加维度的场景",
+        "verification": "每个 ProbeStep 的单元测试；pipeline E2E 测试验证全量通过/部分失败/全量失败场景",
+        "rollback": "pipeline 是 VerifyTheme 的包装层——移除 pipeline 退回原有的单次 evaluate 即可"
+      },
+      {
+        "id": "RC4-D",
+        "name": "客户端协商 + 能力标志",
+        "summary": "在 verifyTheme evaluate 头部加入\"客户端能力协商\"——通过检查 document 上是否挂载了 window.__AGENTSKIN_CAPABILITIES__ 全局变量，判断目标页面是否支持 layers 能力。如果支持 → 返回完整 layers map；如果不存在 → 降级回 count-only 模式但附带一个 reason: 'legacy-client' 标志。调用者根据 reason 做决策而非盲猜。",
+        "approach": "从\"猜测 layers 是否缺失\"改为\"明确知道客户端能力\"。",
+        "impact": {
+          "files": [
+            "src/main/cdp/injection/shared.ts",
+            "src/shared/injection-runtime.ts",
+            "src/main/cdp/cdp-inject.ts"
+          ],
+          "moduleBoundaries": [
+            "shared.ts：__AGENTSKIN_CAPABILITIES__ 检查 + 条件 VERIFY_THEME_BODY 组装",
+            "cdp-inject.ts：注入 capabilities 标记到 window 对象",
+            "injection-runtime：解析 reason 字段"
+          ]
+        },
+        "pros": [
+          "从根本解决信息缺失问题——不是猜测而是明确知道客户端能力",
+          "未来可以扩展为版本协商（如 v1/v2/v3 协议），支持更丰富的能力声明",
+          "不影响现有 evaluate 性能（capabilities 检查是常量时间读取）"
+        ],
+        "cons": [
+          "需要在所有注入路径（engine/legacy/adapter）都添加 capabilities 标记——涉及 3+ 注入器",
+          "如果标记因 DOM reload 丢失，验证会错误降级（需要确保标记在 persistence script 中每帧重写）",
+          "真正解决的是\"协议版本\"问题，但方案名头可能夸大"
+        ],
+        "risks": [
+          "window 全局变量可能被 agent 的安全策略清除（如某些 CDP target 上的严格 CSP）",
+          "capabilities 标记需要在每次注入时更新，增加注入代码量"
+        ],
+        "cost": {
+          "estimatedFiles": 3,
+          "estimatedLines": 120,
+          "complexity": "M"
+        },
+        "longTermValue": "高——客户端协商是多版本/多协议系统的重要机制，为未来 schema 版本化提供了基础",
+        "verification": "模拟 legacy client（无 capabilities 标记）和新 client（有标记）两种场景分别验证；CDP target reload 后确认标记持久性",
+        "rollback": "negotiation 是可选增强——如果 capabilities 不存在，自动降级到原始逻辑"
+      }
+    ],
+    "RC5": [
+      {
+        "id": "RC5-A",
+        "name": "Zod Schema 快照测试 + 契约 CI 门禁",
+        "summary": "为 core types（ThemeApplyTrace, ThemeVerification, CdpResponse, ApplyBaselineSnapshot 等）定义 Zod schema，在 CI check-design-tokens 之后新增 check-type-schemas 脚本，对比 types.ts 的 type export 和 Zod schema 的运行时值是否一致。同时补充 cdp-client.test.ts 中 connectEventCdp 失败路径和 pending Map ghost response 的覆盖。",
+        "approach": "引入运行时 schema 验证层，补全测试覆盖缺口，在 CI 中自动检测契约漂移。",
+        "impact": {
+          "files": [
+            "src/shared/types.ts",
+            "src/main/cdp/cdp-client.test.ts",
+            "src/shared/schemas.ts (新增 Zod schema)",
+            "scripts/check-type-schemas.mjs (新增)"
+          ],
+          "moduleBoundaries": [
+            "shared/types.ts：补充 JSDoc 注解以辅助 Zod schema 生成",
+            "shared/schemas.ts：每个核心 interface 对应一个 Zod schema",
+            "scripts/check-type-schemas.mjs：CI 门禁检查——schema 编译产物与 tsc 类型一致"
+          ]
+        },
+        "pros": [
+          "运行时 schema 为 IPC 边界提供防御（恶意/畸形数据在解析时被拒）",
+          "快照测试在 CI 中阻止类型静默漂移—— breaking change 必须有意识地更新 schema",
+          "补充后的测试覆盖 cdp-client.test.ts 中 connectEventCdp 和 pending Map 两个关键路径"
+        ],
+        "cons": [
+          "引入 Zod 作为运行时依赖——增加 ~25KB 包体积（gzip 后）",
+          "维护两套 schema（编译期 TypeScript + 运行时 Zod）增加工作量",
+          "Zod schema 和 TypeScript type 之间的同步需要 check 脚本强制保证"
+        ],
+        "risks": [
+          "Zod schema 的错误信息可能不如 Zod 4.x 的 i18n 完善——诊断体验可能稍差",
+          "如果 types.ts 的 interface 使用了条件类型或 mapped types，Zod 可能无法 1:1 映射——需要简化"
+        ],
+        "cost": {
+          "estimatedFiles": 4,
+          "estimatedLines": 300,
+          "complexity": "L"
+        },
+        "longTermValue": "极高——类型安全的运行时保障是所有长期维护项目的基石；Zod schema 的 snapshot 作为活文档为新人提供清晰的类型理解",
+        "verification": "CI 中运行 check-type-schemas 确认全量通过；故意修改一个 schema 确认 check 能检测漂移",
+        "rollback": "Zod 作为纯增量依赖——移除后 types.ts 和行为不变，只是丢失运行时检查能力"
+      },
+      {
+        "id": "RC5-B",
+        "name": "测试金字塔补全 + 契约断言库",
+        "summary": "不引入新的 schema 框架，而是基于 Vitest 的现有能力构建契约测试：(1) 为每个核心 interface 写 serialization round-trip test（object → JSON → parse → 必须等于原 object）；(2) 补全 cdp-client.test.ts 中缺失的错误路径测试；(3) 为 connectEventCdp 和 pending Map 的边界条件写专门测试。",
+        "approach": "用纯TestResult-based 测试覆盖替代 schema 框架。",
+        "impact": {
+          "files": [
+            "src/main/cdp/cdp-client.test.ts",
+            "src/shared/types.test.ts (新增)",
+            "src/shared/contracts.test.ts (新增)",
+            "src/main/services/performance/performance-recorder.test.ts"
+          ],
+          "moduleBoundaries": [
+            "cdp-client.test.ts：补全 connectEventCdp error path + pending ghost",
+            "types.test.ts：interface 结构断言",
+            "contracts.test.ts：关键数据模型的 round-trip 测试",
+            "performance-recorder.test.ts：并发 trace 测试"
+          ]
+        },
+        "pros": [
+          "零新依赖——纯 Vitest 扩展",
+          "测试即文档——新人阅读 test 就能理解 interface 的完整约束",
+          "实施速度快——1-2 天即可补全主要缺口"
+        ],
+        "cons": [
+          "测试覆盖是\"事后\"的——只能在漂移发生后检测",
+          "不能提供运行时的 IPC 边界防御",
+          "测试数量膨胀可能增加 CI 时间（但量级在 5-10s 内）"
+        ],
+        "risks": [
+          "测试可能和真实序列化不一致（如 Date 对象 round-trip 时丢失精度）",
+          "维护测试套件需要持续投入——如果 CI 测试被 skip 或 xfail，漂移检测失效"
+        ],
+        "cost": {
+          "estimatedFiles": 4,
+          "estimatedLines": 250,
+          "complexity": "M"
+        },
+        "longTermValue": "高——测试覆盖是所有维护工作的基础；不过契约测试的维护成本需要团队承诺",
+        "verification": "CI 中新增的测试自然执行；故意修改 types.ts 确认测试失败",
+        "rollback": "测试是纯增量——不影响生产代码行为"
+      },
+      {
+        "id": "RC5-C",
+        "name": " branded types + 编译期契约检查",
+        "summary": "使用 TypeScript 的 branded types 和 template literal types 为關鍵 IPC 字段施加编译期约束：AgentId 不是 string 而是 `__brand: 'AgentId'`；ThemeVerification 的 layers 字段用 `Record<LayerName, number>` 而非 `Record<string, number>`。同时用 // @ts-expect-error 注释标注已知的类型断言点，并在 code review 中要求任何 @ts-expect-error 新增必须附带 RFC。",
+        "approach": "通过编译期类型安全和显式标注类型逃逸点，消除运行时漂移的可能性。",
+        "impact": {
+          "files": [
+            "src/shared/types.ts",
+            "src/shared/types/brands.ts (新增)",
+            "src/main/cdp/injection-runtime.ts",
+            "src/main/services/performance/performance-recorder.ts"
+          ],
+          "moduleBoundaries": [
+            "types/brands.ts：branded type 定义工厂",
+            "types.ts：AgentId 等核心 ID 改为 branded type",
+            "injection-runtime.ts：LayerName 改为 union type"
+          ]
+        },
+        "pros": [
+          "零运行时成本——纯编译期检查",
+          "branded type 防止 string 类型误传（如把 themeId 传给期望 agentId 的参数）",
+          "LayerName union 穷尽检查确保 switch/if-else 覆盖所有层"
+        ],
+        "cons": [
+          "branded type 的 `__brand` 字段只在编译期存在——运行时 JSON.parse 的对象不携带 brand信息，仍需验证",
+          "引入 branded types 需要所有消费者适配类型声明（可能涉及 10+ 文件的 import 修改）",
+          "@ts-expect-error 标注是一种纪律约束，依赖人工遵守"
+        ],
+        "risks": [
+          "branded types 通过 `as Brand<string>` 强制转换很容易绕过——需要 ESLint 规则禁止裸 `as` 转型",
+          "过多 branded types 可能增加 IDE 噪音和编译时间"
+        ],
+        "cost": {
+          "estimatedFiles": 6,
+          "estimatedLines": 200,
+          "complexity": "M"
+        },
+        "longTermValue": "高——编译期类型安全是长期维护的第一道防线；但需要团队纪律和可能的 ESLint 强制来保持效果",
+        "verification": "编译成功即为验证；故意引入类型不匹配确认编译报错",
+        "rollback": "branded type 是 additive——回退到 unbrand 只需修改 types.ts 的 type alias"
+      },
+      {
+        "id": "RC5-D",
+        "name": "测试生成器（ codegen + AI-assisted ）",
+        "summary": "为关键 interface（CdpResponse, ThemeApplyTrace, ThemeVerification 等）构建 .test-d.ts 文件（type-level tests），使用expectTypeOf / asserts 在编译期验证。同时为 cdp-client 的关键函数（connectCdp, connectEventCdp, pending Map 操作）构建 property-based 测试（使用 fast-check），自动发现边界条件和异常路径。",
+        "approach": "编译期 type assertion + property-based fuzzing 双管齐下。",
+        "impact": {
+          "files": [
+            "src/main/cdp/cdp-client.test.ts",
+            "src/shared/types.test-d.ts (新增)",
+            "src/shared/property-tests.ts (新增 fast-check property tests)"
+          ],
+          "moduleBoundaries": [
+            "types.test-d.ts：编译期类型断言",
+            "property-tests.ts：cdp-client/csp-fanout 的自动边界测试"
+          ]
+        },
+        "pros": [
+          "property-based 测试能发现人工难以想到的边界条件（如乱序响应、重复 id、超大 payload）",
+          "编译期 type assertion 在 tsc 阶段就检测到不兼容",
+          "fast-check 的测试是自动生成的——维护成本低"
+        ],
+        "cons": [
+          "引入 fast-check 依赖（~15KB gzip）",
+          "Property-based 测试在 CI 中可能产生 flaky（如果随机种子导致罕见失败）——需要固定种子",
+          "学习曲线：团队成员需要理解 property-based 测试的思维方式"
+        ],
+        "risks": [
+          "Property-based 测试可能覆盖到从未被使用的代码路径——但不会导致假阳性",
+          "codegen .test-d.ts 文件如果和实际 type 不同步会产生误报"
+        ],
+        "cost": {
+          "estimatedFiles": 3,
+          "estimatedLines": 250,
+          "complexity": "L"
+        },
+        "longTermValue": "高——property-based 测试是形式化方法的实用近似，能显著提高核心 IPC 边界的可靠性",
+        "verification": "CI 中 fast-check 全量运行；手动审查 property test 生成的边界案例",
+        "rollback": "测试是生命周期的增量——移除 fast-check 和 property tests 不影响生产代码"
+      }
+    ]
+  },
+  "selectedSchemes": {
+    "RC1": {
+      "scheme": "B",
+      "reason": "RC1-B（Fix-in-Place 渐进修复）在满足所有选优标准的前提下实施成本最低、回滚粒度最细。四个文件 ~200 行的改动精准修复全部 5 个缺陷——前置容量守卫修复 B-02，安全阀 setInterval 修复 M-03，apply-baseline/inspect-session/reload-watchdog 改走 pool 修复 M-05 和 B-09，targetKeyFor fallback 索引修复 β-05。每个 bug 独立 commit 可独立回滚。虽然 pool 仍然是可选的（长期不如 RC1-A 的 gateway 方案优雅），但当前最紧迫的是消除缺陷而非架构升级。长期建议在 RC1-B 落地后再增量实施 RC1-A 的 gateway 层。",
+      "scores": {
+        "timeComplexity": 88,
+        "spaceComplexity": 90,
+        "maintainability": 72,
+        "extensibility": 65,
+        "dependencyControl": 95,
+        "weightedTotal": 80.35
+      },
+      "ranking": [
+        { "scheme": "RC1-A", "weightedTotal": 77.80, "reason": "最彻底的架构方案但改动面大（7 文件），gateway 单点风险" },
+        { "scheme": "RC1-B", "weightedTotal": 80.35, "reason": "最优——精准、可分阶段、可独立验证、可独立回滚" },
+        { "scheme": "RC1-C", "weightedTotal": 68.50, "reason": "语义分层有价值但 short+long 双池共享 socket 复杂度高" },
+        { "scheme": "RC1-D", "weightedTotal": 63.20, "reason": "独立安全层不解决 pool 可选的根本问题" }
+      ]
+    },
+    "RC2": {
+      "scheme": "A",
+      "reason": "RC2-A（Trace 管线一致性修复 + 推送通道）是最全面的系统修复——修正 step name（M-01）、统一时钟源（M-06）、修正 finishTrace 位置（B-08）、消除环形缓冲区溢出仅首次警告（B-10）、引入 push 通道替代纯拉取（B-11）。per-agent trace map 取代 shadow-trace 模型，并发 apply 不再丢失数据。改动虽涉及 5 文件但每个改动都是独立的、可验证的、可回滚的。成本中等（200 行），收益覆盖 RC2 所有 5 个缺陷。",
+      "scores": {
+        "timeComplexity": 85,
+        "spaceComplexity": 80,
+        "maintainability": 88,
+        "extensibility": 90,
+        "dependencyControl": 95,
+        "weightedTotal": 87.85
+      },
+      "ranking": [
+        { "scheme": "RC2-A", "weightedTotal": 87.85, "reason": "最优——全面修复 5 个缺陷，per-agent map 消除并发 fallback" },
+        { "scheme": "RC2-C", "weightedTotal": 82.40, "reason": "event soursing 模型优雅但重写 recorder 成本过高" },
+        { "scheme": "RC2-B", "weightedTotal": 74.30, "reason": "最小改动但只修 3/5 个缺陷，不含并发和推送" },
+        { "scheme": "RC2-D", "weightedTotal": 71.50, "reason": "Telemetry SDK 抽象层过度工程化，XL 复杂度" }
+      ]
+    },
+    "RC3": {
+      "scheme": "B",
+      "reason": "RC3-B（计数器安全审计 + pending Map 防护）以最小改动（3 文件 ~80 行）精准修复 B-04（firstSession 双重 release 和 refCount underflow）、β-07（pending Map 非空断言）、B-07（pending Map 并发）。firstSession 所有权显式转移是最精确的语义 fix——不引入新抽象层，不改变 API 表面。虽然不解决并发 trace 的 shadow 模型问题（属于 RC2 范畴），但本方案完整解决了 RC3 管辖的所有资源所有权和完成信号处理缺陷。改动量小、可快速部署、可独立回滚。",
+      "scores": {
+        "timeComplexity": 90,
+        "spaceComplexity": 92,
+        "maintainability": 78,
+        "extensibility": 68,
+        "dependencyControl": 95,
+        "weightedTotal": 83.05
+      },
+      "ranking": [
+        { "scheme": "RC3-A", "weightedTotal": 79.20, "reason": "RAII 守卫模式优雅但 TS5.2 using 支持需确认" },
+        { "scheme": "RC3-B", "weightedTotal": 83.05, "reason": "最优——精准、最小改动、所有权语义清晰" },
+        { "scheme": "RC3-D", "weightedTotal": 75.60, "reason": "幂等性合约有价值但增加 API 复杂度" },
+        { "scheme": "RC3-C", "weightedTotal": 72.80, "reason": "TC39 using 声明未来导向但异步语义需验证" }
+      ]
+    },
+    "RC4": {
+      "scheme": "A",
+      "reason": "RC4-A（三层验证降级模型）从 boolean 升级为 'full'|'partial'|'failed' 三值判定，彻底修复 β-04（layers 缺失时错误降级）和 β-09（waitForTheme 超时后无返回）。改动涉及 4 文件 ~120 行，每个文件的变更都聚焦于增强验证精度而非重构。保留旧的 isThemeFullyApplied API 作为兼容层（映射三值→boolean），新代码使用增强版本。分级响应让 watchdog 在 partial 场景做补注入而非 skip——这是用户体验的直接改善。实施可分阶段：先改 shared/injection-runtime.ts，再改 shared.ts（waitForTheme），再改 cdp-fanout.ts 和 reload-watchdog.ts。",
+      "scores": {
+        "timeComplexity": 82,
+        "spaceComplexity": 88,
+        "maintainability": 85,
+        "extensibility": 88,
+        "dependencyControl": 95,
+        "weightedTotal": 86.55
+      },
+      "ranking": [
+        { "scheme": "RC4-A", "weightedTotal": 86.55, "reason": "最优——三值模型精确修复验证降级，兼容旧 API" },
+        { "scheme": "RC4-C", "weightedTotal": 76.30, "reason": "Pipeline 模式优雅但增加多次 CDP round-trip" },
+        { "scheme": "RC4-D", "weightedTotal": 73.80, "reason": "能力协商有价值但依赖所有注入器适配" },
+        { "scheme": "RC4-B", "weightedTotal": 70.50, "reason": "最小修复但不解决根本问题" }
+      ]
+    },
+    "RC5": {
+      "scheme": "A",
+      "reason": "RC5-A（Zod Schema 快照测试 + 契约 CI 门禁）从根本上解决类型契约漂移的系统性问题——Zod schema 在运行时提供 IPC 边界防御（防止畸形数据穿透），check-type-schemas 脚本在 CI 中阻止类型静默漂移（必须显式更新 schema 才能修改 interface）。补充 cdp-client.test.ts 中 connectEventCdp 失败路径和 pending ghost response 覆盖。虽然引入 Zod 依赖（25KB gzip），但这是可控的增量——Zod 是最成熟的 TS schema 库，社区维护、API 稳定、 TypeScript 集成最好。长期来看，所有 IPC 通道的运行时验证都需要 schema，这是一次性投入持续受益的基建。",
+      "scores": {
+        "timeComplexity": 75,
+        "spaceComplexity": 82,
+        "maintainability": 92,
+        "extensibility": 90,
+        "dependencyControl": 80,
+        "weightedTotal": 85.60
+      },
+      "ranking": [
+        { "scheme": "RC5-A", "weightedTotal": 85.60, "reason": "最优——Zod schema + CI 门禁系统解决契约漂移" },
+        { "scheme": "RC5-B", "weightedTotal": 78.40, "reason": "测试覆盖补全扎实但缺少运行时防御" },
+        { "scheme": "RC5-D", "weightedTotal": 74.20, "reason": "Property-based testing 有趣但引入 fast-check 依赖" },
+        { "scheme": "RC5-C", "weightedTotal": 72.50, "reason": "编译期 branded types 零成本但依赖团队纪律" }
+      ]
+    }
+  },
+  "implementationPlan": {
+    "phase1": {
+      "name": "Critical Fixes (立即)",
+      "schemes": ["RC1-B", "RC2-A", "RC3-B"],
+      "reason": "这三个方案修复 RC1（Session Pool 安全阀缺失）、RC2（Trace 管线缺陷）、RC3（资源所有权缺陷）——均属于 critical 级别的正确性问题。建议同时实施：RC3-B（80 行，最快）→ RC2-B 或 RC2-A（200 行）→ RC1-B（200 行）。预估 1-2 天完成全部修改和测试。"
+    },
+    "phase2": {
+      "name": "Integrity & Observability (短期)",
+      "schemes": ["RC4-A", "RC5-A"],
+      "reason": "RC4（验证降级模型）和 RC5（schema 契约门禁）属于系统完整性缺陷——不直接导致功能失败但长期侵蚀可靠性。建议在 Phase 1 完成并在生产环境观察 1-2 周无回归后实施。RC4-A（120 行）和 RC5-A（300 行）预估 3-4 天。"
+    },
+    "phase3": {
+      "name": "Architectural Upgrade (长期备选)",
+      "schemes": ["RC1-A (gateway)", "RC2-C (event sourcing)"],
+      "reason": "RC1-A（Pool Gateway）和 RC2-C（Event Sourcing Trace 模型）是更彻底的架构升级方案——改动面大、收益也大，但风险更高。建议在 Phase 1+2 落地并稳定运行后，作为 RFC 评审再决定是否实施。这些方案适合作为 RFC 2026-Q4 的架构演进候选。"
+    },
+    "totalEstimatedEffort": {
+      "filesModified": 22,
+      "estimatedNewLines": 1050,
+      "estimatedDays": "5-7 天（分两个 phase）"
+    }
+  }
+}

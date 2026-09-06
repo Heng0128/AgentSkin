@@ -1,0 +1,26 @@
+/* ============================================================
+   ENGINE: codex — Layer 0: Token Override (pass-through)
+   ------------------------------------------------------------
+   NOTE: This layer is intentionally a no-op for Codex.
+
+   Codex's native design tokens are the `--color-token-*` family
+   (verified against a live renderer, e.g. build 62640). Those are
+   owned and overridden by the per-theme `codex.css` generator
+   (scripts/generators/codexCss.mjs → codexColorTokenOverrides), and
+   background transparency for the art punch-through is handled by
+   engines/codex/adapter.mjs (discoverAndOverrideTokens).
+
+   The legacy flat `--text-primary` / `--bg-*` / `--accent` / `--border-*`
+   overrides that used to live here were removed: they referenced a token
+   namespace Codex no longer exposes (verified MISSING in a live renderer),
+   so they were pure no-op dead code. Keeping this file as a required
+   placeholder satisfies the engine loader (palette/orchestrator.ts expects
+   the three-file set) and check:contract without injecting dead rules.
+
+   If Codex ever reintroduces a flat token namespace worth centralizing
+   here, add overrides keyed on `--color-token-*` only.
+   ============================================================ */
+
+html.agentskin-host-codex:root {
+  /* pass-through: no static token overrides; theme layer owns --color-token-* */
+}

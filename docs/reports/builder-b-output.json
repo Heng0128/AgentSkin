@@ -1,0 +1,34 @@
+{
+  "modifiedFiles": [
+    "src/shared/import/parsers/dreamskin-parser.test.ts",
+    "src/shared/import/parsers/agentskin-built-parser.test.ts",
+    "src/shared/import/parsers/source-directory-parser.test.ts",
+    "engines/shared/adopted-sheets-manager.test.mjs",
+    "engines/shared/deep-core.test.mjs",
+    "engines/shared/token-discovery.test.mjs",
+    "vitest.config.ts"
+  ],
+  "commits": [
+    "a27f3a71",
+    "c96c66d9",
+    "0c05408b",
+    "d0e84e84",
+    "250b0c71",
+    "36de36a7",
+    "75b6ef40"
+  ],
+  "testResults": {
+    "totalTests": 195,
+    "passed": 195,
+    "failed": 0,
+    "breakdown": {
+      "dreamskin-parser.test.ts": { "total": 31, "passed": 31, "failed": 0 },
+      "agentskin-built-parser.test.ts": { "total": 31, "passed": 31, "failed": 0 },
+      "source-directory-parser.test.ts": { "total": 36, "passed": 36, "failed": 0 },
+      "adopted-sheets-manager.test.mjs": { "total": 21, "passed": 21, "failed": 0 },
+      "deep-core.test.mjs": { "total": 41, "passed": 41, "failed": 0 },
+      "token-discovery.test.mjs": { "total": 35, "passed": 35, "failed": 0 }
+    }
+  },
+  "summary": "Added comprehensive unit test coverage for 6 modules: 3 parsers (dreamskin, agentskin-built, source-directory) with 98 tests via vitest, and 3 engine shared modules (adopted-sheets-manager, deep-core, token-discovery) with 97 tests via standalone node runner. All 195 tests pass. The vitest.config.ts was updated to exclude the new standalone engine test files from vitest's engines project (they use the custom assert/group pattern like existing hybrid-injector and injection-feedback tests)."
+}

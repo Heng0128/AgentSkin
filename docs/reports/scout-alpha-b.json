@@ -1,0 +1,141 @@
+{
+  "scout": "Scout-α",
+  "direction": "B — 注入性能与可观测化",
+  "scannedAt": "2026-08-20",
+  "findings": [
+    {
+      "id": "B-01",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\cdp-client.ts",
+      "lineNumber": 407,
+      "severity": "major",
+      "description": "connectEventCdp 失败路径记录了错误的 trace step 名。catch 块中调用 PerformanceRecorder.recordNamedStep('connectCdp', ...) 应使用 'connectEventCdp' 以匹配其 .then() 分支（第 396 行）。这导致所有 EventCDP 连接失败（reload-watchdog、inspect-session）被错误归因到 connectCdp step，污染 Apply Trace 分类统计。",
+      "evidence": ".catch((error) => {\n  PerformanceRecorder.recordNamedStep(\n    'connectCdp',\n    performance.now() - t0,\n    false,\n    error instanceof Error ? error.message : String(error),\n  );\n  throw error;\n});"
+    },
+    {
+      "id": "B-02",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\session-pool.ts",
+      "lineNumber": 246,
+      "severity": "major",
+      "description": "Session pool 容量守卫在 open() 之后才检查上限，导致每次超限都白白建立 WebSocket 连接再立即关闭。当 per-agent 会话数达到 MAX_SESSIONS_PER_AGENT(64) 时，新目标仍会先执行 connectCdp 握手（~200ms）再关闭返回 null，浪费资源并增加 CDP 目标进程负担。",
+      "evidence": "const session = await open();\nif (!session) return null;\nif (!existing && byTarget.size >= MAX_SESSIONS_PER_AGENT) {\n  mainWarn('SessionPool', ...);\n  try { session.close(); } catch { ... }\n  return null;\n}"
+    },
+    {
+      "id": "B-03",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\session-pool.ts",
+      "lineNumber": 153,
+      "severity": "major",
+      "description": "scanIdleEntries 对 retired 且 refCount>0 的 session 仅记录警告但永不强制关闭。若调用方 acquire 后未 release（异常路径遗漏 finally），该 session 将永久驻留池中无法回收，构成连接泄漏。缺少「超过 grace period 后强制 discard」的安全阀。",
+      "evidence": "if (entry.refCount > 0) {\n  if (entry.retired && now - entry.retiredAt > RETIRE_GRACE_MS) {\n    mainWarn('SessionPool', `retired session still in use (refCount=${entry.refCount}): ${appId}/${targetKey}`);\n  }\n  continue;\n}"
+    },
+    {
+      "id": "B-04",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\cdp-fanout.ts",
+      "lineNumber": 580,
+      "severity": "major",
+      "description": "hardeningPass 中 firstSession 的 finally 块存在连接释放不一致。当 firstSession 被设置后，若其为 pooled 模式，finally 中 releaseSession 会被调用（第 581-583 行），但 firstSession 在第 762-764 行会再次 releaseSession，导致 refCount 被双重递减。虽然 release() 用 Math.max(0, ...) 做了下界保护不会负数，但语义上 firstSession 的生命周期管理存在混乱。",
+      "evidence": "} finally {\n  if (handle.pooled) {\n    releaseSession(deps.sessions, appId, targetKeyFor(target.id, target.webSocketDebuggerUrl));\n  } else if (session !== firstSession) {\n    try { session.close(); } catch { }\n  }\n}"
+    },
+    {
+      "id": "B-05",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\reload-watchdog.ts",
+      "lineNumber": 110,
+      "severity": "major",
+      "description": "reload-watchdog 通过 connectEventCdp 建立的长生命周期 CDP 会话完全绕过了 session-pool 管理。该会话无 heartbeat、无 idle TTL、无 refCount 保护，仅通过 detachReloadWatchdog / disposeReloadWatchdogs 清理。若 app 在两次 apply 之间被用户手动关闭或崩溃，watchdog 会话将成为孤儿连接直到下次 dispose。",
+      "evidence": "session = await connectEventCdp(state.options.pageTargetUrl!);\n...\nstate.session = session;\nconst navHandler = (): void => handleNavigationEvent(state);\nstate.navHandler = navHandler;\nsession.on('Page.loadEventFired', navHandler);"
+    },
+    {
+      "id": "B-06",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\inspect-session.ts",
+      "lineNumber": 71,
+      "severity": "major",
+      "description": "inspect-session 的 EventCdpSession 同样绕过 session-pool，且依赖调用方显式调用 stop() 才能关闭。若 UI 组件卸载时忘记调用 stop()（如 Studio 面板被意外关闭），该会话将永久泄漏。缺少超时自动关闭或 WeakRef/FinalizationRegistry 兜底。",
+      "evidence": "export async function startInspect(opts: StartInspectOptions): Promise<InspectController> {\n  const session = await connectEventCdp(opts.webSocketDebuggerUrl);\n  ...\n  return { async stop() { ... session.close(); } };\n}"
+    },
+    {
+      "id": "B-07",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\services\\performance\\performance-recorder.ts",
+      "lineNumber": 392,
+      "severity": "major",
+      "description": "PerformanceRecorder 单迹模型导致并发 apply 丢失可观测性。MAX_CONCURRENCY=6 意味着最多 6 个 agent 同时 apply，但只有第一个获得真实 ApplyTraceBuilder，其余 5 个得到 ShadowTrace（仅含一个 'shadowed-concurrent-apply' step，duration=0）。并发场景下 83% 的 apply 无详细 timing 数据。",
+      "evidence": "static start(agentId: string, themeId?: string): ApplyTraceBuilder | ShadowTrace {\n  if (PerformanceRecorder.active) {\n    return new ShadowTrace(agentId, themeId);\n  }\n  ...\n}"
+    },
+    {
+      "id": "B-08",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\theme-apply-flow.ts",
+      "lineNumber": 637,
+      "severity": "major",
+      "description": "applyOnResolvedPort 中 finishTrace() 在第 637 行被调用，但后续的 hardeningPass、injectAgentWallpaperFromApply、syncSchemeWithStability、captureBaselineOnPort 等后台任务仍在运行。这些后台任务（可能耗时数秒）的 timing 数据完全不会出现在 Apply Trace 中，造成 trace 在 apply 核心阶段提前截断。",
+      "evidence": "finishTrace();\nreturn {\n  response: { status: 'applied', ... },\n  background: Promise.allSettled(backgroundTasks).then(...),\n};"
+    },
+    {
+      "id": "B-09",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\apply-baseline.ts",
+      "lineNumber": 265,
+      "severity": "minor",
+      "description": "apply-baseline / baseline-css-capture / baseline-css-replay / cdp-fingerprint 等模块直接使用 connectCdp 建立一次性会话，未通过 session-pool 复用。在同一个 apply epoch 内，这些模块与 hardeningPass 可能访问同一 target，造成重复 WebSocket 握手。",
+      "evidence": "async function openMainDomSession(port: number): Promise<CdpSession | null> {\n  const targets = await findDomTargets(port);\n  if (!targets.length || !targets[0].webSocketDebuggerUrl) return null;\n  return await connectCdp(targets[0].webSocketDebuggerUrl, 3000);\n}"
+    },
+    {
+      "id": "B-10",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\services\\performance\\performance-logger.ts",
+      "lineNumber": 187,
+      "severity": "minor",
+      "description": "PerformanceLogger 环形缓冲区溢出后仅首次打印警告（overflowWarned 标志），后续溢出静默丢弃。Diagnostics UI 依赖此缓冲区做趋势分析，若用户未注意到首次警告，后续数据丢失将无迹可查。overflowCount 虽在 stats 中暴露但无主动告警。",
+      "evidence": "log(trace: ThemeApplyTrace): void {\n  buffer.push(trace);\n  if (buffer.length > MAX_HISTORY) {\n    buffer.shift();\n    traceOverflowCount += 1;\n    if (!overflowWarned) {\n      overflowWarned = true;\n      console.warn(`[PerformanceLogger] ring buffer overflow: MAX_HISTORY=${MAX_HISTORY} exceeded, ...`);\n    }\n  }\n}"
+    },
+    {
+      "id": "B-11",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\ipc\\performance-ipc.ts",
+      "lineNumber": 37,
+      "severity": "minor",
+      "description": "performance-ipc 仅提供拉取接口（poll model），UI 每 5s 轮询。对于诊断偶发性能退化，轮询间隔可能错过短时 spike。模块注释提到未来可能通过 webContents.send 推送实时更新，但当前未实现，构成数据闭环缺口。",
+      "evidence": "export function registerPerformanceIpc(): void {\n  ipcMain.handle(IpcChannel.PERFORMANCE_GET, (_event, count: unknown): PerformanceHistoryResponse => {\n    return performanceLogger.getHistory(clampCount(count, MAX_COUNT));\n  });\n  ...\n}"
+    },
+    {
+      "id": "B-12",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\session-pool.ts",
+      "lineNumber": 358,
+      "severity": "minor",
+      "description": "Session pool heartbeat 使用 Runtime.evaluate('1') 作为 ping，但未先调用 Runtime.enable。若该 session 此前未被用于 Runtime 域操作（如仅用于 Page.* 命令），ping 可能因域未启用而失败，导致健康 session 被误判为死亡并在 2 次失败（10s）后丢弃。",
+      "evidence": "private async ping(appId: AgentId, targetKey: string, entry: PooledEntry): Promise<void> {\n  try {\n    await entry.session.send('Runtime.evaluate', {\n      expression: '1',\n      returnByValue: true,\n      awaitPromise: false,\n    });\n    entry.consecutiveFailures = 0;\n  } catch { ... }\n}"
+    },
+    {
+      "id": "B-13",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\cdp-client.ts",
+      "lineNumber": 225,
+      "severity": "minor",
+      "description": "openCdpSocket 中 enabledDomains 跟踪依赖正则 /^([A-Za-z]+)\\.enable$/ 匹配。若未来 CDP 方法名格式变化（如含数字或下划线），该正则将失效，导致域禁用配对丢失。当前实现假设 CDP 域名为纯字母。",
+      "evidence": "const enableMatch = /^([A-Za-z]+)\\.enable$/.exec(method);\nif (enableMatch) {\n  enabledDomains.add(enableMatch[1]);\n}"
+    },
+    {
+      "id": "B-14",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\services\\performance\\performance-recorder.ts",
+      "lineNumber": 270,
+      "severity": "info",
+      "description": "ApplyTraceBuilder.finish() 中 finishedAt 使用 new Date().toISOString()（ wall-clock ），而 startedAt 使用 process.hrtime.bigint()（monotonic）。若系统时钟在 apply 过程中被 NTP 调整，duration（基于 monotonic）与 finishedAt - startedAt（基于 wall-clock）将不一致。",
+      "evidence": "return {\n  id: this.traceId,\n  agentId: this.agentId,\n  startedAt: this.startedAt,\n  finishedAt: new Date().toISOString(),\n  duration: totalDuration,\n  ...\n};"
+    },
+    {
+      "id": "B-15",
+      "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\ipc\\with-monitored-timeout.ts",
+      "lineNumber": 37,
+      "severity": "info",
+      "description": "withMonitoredTimeout 仅依赖 isIpcTimeoutError（检查 name === 'IpcTimeoutError'）判断超时。但 isIpcTimeoutError 不验证 channel/ms 属性存在性。若某处抛出的 Error 恰好 name 匹配但缺少 channel/ms，logTimeout 将记录 undefined 字段。当前实现中 serializeForIpc 始终包含这些字段，风险较低。",
+      "evidence": "return withTimeout(channel, ms, promise, signal).catch((reason) => {\n  if (isIpcTimeoutError(reason)) {\n    performanceLogger.logTimeout({\n      channel: reason.channel,\n      ms: reason.ms,\n      timestamp: Date.now(),\n    });\n  }\n  throw reason;\n});"
+    }
+  ],
+  "summary": {
+    "totalFindings": 15,
+    "critical": 0,
+    "major": 8,
+    "minor": 5,
+    "info": 2,
+    "topRisks": [
+      "B-01: connectEventCdp 失败路径 trace step 名错误，污染 Apply Trace 分类",
+      "B-07: 单迹模型导致 83% 并发 apply 丢失详细 timing",
+      "B-05/06: reload-watchdog 与 inspect-session 绕过 session-pool，存在孤儿连接风险",
+      "B-03: retired session 无强制回收安全阀",
+      "B-08: finishTrace 在后台任务完成前截断 trace"
+    ]
+  }
+}

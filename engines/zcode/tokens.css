@@ -1,0 +1,37 @@
+/* ============================================================
+   ENGINE: zcode — Layer 0: Token Override (PLACEHOLDER)
+   ------------------------------------------------------------
+   ZCode is a Tailwind v4 UI whose native theme tokens are the
+   --color-* family declared on :root / .dark / .theme-zai-dark
+   (verified against the live DOM, 50894 probe: 257 tokens).
+
+   As of commit dd4528e3 the codex engine L0 was emptied in favour
+   of theme-layer ownership; zcode follows the SAME architecture:
+
+   - The primary visual identity (--color-* backgrounds, surfaces,
+     foregrounds, borders, accents) is now owned by the THEME LAYER
+     via `zcodeColorTokenOverrides()` in scripts/theme-utils.mjs
+     (generated into each theme's zcode.css). Keeping a second copy
+     here would double-map the same tokens from two sources and
+     drift apart — this file is intentionally a no-op placeholder.
+   - The flat semantic layer (--text-* / --bg-* / --accent-* /
+     --button-* / --sidebar-bg / --input-bg …) is also emitted by
+     the theme layer (shellTokenOverrides) and consumed by the
+     adapter.mjs structural CSS via var(--x, fallback) — every
+     consumer has a fallback, so absence here never breaks the
+     adapter.
+
+   Selector specificity note: the theme layer uses the same
+   html.agentskin-host-zcode:root + !important and is injected at
+   Layer 3 (theme.css), after this Layer 1, so no conflict.
+
+   This file must remain present: palette/orchestrator.ts treats a
+   missing tokens.css as a missing engine layer (falls back to
+   legacy) and check-injection-contract.mjs lists it as required
+   per-agent. Empty placeholder satisfies both.
+   ============================================================ */
+
+html.agentskin-host-zcode:root {
+  /* No-op: all native token overrides are owned by the theme layer
+     (zcodeColorTokenOverrides) to keep a single source of truth. */
+}

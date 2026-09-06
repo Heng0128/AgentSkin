@@ -1,0 +1,28 @@
+{
+  "totalViolations": 82,
+  "errors": 2,
+  "warnings": 70,
+  "infos": 10,
+  "remainingIssues": [
+    {
+      "file": "src/ui/studio/capture-store.ts",
+      "line": 481,
+      "rule": "parse",
+      "severity": "error",
+      "message": "Expected a semicolon or an implicit semicolon after a statement, but found none",
+      "introducedByCommit": "0327b069",
+      "note": "Missing closing brace '}' for if-block in setInspectResult. The if ('error' in node) { block is never closed before the set() call."
+    },
+    {
+      "file": "src/ui/studio/capture-store.ts",
+      "line": null,
+      "rule": "format",
+      "severity": "error",
+      "message": "Code formatting aborted due to parsing errors",
+      "introducedByCommit": "0327b069",
+      "note": "Secondary error caused by the parse error above."
+    }
+  ],
+  "result": "FAIL",
+  "summary": "Biome check found 82 total violations (2 errors, 70 warnings, 10 infos). The 2 errors are parse/format errors in src/ui/studio/capture-store.ts introduced by commit 0327b069 (phase5-step3): a missing closing brace '}' for the if-block inside setInspectResult causes a syntax error at line 481. The 70 warnings and 10 infos are pre-existing lint issues (noExplicitAny, noUnusedImports, noUnusedVariables, suppressions/unused, useOptionalChain, noUselessSwitchCase, useTemplate) scattered across test files and UI components — none were introduced by recent auto-fix changes. The parse error requires manual fix: add a closing brace '}' after the 'return;' statement inside setInspectResult's if-block."
+}

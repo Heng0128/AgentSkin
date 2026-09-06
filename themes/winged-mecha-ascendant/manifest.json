@@ -1,0 +1,57 @@
+{
+  "id": "winged-mecha-ascendant",
+  "name": "winged-mecha-ascendant",
+  "displayName": "Winged Mecha Ascendant",
+  "version": "2.0.0",
+  "description": "White-and-gold mecha with radiant wings above the Earth.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "mecha",
+    "space"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#98b863",
+    "secondary": "#acc682",
+    "background": "#170d13",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#2d2229",
+    "surfaceElevated": "#3b3137",
+    "border": "#32272d",
+    "codeBackground": "#150c11",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#291d24",
+    "buttonBackground": "#98b863",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#98b86360"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

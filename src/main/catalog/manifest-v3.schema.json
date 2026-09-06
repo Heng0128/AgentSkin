@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agentskin.dev/schema/manifest-v3.json",
+  "title": "AgentSkin Theme Manifest v3",
+  "description": "Schema for AgentSkin v3 single-file theme packages (schemaVersion 3). One semantic theme.css (app-agnostic part selectors) targets all apps; optional per-app overrides/<app>.css carry app-specific tweaks. Native token mapping is owned by the engine layers, not the theme package.",
+  "type": "object",
+  "required": ["id", "name", "version", "colors"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editor validation"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 3
+    },
+    "semanticVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "V3 format iteration number (distinct from the theme version)"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "displayName": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "themeCss": {
+      "type": "string",
+      "description": "Single semantic CSS file (relative to manifest). Defaults to 'theme.css'. Scoped per app at package build."
+    },
+    "apps": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9_-]*$"
+      },
+      "description": "Apps this theme targets. Defaults to all six known agents. Entries outside the known agent set are rejected by cross-field validation."
+    },
+    "overrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[^/\\\\][^\\\\]*$"
+      },
+      "description": "Per-app CSS override files (relative to manifest), keyed by agent id. Optional — app-specific tweaks only."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["dark", "light", "auto"]
+    },
+    "colors": {
+      "type": "object",
+      "required": ["background", "foreground"],
+      "additionalProperties": false,
+      "properties": {
+        "accent": { "type": "string" },
+        "secondary": { "type": "string" },
+        "background": { "type": "string" },
+        "foreground": { "type": "string" },
+        "muted": { "type": "string" },
+        "surface": { "type": "string" },
+        "surfaceElevated": { "type": "string" },
+        "border": { "type": "string" },
+        "codeBackground": { "type": "string" },
+        "codeForeground": { "type": "string" },
+        "inputBackground": { "type": "string" },
+        "buttonBackground": { "type": "string" },
+        "buttonForeground": { "type": "string" },
+        "focusRing": { "type": "string" },
+        "selection": { "type": "string" },
+        "extended": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "description": "Theme color identity (14-token family). background + foreground required; missing tokens are derived by the palette layer."
+    },
+    "hero": {
+      "type": "string",
+      "description": "Optional hero artwork (png/webp/jpeg). Never downscaled."
+    },
+    "icon": {
+      "type": "string",
+      "description": "Optional icon. When absent, generated from hero/palette at package build."
+    },
+    "preview": {
+      "type": "string",
+      "description": "Optional preview screenshot. When absent, generated from hero/palette at package build."
+    },
+    "art": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this theme ships hero artwork (default true). CSS-only themes set false."
+    },
+    "author": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri" }
+      },
+      "additionalProperties": false
+    },
+    "category": { "type": "string" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "license": { "type": "string" },
+    "unofficial": { "type": "boolean" }
+  }
+}

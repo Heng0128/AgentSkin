@@ -1,0 +1,58 @@
+{
+  "id": "sunset-cellphone-girl",
+  "name": "sunset-cellphone-girl",
+  "displayName": "Sunset Cellphone Girl",
+  "version": "2.0.0",
+  "description": "Girl checks a flip phone against a sunset skyline.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "anime",
+    "sunset",
+    "retro"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#ff9a30",
+    "secondary": "#ffae59",
+    "background": "#060409",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#1b191e",
+    "surfaceElevated": "#2a282c",
+    "border": "#201e23",
+    "codeBackground": "#050408",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#161419",
+    "buttonBackground": "#ff9a30",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#ff9a3060"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

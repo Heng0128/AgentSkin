@@ -1,0 +1,59 @@
+{
+  "id": "fuji-rooftop-winter",
+  "name": "fuji-rooftop-winter",
+  "displayName": "Fuji Rooftop Winter",
+  "version": "2.0.0",
+  "description": "Schoolgirl in a sailor uniform on a snowy rooftop balcony with Mt. Fuji behind.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "anime",
+    "rooftop",
+    "fuji",
+    "winter"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#cac2af",
+    "secondary": "#d4cebf",
+    "background": "#26251f",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#3e3d36",
+    "surfaceElevated": "#4a4a43",
+    "border": "#42413a",
+    "codeBackground": "#23221c",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#3a3931",
+    "buttonBackground": "#cac2af",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#cac2af60"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

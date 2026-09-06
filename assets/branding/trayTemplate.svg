@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="AgentSkin tray template">
+  <!-- Monochrome silhouette used as macOS template mask. The system renders the
+       non-transparent region in the menu-bar accent colour. -->
+  <rect x="1" y="1" width="46" height="46" rx="11.5" fill="#000000"/>
+</svg>

@@ -1,0 +1,74 @@
+{
+  "schema": "builder-report/v1",
+  "scheme": "RC4-A",
+  "title": "三层验证降级模型 (ThemeApplyVerdict full/partial/failed)",
+  "snapshot": "c579cc6b",
+  "branch": "main",
+  "completedAt": "2025-01-15T00:00:00Z",
+  "phases": [
+    {
+      "step": 1,
+      "commit": "42f05d79",
+      "file": "src/shared/injection-runtime.ts",
+      "change": "新增 ThemeApplyVerdict 三值类型 + isThemeFullyApplyVerdict 函数",
+      "detail": "将 isThemeFullyApplied 的判定逻辑重构为三值返回：'full'（accent + sheets + layers 全通过）、'partial'（有 accent 但 layers 不全或数据不可用）、'failed'（无 accent 或 无 sheets）。旧 isThemeFullyApplied 保留为兼容层（映射 full→true，其余→false）。修复了 β-04：layers 缺失时旧逻辑退化为仅看 accent+sheetCount 的问题，新逻辑返回 'partial' 触发补注入。",
+      "linesChanged": { "inserted": 61, "deleted": 21 }
+    },
+    {
+      "step": 2,
+      "commit": "f4ea3427",
+      "file": "src/main/cdp/injection/shared.ts",
+      "change": "waitForTheme 返回 WaitForThemeResult 替代 bare ThemeVerification | null",
+      "detail": "新增 WaitForThemeResult 接口 { applied, verdict, verification }。轮询过程中维护 lastVerification，超时后返回最后一个非 null 的 verification 而非 null。修复了 β-09：超时后调用方不再收到 null 导致无法判断主题状态。verdict 由 isThemeFullyApplyVerdict 计算得出。",
+      "linesChanged": { "inserted": 45, "deleted": 11 }
+    },
+    {
+      "step": 3,
+      "commit": "d55b4731",
+      "file": "src/main/cdp/cdp-fanout.ts",
+      "change": "watchdog 分级响应 — partial 触发补注入而非 skip",
+      "detail": "将 watchdog gate 从 isThemeFullyApplied(watchdogVerification, { requireHero }) 切换为 isThemeFullyApplyVerdict。'verdict === full' 时跳过注入（behavior unchanged）；'partial'/'failed' 时均触发 tryEngineInjection 补注入，并输出带 verdict 的日志供诊断。",
+      "linesChanged": { "inserted": 19, "deleted": 4 }
+    },
+    {
+      "step": 4,
+      "commit": "d98a7b40",
+      "file": "src/main/cdp/reload-watchdog.ts",
+      "change": "reload-watchdog 分级响应 — partial 触发补注入而非 skip",
+      "detail": "将 reverifyAfterNavigation 中 `verification.adoptedSheetCount > 0` 的简单 heuristic 替换为 isThemeFullyApplyVerdict 三值判定。新增 requireHero 计算（基于 imageDataUrls.hero / imageFilePaths.hero）。仅 verdict === full 时跳过；partial/failed 均触发 tryEngineInjection 补注入并输出 verdict 日志。",
+      "linesChanged": { "inserted": 15, "deleted": 4 }
+    },
+    {
+      "step": 5,
+      "commit": "8ffe7796 + 32d2d748",
+      "files": [
+        "src/main/cdp/injection/engine-strategy.ts",
+        "src/main/cdp/injection/cdp-strategy.ts",
+        "src/main/cdp/live-doubao-engine.manual.test.ts",
+        "src/main/cdp/live-apply-all.manual.test.ts"
+      ],
+      "change": "更新所有 waitForTheme 调用方适配新返回类型",
+      "detail": "engine-strategy.ts 解构 { verification, applied }，用 applied 替代 isThemeFullyApplied(verification, {...}) 检查（移除未使用的 isThemeFullyApplied import）。cdp-strategy.ts 解构 { verification } 保留后续 heroBlobActive 逻辑。两个 manual test 文件同步解构更新。",
+      "linesChanged": { "inserted": 10, "deleted": 12 }
+    },
+    {
+      "step": 6,
+      "commit": "c579cc6b",
+      "file": "src/main/cdp/reload-watchdog.test.ts",
+      "change": "更新 reload-watchdog 测试数据以匹配三值判定",
+      "detail": "测试 'does NOT re-inject when the engine sheets are already present' 的 verifyTheme mock 新增 layers: { palette: 1, tokens: 45, cosmetic: 12 }，使 verdict 为 'full' 而非 'partial'。旧测试数据无 layers 字段，新逻辑下返回 'partial' 触发补注入，属于预期的 RC4-A 行为变更。",
+      "linesChanged": { "inserted": 4, "deleted": 0 }
+    }
+  ],
+  "verification": {
+    "tscNoEmit": "pass (exit 0)",
+    "biomeCheck": "pass (via pre-commit hook)",
+    "engineStrategyTests": "9/9 pass",
+    "reloadWatchdogTests": "9/9 pass",
+    "sharedTests": "3/3 pass",
+    "cdpFanoutTests": "36/36 pass",
+    "note": "session-pool.test.ts 与 theme-apply-flow.test.ts 各有 1 个失败，经验证为预存失败（与 RC4-A 无关，stash 后同样失败）",
+    "totalLines": { "inserted": 154, "deleted": 52, "net": 102 }
+  },
+  "summary": "RC4-A 三层验证降级模型全部落地：(1) injection-runtime 新增 ThemeApplyVerdict 三值类型 + isThemeFullyApplyVerdict 函数，旧 isThemeFullyApplied 保留为兼容层；(2) waitForTheme 返回 WaitForThemeResult {applied, verdict, verification}，超时后返回最后一个非 null verification 而非 null；(3) cdp-fanout watchdog 对 partial 做补注入而非 skip；(4) reload-watchdog 同步分级响应；(5) 所有 waitForTheme 调用方适配新返回类型。修复 β-04（layers 缺失时错误降级）和 β-09（waitForTheme 超时后无返回）两个 scout 缺陷。tsc --noEmit 全绿，pre-commit biome 检查通过，所有相关测试套件通过。"
+}

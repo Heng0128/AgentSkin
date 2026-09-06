@@ -1,0 +1,26 @@
+{
+  "extractedAt": "2026-08-18T13:40:00.331Z",
+  "agents": {
+    "codex": {
+      "status": "ok",
+      "styleVars": {
+        "dark": 1255,
+        "light": 1246,
+        "neutral": 1538
+      },
+      "rootVars": {
+        "default": 1246,
+        "dark": 1246,
+        "light": 1246
+      },
+      "domNodes": {
+        "default": 295,
+        "dark": 295,
+        "light": 295
+      },
+      "colorPaletteDark": 60,
+      "colorPaletteLight": 60,
+      "colorPaletteNeutral": 60
+    }
+  }
+}

@@ -1,0 +1,170 @@
+[
+  {
+    "scenario": "用户应用主题后，wallpaper 模块同步更新",
+    "componentPath": "src/ui/stores/themeStore.ts → src/ui/stores/wallpaperStore.ts",
+    "supportedStates": ["theme-apply 成功时通过 wallpaperHandlers 回调清理旧壁纸", "theme-apply 主流程中通过 main-process injectAgentWallpaperFromApply 注入主题捆绑壁纸"],
+    "missingStates": ["theme-apply 失败（requires-restart / port-occupied）时，per-agent wallpaper 设置不会回滚到 apply 前状态", "theme-apply 流程中 setAgentWallpaper 写入失败时，不通知用户壁纸设置不一致"],
+    "userImpact": "主题应用被用户取消或失败后，per-agent wallpaper 设置可能处于半写入状态——UI 显示壁纸已设置但实际未注入，用户需手动重新设置壁纸。",
+    "severity": "major"
+  },
+  {
+    "scenario": "主题删除后 environment 模块清理相关状态",
+    "componentPath": "src/ui/stores/themeStore.ts → src/ui/stores/environmentStore.ts",
+    "supportedStates": ["confirmDelete 成功后调用 environmentStore.purgeTheme 清理引用该 theme 的 preset", "confirmDelete 成功后清理受影响 agent 的 wallpaper"],
+    "missingStates": ["purgeTheme 的 savePresets 是 fire-and-forget（void），持久化失败时用户不会收到通知", "purgeTheme 不清理该 theme 关联的 wallpaperId——preset 中 wallpaperId 可能指向还在库的 wallpaper，但 theme 上下文已丢失"],
+    "userImpact": "删除主题后，environment preset 列表中可能残留显示但点击后无主题可应用的情况（因 wallpaperId 仍在但 themeId 为 null），用户看到残缺的 preset。",
+    "severity": "minor"
+  },
+  {
+    "scenario": "壁纸提取主题后 themeStore 同步",
+    "componentPath": "src/ui/stores/wallpaperStore.ts → src/ui/stores/themeStore.ts",
+    "supportedStates": ["runWallpaperCompanion 成功后通过 api.applyTheme 触发主题应用，main-process 侧会发 THEME_HOT_RELOAD 事件更新 UI"],
+    "missingStates": ["extractThemeFromWallpaper 返回的 theme 因为是新创建的，themeStore.installed 列表尚未包含——refreshThemes 未被调用", "applyTheme 成功后 themeStore.installed 仍为空直到下一次 refreshThemes debounce（100ms）触发"],
+    "userImpact": "壁纸提取主题应用后，catalog 列表在短暂窗口期内不显示新提取的主题——用户切换到 Themes 页面看不到刚提取的主题，需要手动刷新。",
+    "severity": "minor"
+  },
+  {
+    "scenario": "壁纸应用后 status 更新",
+    "componentPath": "src/ui/stores/wallpaperStore.ts → src/ui/stores/statusStore.ts",
+    "supportedStates": ["setAndApplyAgentWallpaper 成功后返回 ApplyAgentWallpaperResult"],
+    "missingStates": ["wallpaper 应用成功/失败后不调用 statusStore.setStatus 或 refreshStatus——status 栏不反映壁纸注入状态", "applyAgentWallpaper 返回的 IPC 错误通过 notificationStore.fail 但未更新 statusStore.error"],
+    "userImpact": "壁纸注入状态不在全局 status 中体现，用户只能从 toast 或 InjectDock 诊断面板获知壁纸注入结果，缺乏统一状态视图。",
+    "severity": "major"
+  },
+  {
+    "scenario": "壁纸导入失败时错误反馈链路",
+    "componentPath": "src/ui/stores/wallpaperStore.ts → src/ui/stores/notificationStore.ts",
+    "supportedStates": ["importWallpaper IPC 返回 ok=false + error 时通过 notificationStore.fail 报告错误", "Wallpaper Engine 未安装时 initialize 捕获错误并设置 error 状态"],
+    "missingStates": ["importWallpaper 取消（用户关闭文件对话框）时静默返回空列表——用户不确定是取消还是无壁纸可导入", "normalizeWallpaperResult 无法识别的返回形态时完全静默——无 toast、无日志"],
+    "userImpact": "用户在 wallpaper 导入时遇到非预期返回态时完全无反馈，无法判断是取消、失败还是成功。",
+    "severity": "minor"
+  },
+  {
+    "scenario": "设置修改后所有相关模块收到通知",
+    "componentPath": "src/ui/stores/settingsStore.ts → src/ui/stores/statusStore.ts",
+    "supportedStates": ["chooseAppPath / clearAppPort / saveAppPort 成功后调用 statusStore.setStatus 更新全局状态", "saveAppPort 失败时通过 notificationStore.fail 报告"],
+    "missingStates": ["saveLiveDomRefreshInterval 成功后不通知任何跨模块——依赖此间隔的 useLiveDom hook 在设置变更后不会立即生效（需等到下次 mount）", "setCustomThemeCss（自定义 CSS）变更后不触发任何跨模块同步——正在运行的 agent 不会收到 CSS 更新"],
+    "userImpact": "用户修改 Live DOM 刷新间隔后，正在进行的 DOM 采样仍按旧间隔运行，直到页面重新挂载。自定义 CSS 修改后需手动重新应用主题才能生效。",
+    "severity": "major"
+  },
+  {
+    "scenario": "设置持久化失败时用户收到明确提示",
+    "componentPath": "src/main/settings-service.ts → src/ui/stores/settingsStore.ts",
+    "supportedStates": ["setAppPath 在 IPC 层验证路径不存在时抛异常，renderer 捕获后 notificationStore.fail"],
+    "missingStates": ["settings-service persist() 失败（磁盘满/权限）时，renderer store 已 set 新值但磁盘未写入——无错误提示", "writeJsonAtomic 的实现细节未暴露给 renderer——renderer 无法区分 IPC 成功但磁盘写入失败的情况"],
+    "userImpact": "磁盘写入失败后，用户看到 UI 显示设置已保存，但应用重启后设置丢失，且从未收到任何错误提示。",
+    "severity": "critical"
+  },
+  {
+    "scenario": "设置回滚机制",
+    "componentPath": "src/ui/stores/settingsStore.ts",
+    "supportedStates": ["store 内存状态在 IPC 调用前已更新"],
+    "missingStates": ["IPC 失败时没有回滚到先前值的机制——store 中 settings 字段保持 IPC 调用前的值不变（并非新值也非旧值）", "没有持久化确认机制——renderer 假设 IPC 返回即持久化成功"],
+    "userImpact": "IPC 调用中间失败（如 JSON 序列化错误）时，store 中 settings 处于不一致状态，下次 UI 渲染可能显示过期数据。",
+    "severity": "major"
+  },
+  {
+    "scenario": "MCP 连接状态变化时 UI 实时更新",
+    "componentPath": "src/ui/stores/settingsStore.ts → src/main/mcp/http-server.ts",
+    "supportedStates": ["toggleMcp 后立即更新 store 中 mcpRunning/mcpUrl", "MCP start 失败时通过 fail pipeline 告知用户"],
+    "missingStates": ["MCP 进程崩溃（外部 kill）后 store 仍显示 running=true——无健康检查轮询", "MCP 端口冲突被占用后 store 状态不会自动恢复为停止态"],
+    "userImpact": "MCP 进程异常终止后，UI 一直显示「运行中」，用户继续配置 MCP 客户端连接失败却找不到原因。",
+    "severity": "critical"
+  },
+  {
+    "scenario": "MCP 连接失败时重试机制",
+    "componentPath": "src/ui/stores/settingsStore.ts",
+    "supportedStates": ["startMcp 返回 ok=false 时通过 notificationStore.fail 报告具体错误"],
+    "missingStates": ["无自动重试逻辑（如端口递增再试）——与 http-server.ts 的端口扫描逻辑不匹配", "无重试次数/退避策略——用户需手动反复点击开关", "MCP start 失败后 mcpBusy 锁释放但 mcpRunning 仍为 false——用户立即重试可能遇到资源未释放问题"],
+    "userImpact": "MCP 启动遇到瞬时端口冲突时，用户必须手动重试多次，无自动恢复机制。",
+    "severity": "major"
+  },
+  {
+    "scenario": "MCP 状态在多个窗口间同步",
+    "componentPath": "src/ui/stores/settingsStore.ts",
+    "supportedStates": ["settingsStore 在主窗口的 Zustand store 中维护 mcpRunning/mcpUrl"],
+    "missingStates": ["无跨窗口状态广播——Studio 窗口或其他 BrowserWindow 不收到 MCP 状态同步", "renderer 进程间无 MCP 状态共享机制（如 IPC 事件或 shared storage）"],
+    "userImpact": "多窗口模式下（主窗口 + Studio 窗口），Studio 窗口中的 MCP 工具状态与主窗口不同步。",
+    "severity": "major"
+  },
+  {
+    "scenario": "注入失败时错误正确传播到 UI",
+    "componentPath": "src/main/theme-apply-flow.ts → src/ui/stores/themeStore.ts",
+    "supportedStates": ["adapter.applyTheme 抛 RESTART_REQUIRED 时返回 requires-restart 对话框", "PORT_OCCUPIED 时显示具体端口号 toast", "THEME_ENGINE_INJECT_FAILURE IPC 事件推送到 renderer"],
+    "missingStates": ["backgroundTasks（hardening/wallpaper/scheme sync）失败时仅 log 不通知用户——部分注入可能失败但用户看到「应用成功」toast", "baseline capture/probe 失败不传播到 UI——静默 ignore"],
+    "userImpact": "主题注入后壁纸或 scheme 同步失败，用户只看到成功 toast，但实际视觉效果不完整（如仍为亮色 theme 但 agent 是暗色模式）。",
+    "severity": "critical"
+  },
+  {
+    "scenario": "注入恢复后状态自动同步",
+    "componentPath": "src/shared/injection/orchestrator/injection-state-machine.ts",
+    "supportedStates": ["状态机定义了 SELF_HEALING → HEALTHY 转换路径", "notifyHotReload 推送 UI 更新"],
+    "missingStates": ["renderer 侧没有订阅 injectionStateMachine.onTransition——状态机转换不驱动 UI 更新", "self-healing 成功后仅通过 THEME_HOT_RELOAD 通知，不更新 diagnosticsStore 中的 drift 状态"],
+    "userImpact": "注入自愈过程对用户完全不可见——Diagnostics 页面不显示 self-healing 进度和结果。",
+    "severity": "major"
+  },
+  {
+    "scenario": "多 agent 注入冲突时并发控制",
+    "componentPath": "src/ui/stores/themeStore.ts (ChainController) + src/main/theme-apply-flow.ts",
+    "supportedStates": ["renderer 侧 ChainController.withAgent 保证同 agent 操作串行", "main-process 侧 applyingTheme 锁 + epoch 机制防止并发注入"],
+    "missingStates": ["renderer 串行链和 main-process 串行锁是两套独立系统——renderer 排队后到 main 仍可能冲突", "cross-agent 并行时 epoch 不全局同步——agent A 的新操作终止 agent B 的 background task 需要 per-agent epoch 检查但 wallpaper hardening 链中 epoch 传递不一致"],
+    "userImpact": "快速切换两个 agent 的主题时，可能出现后应用的 theme 先完成、先应用的 theme 后完成的竞态，最终显示不稳定。",
+    "severity": "major"
+  },
+  {
+    "scenario": "导入路径不统一时兼容处理",
+    "componentPath": "src/shared/import/theme-source-parser.ts",
+    "supportedStates": ["ParserRegistry.findParser 按优先级尝试所有已注册 Parser", "支持 path/buffer/json/files 四种输入类型"],
+    "missingStates": ["DreamSkin .zip 格式（无固定扩展名）无 canParse 回退——仅靠 path 匹配可能漏检", "ParserRegistry 在 findParser 中 catch canParse 异常后静默 skip——parser 内部 bug 被吞掉", "无未匹配 parser 时的 fallback 错误消息包含具体尝试了哪些 parser"],
+    "userImpact": "用户拖入一个有效的但扩展名不标准的主题文件时，UI 静默拒绝且无错误提示，用户不知道为什么不能导入。",
+    "severity": "major"
+  },
+  {
+    "scenario": "导入文件格式错误时明确错误提示",
+    "componentPath": "src/main/catalog/theme-import-export.ts → src/ui/stores/installFlowStore.ts",
+    "supportedStates": ["validateThemeZip 返回 errors[] 数组包含具体错误", "installFlowStore catch 后通过 notificationStore.fail 显示 toMessage(error)"],
+    "missingStates": ["validateThemeZip 的 errors 数组在 installFlowFlow 中被折叠为单个 toMessage——多错误时只显示第一条", "ParserError 的 parserName/sourceFormat 信息未被传递到 UI——用户不知道是哪个 parser 失败了"],
+    "userImpact": "ZIP 导入失败时看到「Invalid ZIP: ...」单一错误，但实际可能有多个结构性问题（缺少 manifest + CSS 被拦截 + 图片过大），每次修复一个后才发现下一个。",
+    "severity": "major"
+  },
+  {
+    "scenario": "导入成功后所有相关模块更新",
+    "componentPath": "src/ui/stores/themeStore.ts (confirmFileImport)",
+    "supportedStates": ["importThemeFromPath 成功后调用 refreshThemes 更新 catalog", "importThemeFromPath 成功后调用 wallpaperStore.initialize 刷新壁纸列表"],
+    "missingStates": ["未调用 environmentStore.loadPresets——如果导入的 theme 预设了 environment 则不出现", "未调用 statusStore.refreshStatus——新导入 theme 的兼容性 probe 结果不在 status 中体现", "未通知 studioStore——Studio 页面的 template 选择器不更新"],
+    "userImpact": "导入主题后，某些页面（如 Studio）不立即显示新主题，需要切换页面或手动刷新才能看到。",
+    "severity": "minor"
+  },
+  {
+    "scenario": "MCP 工具执行写操作后 GUI 状态同步",
+    "componentPath": "src/main/mcp/status-sync.ts",
+    "supportedStates": ["syncStatusToGui 调用 notifyStatusChanged 推送 STATUS_CHANGED 到所有窗口"],
+    "missingStates": ["syncStatusToGui 是 fire-and-forget——调用方不检查结果，notifyStatusChanged 失败时静默吞掉", "非 status 相关的 GUI 更新（如 theme catalog、wallpaper list）不被 refreshThemes/wallpaperStore.initialize 触发"],
+    "userImpact": "通过 MCP 工具导入主题后，GUI 的 status 刷新但 catalog 列表不更新——用户需要手动刷新主题列表。",
+    "severity": "major"
+  },
+  {
+    "scenario": "主题 hot-reload 跨模块一致性",
+    "componentPath": "src/ui/stores/themeStore.ts (offThemeHotReload)",
+    "supportedStates": ["scheme-switch 时推送可选 i18n toast", "theme-switch 依赖 apply flow 时还触发 useStatusStore.refreshStatus?"],
+    "missingStates": ["hot-reload 后 wallpaper 模块不感知——scheme 切换可能影响壁纸 scrimOpacity 但 wallpaperStore 不更新", "hot-reload 后 environment 模块不感知——用户切换 scheme 时 preset 不会自动更新当前激活状态"],
+    "userImpact": "用户在 Theme Studio 切换 light/dark 模式时，wallpaper 的 scrim/overlay 参数不随 scheme 动态调整，视觉不一致。",
+    "severity": "minor"
+  },
+  {
+    "scenario": "secondary-inject store IPC 订阅泄漏",
+    "componentPath": "src/ui/stores/secondaryInjectStore.ts",
+    "supportedStates": ["disposeSecondaryInjectSubscriptions 提供了清理函数"],
+    "missingStates": ["disposeSecondaryInjectSubscriptions 从未被任何生命周期钩子调用——HMR 时 IPC 订阅累积", "init() 幂等检查仅靠 _initialized flag，但模块卸载后 flag 不重置——HMR 场景下订阅泄漏", "THEME_SECONDARY_INJECT_PROGRESS/SUMMARY 事件持续推送到已 dispose 的 subscription"],
+    "userImpact": "开发模式下 HMR 后 InjectDock 诊断面板显示重复/重叠的注入进度条。生产模式下影响较小但属于资源泄漏。",
+    "severity": "minor"
+  },
+  {
+    "scenario": "restoreApp 后 wallpaper 清理跨模块一致性",
+    "componentPath": "src/ui/stores/themeStore.ts (restoreApp) → src/ui/stores/wallpaperStore.ts",
+    "supportedStates": ["restoreApp 成功后通过 wallpaperHandlers 回调清理 per-agent wallpaper"],
+    "missingStates": ["wallpaperHandlers 回调是 fire-and-forget（void）——setAgentWallpaper IPC 失败时用户不感知", "restoreAll 成功后只 setStatus(lastOkEntry.status)，不批量清理所有受影响 agent 的 wallpaper——每个 agent 的 wallpaper 仍通过独立 handler 清理但 restoreAll 不调用 wallpaperHandlers"],
+    "userImpact": "批量恢复所有 agent 后，某些 agent 的 wallpaper 未被彻底清理，仍显示之前的动态壁纸残影。",
+    "severity": "major"
+  }
+]

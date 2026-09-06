@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">AgentSkin theme package document icon</title>
+  <desc id="desc">A white page with a folded corner carrying the fanned AgentSkin skin-layers mark in cyan, violet and pink.</desc>
+  <defs>
+    <linearGradient id="page" x1="320" y1="96" x2="704" y2="928" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F1EFF8"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="640" y1="96" x2="760" y2="288" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EFECF7"/>
+      <stop offset="1" stop-color="#D9D4E9"/>
+    </linearGradient>
+    <linearGradient id="fCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="fViolet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+    <linearGradient id="fPink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f9a8d4"/>
+      <stop offset="100%" stop-color="#db2777"/>
+    </linearGradient>
+    <filter id="fshadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#2A2440" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <!-- Document page -->
+  <path
+    d="M248 96 L640 96 L832 288 V872 Q832 928 776 928 H248 Q192 928 192 872 V152 Q192 96 248 96 Z"
+    fill="url(#page)" stroke="#D8D3E6" stroke-width="6"/>
+  <path d="M640 96 L832 288 H696 Q640 288 640 232 Z" fill="url(#fold)" stroke="#D8D3E6" stroke-width="6" stroke-linejoin="round"/>
+
+  <!-- Fanned skin-layers mark, centred on the page -->
+  <g transform="translate(308 372)" filter="url(#fshadow)">
+    <rect x="0" y="104" width="288" height="288" rx="66" fill="url(#fCyan)"/>
+    <rect x="52" y="52" width="288" height="288" rx="66" fill="url(#fViolet)"/>
+    <rect x="104" y="0" width="288" height="288" rx="66" fill="url(#fPink)"/>
+  </g>
+</svg>

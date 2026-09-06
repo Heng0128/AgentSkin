@@ -1,0 +1,294 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-08-29T04:13:19.580Z",
+  "themes": [
+    {
+      "id": "academy-corridor-winter",
+      "name": "Academy Corridor Winter",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "crimson-horned-mecha",
+      "name": "Crimson Horned Mecha",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "exploding-tag-storm",
+      "name": "Exploding Tag Storm",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "fuji-balcony-overcast",
+      "name": "Fuji Balcony Overcast",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "fuji-rooftop-winter",
+      "name": "Fuji Rooftop Winter",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "galactic-garden",
+      "name": "Galactic Garden",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "industrial-sage-toad",
+      "name": "Industrial Sage Toad",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "luffy-grand-departure",
+      "name": "Luffy Grand Departure",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "midnight-dessert-feast",
+      "name": "Midnight Dessert Feast",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "miku-future-beats",
+      "name": "初音未来 · Future Beats",
+      "version": "1.2.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "shibuya-rooftop-mask",
+      "name": "Shibuya Rooftop Mask",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "stage-bassist-blue",
+      "name": "Stage Bassist Blue",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "sunset-cellphone-girl",
+      "name": "Sunset Cellphone Girl",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "void-donut-boy",
+      "name": "Void Donut Boy",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "winged-mecha-ascendant",
+      "name": "Winged Mecha Ascendant",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    },
+    {
+      "id": "yule-fireplace-glow",
+      "name": "Yule Fireplace Glow",
+      "version": "2.0.0",
+      "adapters": [
+        "traework",
+        "qoderwork",
+        "workbuddy",
+        "doubao",
+        "codex",
+        "zcode"
+      ],
+      "adaptationLevel": "deep",
+      "hasHero": true,
+      "hasImages": true,
+      "wcagCompliant": false,
+      "status": "active"
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "direction": "I",
+  "directionName": "跨模块集成",
+  "executionTime": "2026-08-29 1200",
+  "snapshotCommit": "6579c37",
+  "requirements": [
+    {
+      "requirementId": "REQ-I-1001",
+      "description": "双窗口 fan-out 一致性修复 — 修复 4 处仅发 mainWindow 的 IPC 推送，确保 studioWindow 同步收到 drift status、health report、inject failure、bundle imported 通知",
+      "acceptanceCriteria": [
+        "pushDriftStatus 同时发送到 mainWindow 和 studioWindow",
+        "THEME_HEALTH_REPORT 同时发送到两个窗口",
+        "THEME_ENGINE_INJECT_FAILURE 同时发送到两个窗口",
+        "bundle FILE_IMPORTED 同时发送到两个窗口",
+        "不破坏现有双窗口模式"
+      ],
+      "priority": "P0",
+      "complexity": "S",
+      "affectedModules": ["cdp-fingerprint", "cdp-fanout", "bundle-ipc", "studioWindow"]
+    },
+    {
+      "requirementId": "REQ-I-1002",
+      "description": "health-monitor 死代码清理与 notificationStore 集成 — 将 InjectionHealthMonitor 接入真实注入流程，或在评估后移除死代码并建立替代健康检查的通知链路",
+      "acceptanceCriteria": [
+        "health-monitor 与 notificationStore 集成 或 移除死代码并文档化替代方案",
+        "注入失败时用户收到 toast 通知",
+        "不引入新的死代码路径"
+      ],
+      "priority": "P1",
+      "complexity": "M",
+      "affectedModules": ["health-monitor", "notificationStore", "theme-apply-flow"]
+    },
+    {
+      "requirementId": "REQ-I-1003",
+      "description": "后台注入任务失败通知 — theme-apply-flow 的 backgroundTasks 失败时通过 notificationStore 通知用户",
+      "acceptanceCriteria": [
+        "hardening 失败时用户收到警告通知",
+        "wallpaper scheme sync 失败时用户收到警告通知",
+        "不干扰主流程 success toast"
+      ],
+      "priority": "P0",
+      "complexity": "S",
+      "affectedModules": ["theme-apply-flow", "notificationStore"]
+    },
+    {
+      "requirementId": "REQ-I-1004",
+      "description": "注入状态机 → UI 订阅桥接 — injectionStateMachine 的 onTransition 驱动 diagnosticsStore 更新",
+      "acceptanceCriteria": [
+        "renderer 侧订阅 injectionStateMachine 状态转换",
+        "self-healing 进度在 Diagnostics 页面可见",
+        "状态转换触发 diagnosticsStore 更新"
+      ],
+      "priority": "P1",
+      "complexity": "M",
+      "affectedModules": ["injection-state-machine", "diagnosticsStore", "themeStore"]
+    },
+    {
+      "requirementId": "REQ-I-1005",
+      "description": "settingsStore 持久化失败通知 + 回滚 — writeJsonAtomic 失败时回滚 store 状态并显示 toast",
+      "acceptanceCriteria": [
+        "IPC persist 失败时 store 回滚到之前状态",
+        "用户收到持久化失败的 destructive toast",
+        "不破坏现有成功路径"
+      ],
+      "priority": "P0",
+      "complexity": "M",
+      "affectedModules": ["settingsStore", "settings-service", "notificationStore"]
+    },
+    {
+      "requirementId": "REQ-I-1006",
+      "description": "MCP 健康检查与状态同步 — 添加 MCP 进程存活检测，状态变化时 fan-out 到所有窗口",
+      "acceptanceCriteria": [
+        "MCP 进程死亡后 30 秒内 store 状态更新为 stopped",
+        "MCP 状态变化通过 IPC 推送到所有窗口",
+        "不引入过高轮询开销"
+      ],
+      "priority": "P1",
+      "complexity": "M",
+      "affectedModules": ["settingsStore", "http-server", "mcp-status-sync"]
+    },
+    {
+      "requirementId": "REQ-I-1007",
+      "description": "secondary-inject store dispose 与 HMR 生命周期集成 — disposeSecondaryInjectSubscriptions 注册到 HMR cleanup",
+      "acceptanceCriteria": [
+        "disposeSecondaryInjectSubscriptions 在 HMR dispose 时被调用",
+        "dispose 后 reset _initialized flag 允许 re-init",
+        "HMR 不再泄漏 IPC 订阅"
+      ],
+      "priority": "P2",
+      "complexity": "S",
+      "affectedModules": ["secondaryInjectStore", "renderer", "HMR-lifecycle"]
+    },
+    {
+      "requirementId": "REQ-I-1008",
+      "description": "装饰器解析器测试覆盖 — 为 dreamskin-parser、agentskin-built-parser、source-directory-parser 补齐单元测试",
+      "acceptanceCriteria": [
+        "dreamskin-parser.test.ts 覆盖 canParse + parse + error paths",
+        "agentskin-built-parser.test.ts 覆盖 identity detection + parse paths",
+        "source-directory-parser.test.ts 覆盖 directory detection + parse",
+        "所有新测试通过"
+      ],
+      "priority": "P1",
+      "complexity": "M",
+      "affectedModules": ["dreamskin-parser", "agentskin-built-parser", "source-directory-parser"]
+    },
+    {
+      "requirementId": "REQ-I-1009",
+      "description": "引擎共享模块测试覆盖 — 为 engines/shared/ 的 adopted-sheets-manager、deep-core、token-discovery 补齐测试",
+      "acceptanceCriteria": [
+        "adopted-sheets-manager 测试覆盖 append/remove/clear/isEmpty",
+        "deep-core 测试覆盖 shadow DOM injection + route handling",
+        "token-discovery 测试覆盖 CSS variable extraction",
+        "所有新测试通过"
+      ],
+      "priority": "P1",
+      "complexity": "L",
+      "affectedModules": ["engines/shared"]
+    },
+    {
+      "requirementId": "REQ-I-1010",
+      "description": "apply→wallpaper→health-check 端到端集成测试 — 补齐 agent-engine-service 的 E2E 测试",
+      "acceptanceCriteria": [
+        "测试 applyTheme → wallpaper apply → health check 的完整链路",
+        "测试 applyTheme → wallpaper apply 失败的回滚行为",
+        "测试 restoreAll 后的 wallpaper 清理",
+        "所有新测试通过"
+      ],
+      "priority": "P2",
+      "complexity": "L",
+      "affectedModules": ["agent-engine-service", "wallpaperStore", "theme-health-check"]
+    },
+    {
+      "requirementId": "REQ-I-1011",
+      "description": "notifyPersistFailure 用户可见 toast 修复 — 将 PERSIST_FAILURE_WARNING IPC 桥接到 notificationStore",
+      "acceptanceCriteria": [
+        "持久化失败时显示 destructive toast",
+        "toast 包含具体错误信息",
+        "不影响正常的 diagnosticsStore 更新"
+      ],
+      "priority": "P1",
+      "complexity": "S",
+      "affectedModules": ["useAppController", "notificationStore"]
+    },
+    {
+      "requirementId": "REQ-I-1012",
+      "description": "restoreAll 事务回滚 + 通知 — 部分失败时回滚所有已成功的恢复，并通知用户哪些 agent 失败",
+      "acceptanceCriteria": [
+        "partial failure 时回滚所有已成功的 restore",
+        "用户收到包含失败 agent 列表的通知",
+        "全成功时保持现有行为"
+      ],
+      "priority": "P2",
+      "complexity": "L",
+      "affectedModules": ["agent-engine-service", "notificationStore"]
+    },
+    {
+      "requirementId": "REQ-I-1013",
+      "description": "deep link 操作结果回传 — restore deep link 发送结果事件到 UI",
+      "acceptanceCriteria": [
+        "handleRestore 成功后发送 result event",
+        "handleRestore 失败后发送 error event",
+        "UI 可据此显示 toast"
+      ],
+      "priority": "P2",
+      "complexity": "S",
+      "affectedModules": ["deep-link-handler", "notificationStore"]
+    }
+  ]
+}

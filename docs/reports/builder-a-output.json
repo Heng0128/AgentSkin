@@ -1,0 +1,21 @@
+{
+  "modifiedFiles": [
+    "src/main/cdp/cdp-fingerprint.ts",
+    "src/main/cdp/cdp-fanout.ts",
+    "src/main/agent-engine-service.ts",
+    "src/main/ipc/bundle-ipc.ts",
+    "src/ui/hooks/useAppController.ts",
+    "src/shared/ipc-channels.ts",
+    "src/shared/types/ipc.ts",
+    "src/preload.ts",
+    "src/main/theme-apply-flow.ts",
+    "src/main/theme-apply-flow.test.ts"
+  ],
+  "commits": [
+    "646a8857",
+    "5ad75fbf",
+    "9b247290",
+    "6772522b"
+  ],
+  "summary": "Implemented three integration fixes: (1) REQ-I-1001 - Fixed 4 IPC pushes to fan-out to both mainWindow and studioWindow: pushDriftStatus in cdp-fingerprint.ts, THEME_HEALTH_REPORT and THEME_ENGINE_INJECT_FAILURE in cdp-fanout.ts, FILE_IMPORTED in bundle-ipc.ts. Added studioWindow to CdpFanoutDeps interface and fanoutDeps(). (2) REQ-I-1011 - Added notificationStore.fail() destructive toast in useAppController.ts when PERSIST_FAILURE_WARNING IPC is received, making disk persistence failures user-visible. (3) REQ-I-1003 - Added new THEME_BACKGROUND_TASK_FAILURE IPC channel, send it from theme-apply-flow.ts when background tasks (hardening/wallpaper/scheme-sync) fail, and subscribe in useAppController.ts to show a destructive toast via notificationStore.fail(). All modifications pass tsc --noEmit type check (remaining errors are pre-existing in unmodified files)."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "src/ui/studio/capture-store.ts",
+  "description": "Fix missing closing brace in setInspectResult",
+  "commit": "a533f552",
+  "result": "PASS"
+}

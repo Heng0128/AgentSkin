@@ -1,0 +1,104 @@
+{
+  "totalErrors": 16,
+  "newErrors": [],
+  "preExistingErrors": [
+    {
+      "file": "src/engine/src/runtime/verify-style.test.ts",
+      "line": 125,
+      "code": "TS7006",
+      "message": "Parameter 'a' implicitly has an 'any' type."
+    },
+    {
+      "file": "src/engine/src/runtime/verify-style.test.ts",
+      "line": 125,
+      "code": "TS7006",
+      "message": "Parameter 'b' implicitly has an 'any' type."
+    },
+    {
+      "file": "src/engine/src/runtime/verify-style.test.ts",
+      "line": 129,
+      "code": "TS7006",
+      "message": "Parameter 'actual' implicitly has an 'any' type."
+    },
+    {
+      "file": "src/engine/src/runtime/verify-style.test.ts",
+      "line": 129,
+      "code": "TS7006",
+      "message": "Parameter 'expected' implicitly has an 'any' type."
+    },
+    {
+      "file": "src/engine/src/runtime/verify-style.test.ts",
+      "line": 131,
+      "code": "TS2552",
+      "message": "Cannot find name 'colorDistance$1'. Did you mean 'mockColorDistance'?"
+    },
+    {
+      "file": "src/shared/injection/contract-validator.ts",
+      "line": 196,
+      "code": "TS2322",
+      "message": "Type not assignable to 'VerificationContract' — provenance.source type mismatch (string vs literal union)."
+    },
+    {
+      "file": "src/shared/injection/contract-validator.ts",
+      "line": 197,
+      "code": "TS2322",
+      "message": "Type not assignable to 'VerificationContract' — provenance.source type mismatch (string vs literal union)."
+    },
+    {
+      "file": "src/shared/injection/contract-validator.ts",
+      "line": 198,
+      "code": "TS2322",
+      "message": "Type not assignable to 'VerificationContract' — provenance.source type mismatch (string vs literal union)."
+    },
+    {
+      "file": "src/shared/injection/contract-validator.ts",
+      "line": 199,
+      "code": "TS2322",
+      "message": "Type not assignable to 'VerificationContract' — provenance.source type mismatch (string vs literal union)."
+    },
+    {
+      "file": "src/shared/injection/contract-validator.ts",
+      "line": 200,
+      "code": "TS2322",
+      "message": "Type not assignable to 'VerificationContract' — provenance.source type mismatch (string vs literal union)."
+    },
+    {
+      "file": "src/shared/injection/contract-validator.ts",
+      "line": 201,
+      "code": "TS2322",
+      "message": "Type not assignable to 'VerificationContract' — provenance.source type mismatch (string vs literal union)."
+    },
+    {
+      "file": "src/shared/injection/orchestrator.test.ts",
+      "line": 1069,
+      "code": "TS2741",
+      "message": "Property 'agentId' is missing in type but required in 'OrchestratorBatchParams'."
+    },
+    {
+      "file": "src/shared/injection/orchestrator.test.ts",
+      "line": 1104,
+      "code": "TS2741",
+      "message": "Property 'agentId' is missing in type but required in 'OrchestratorBatchParams'."
+    },
+    {
+      "file": "src/shared/injection/orchestrator.test.ts",
+      "line": 1127,
+      "code": "TS2345",
+      "message": "Argument of type '\"fresh-agent-for-test\"' is not assignable to parameter of type 'AgentId'."
+    },
+    {
+      "file": "src/shared/injection/orchestrator/injection-orchestrator.ts",
+      "line": 425,
+      "code": "TS2552",
+      "message": "Cannot find name 'BatchAgentResult'. Did you mean 'BatchResult'?"
+    },
+    {
+      "file": "src/ui/pages/SettingsPage.tsx",
+      "line": 385,
+      "code": "TS2552",
+      "message": "Cannot find name 'settings'. Did you mean 'Settings'?"
+    }
+  ],
+  "result": "PASS",
+  "summary": "All 16 errors are pre-existing in files not modified by recent changes. The recently modified files (agent-engine-service.ts, theme-apply-flow.ts, preload.ts, ipc-channels.ts, ipc.ts, useAppController.ts, cdp-fingerprint.ts, cdp-fanout.ts, bundle-ipc.ts) and test files (dreamskin-parser.test.ts, agentskin-built-parser.test.ts, source-directory-parser.test.ts, theme-apply-flow.test.ts) introduce zero new type errors. Pre-existing errors are located in: engine/ runtime tests (5 errors in verify-style.test.ts), shared/injection/ contract-validator (6 errors), orchestrator test and implementation (4 errors), and SettingsPage.tsx (1 error). No new errors introduced."
+}

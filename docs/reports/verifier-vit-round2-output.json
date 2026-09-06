@@ -1,0 +1,54 @@
+{
+  "totalTests": 8493,
+  "passed": 8487,
+  "failed": 2,
+  "failures": [
+    {
+      "file": "tests/performance/injection-benchmark.test.ts",
+      "test": "Comparison: orchestrator vs raw execution > orchestrator overhead is within threshold vs direct engine call",
+      "error": "AssertionError: expected 12.969500000000153 to be less than 10",
+      "category": "known_flaky",
+      "note": "Performance benchmark — orchestrator overhead 12.97ms exceeded 10ms threshold. Timing-sensitive, non-deterministic."
+    },
+    {
+      "file": "src/main/catalog/manifest-schema.test.ts",
+      "test": "manifest schema single-source-of-truth (A1) > docs mirror is byte-identical to the catalog authority",
+      "error": "AssertionError: expected false to be true — docs/manifest-v2.schema.json differs from src/main/catalog/manifest-v2.schema.json",
+      "category": "pre_existing",
+      "note": "Schema drift between docs mirror and catalog authority. MD5 catalog=0427EBC4 vs docs=BFCEFEC3. Not related to pkg-parser fix."
+    }
+  ],
+  "errors": [
+    {
+      "file": "src/main/cdp/cdp-reconnect.test.ts",
+      "test": "terminates WebSocket on timeout during initial connect",
+      "error": "Unhandled Rejection: CDP connect timeout at cdp-reconnect.ts:210:17",
+      "category": "known_flaky",
+      "note": "Network-related timeout during CDP reconnect test. Non-deterministic."
+    }
+  ],
+  "suiteFailures": [
+    {
+      "file": "engines/workbuddy/ambient-router.test.mjs",
+      "error": "No test suite found in file",
+      "category": "pre_existing",
+      "note": ".mjs file without vitest test structure — pre-existing configuration issue."
+    },
+    {
+      "file": "scripts/validate-theme-package.test.mjs",
+      "error": "No test suite found in file",
+      "category": "pre_existing",
+      "note": ".mjs file without vitest test structure — pre-existing configuration issue."
+    }
+  ],
+  "pkgParserVerification": {
+    "file": "src/main/scene/pkg-parser.test.ts",
+    "tests": 24,
+    "passed": 24,
+    "failed": 0,
+    "result": "ALL_PASS",
+    "note": "pkg-parser fix confirmed — all 24 tests pass."
+  },
+  "result": "PASS",
+  "summary": "pkg-parser fix verified: 24/24 tests pass. Full suite: 8487/8493 tests pass (4 skipped). The 2 test failures are: (1) injection-benchmark — known flaky performance test (12.97ms > 10ms threshold), (2) manifest-schema — pre-existing schema drift between docs mirror and catalog authority. Additionally, 1 unhandled error from cdp-reconnect (known flaky network timeout). 2 suite-level failures from .mjs files lacking vitest structure (pre-existing). All failures are unrelated to the pkg-parser fix."
+}

@@ -1,0 +1,136 @@
+{
+  "$schema": "../verification-contract.schema.json",
+  "targets": {
+    "zcode": {
+      "verification": {
+        "required": [
+          {
+            "name": "host-class-present",
+            "any": ["html.agentskin-host-zcode"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "palette-accent-applied",
+            "any": [":root[style*='--agentskin-accent']", "html[style*='--agentskin-accent']"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "recommended": [
+          {
+            "name": "adapter-marker-present",
+            "any": ["body"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "tokens-layer-present",
+            "any": [
+              ":root[style*='--agentskin-background']",
+              "html[style*='--agentskin-background']"
+            ],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "contexts": [
+          {
+            "name": "workspace-visible",
+            "when": { "any": ["[class*='workspace']", "[class*='panel']", "[class*='file-tree']"] },
+            "required": [
+              {
+                "name": "workspace-themed",
+                "any": [
+                  "[class*='workspace'] [style*='--agentskin']",
+                  "[class*='panel'] [style*='--agentskin']"
+                ],
+                "provenance": {
+                  "source": "reporter",
+                  "strength": "medium",
+                  "knownGaps": ["workspace class selector may vary across zcode versions"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "pdfjs-viewer-active",
+            "when": {
+              "any": ["[class*='pdfViewer']", "[class*='pdf-viewer']", "canvas[class*='pdf']"]
+            },
+            "required": [
+              {
+                "name": "pdf-viewer-themed",
+                "any": [
+                  ".pdfViewer .page[style*='--agentskin']",
+                  ".pdfViewer[style*='--agentskin']"
+                ],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["PDF.js page background must remain white for readability"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "katex-formula-active",
+            "when": { "any": [".katex", ".katex-display", "[class*='katex']"] },
+            "required": [
+              {
+                "name": "katex-themed",
+                "any": [".katex[style*='--agentskin']", ".katex-display[style*='--agentskin']"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": [
+                    "KaTeX uses SVG paths with fill/stroke, theme application is complex"
+                  ],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "cjk-cmaps-loaded",
+            "when": { "any": ["[class*='pdfViewer']"] },
+            "required": [
+              {
+                "name": "cjk-fonts-available",
+                "any": ["html.agentskin-host-zcode[data-cjk-supported]"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "weak",
+                  "knownGaps": ["30+ bcmap files support CJK character mapping"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

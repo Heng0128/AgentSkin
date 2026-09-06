@@ -1,0 +1,72 @@
+﻿[
+  {
+    "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\cdp-client.ts",
+    "lineNumber": 407,
+    "severity": "critical",
+    "description": "connectEventCdp error-path PerformanceRecorder step name 拼写错误。第 396 行 .then() 内使用 'connectEventCdp' 而 .catch() 内却写 'connectCdp'（来自 connectCdp 复用字符串）。导致 Apply Trace 连接失败时 step 名与成功路径不一致，影响 trace 数据归并与监控告警；且该 bug 位于 catch 内——只在连接失败时触发——当前测试套件未覆盖此分支。",
+    "evidence": "L396: PerformanceRecorder.recordNamedStep('connectEventCdp', performance.now() - t0);\n...\nL406-408:\n  PerformanceRecorder.recordNamedStep(\n    'connectCdp',\n    performance.now() - t0,\n    false,\n    ...\n  );\n注：catch 中应为 'connectEventCdp' 才能与 then 路径对齐。"
+  },
+  {
+    "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\services\\performance\\performance-logger.ts",
+    "lineNumber": 131,
+    "severity": "major",
+    "description": "getRecent(count) 对 count=0 的语义违反直觉：slice(-0) 等价于 slice(0) 返回整个 buffer，而非空数组。调用方若用 count=0 意为「不要最近项」却会拿到全量数据，与 clampCount 的 floor-to-1 语义不一致。单元测试显式承认此行为（papercut 项），说明已知悉但保留未修。通过 performance-ipc 传入 count=0 时 clamp 到 1 会屏蔽此路径，但直接调用 getRecent(0) 的第三方/内部代码仍会被误导。",
+    "evidence": "function getRecent(count: number): ThemeApplyTrace[] {\n  const n = Math.max(0, Math.min(count, buffer.length));\n  return buffer.slice(-n).reverse();\n}\n// 当 n === 0，buffer.slice(-0) 返回整个 buffer 的副本"
+  },
+  {
+    "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\session-pool.ts",
+    "lineNumber": 306,
+    "severity": "major",
+    "description": "invalidateEpoch 仅在 pool 内「软退休」refCount>0 的 session，不会主动递减或清理它们。epoch 暴涨（频繁 apply/restore 切换）时退休 session 会堆积在 pool 里，只有 idle scanner（10s 周期、>30s idle TTL）才会逐步清除。长生命周期进程下每 epoch 最多堆积 (targets_per_agent) 个 session；加上 MAX_SESSIONS_PER_AGENT=64 的 cap 不覆盖退休 session，可能在极端高频 epoch 切换下造成短期 CDP socket 堆积。",
+    "evidence": "invalidateEpoch(appId: AgentId): void {\n  const byTarget = this.pools.get(appId);\n  if (!byTarget) return;\n  const now = Date.now();\n  for (const [targetKey, entry] of byTarget) {\n    if (entry.refCount > 0) {\n      entry.retired = true;\n      entry.retiredAt = now;\n    } else {\n      this.discard(appId, targetKey, entry);\n    }\n  }\n}"
+  },
+  {
+    "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\shared\\injection-runtime.ts",
+    "lineNumber": 70,
+    "severity": "major",
+    "description": "isThemeFullyApplied 在 layers 数据不可用（旧 renderer 客户端）时直接退化为仅依赖 accent + adoptedSheetCount 的 fallback，跳过了 cosmetic/tokens/palette 各层级的完整性校验。对 requireHero=false 的主题尤其危险：只要 accent 非空且至少一个 sheet 就视为完全应用，即便某些必要引擎层缺失。单元测试覆盖 artResolved=true/false 的分支，但未覆盖 layers 缺失 且 requireHero=false 的关键组合。",
+    "evidence": "if (!v.layers) return opts?.requireHero ? v.artResolved === true : true;\n// 当 opts.requireHero=false 时，无论 layers 是否完整都返回 true\n// 旧客户端传回 adoptedSheetCount>=1 + 空 accent 即可蒙混过关"
+  },
+  {
+    "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\session-pool.ts",
+    "lineNumber": 123,
+    "severity": "major",
+    "description": "targetKeyFor 当 id 与 webSocketDebuggerUrl 都缺失时返回字面量 'unknown-target'，所有无法辨识的 CDP target 共享同一个 targetKey。session pool 里它们会互相覆盖或命中错误条目，导致对某个 target 的 refCount/retired 状态误操作另一个 target。虽理想情况不应出现 id/url 都缺失的目标，但空值防御仅依赖调用方保证。",
+    "evidence": "export function targetKeyFor(\n  id: string | null | undefined,\n  webSocketDebuggerUrl: string | null | undefined,\n): string {\n  return id || webSocketDebuggerUrl || 'unknown-target';\n}"
+  },
+  {
+    "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\services\\performance\\types.ts",
+    "lineNumber": 1,
+    "severity": "minor",
+    "description": "ThemeApplyTrace / PerformanceStep / DeviceInfo 等核心 trace 类型定义在 performance/types.ts 中，但未见明确的 .test.ts 类型守卫测试；若上游字段变更（如 performance-recorder 的 startedAt 从number改为ISO字符串）下游消费者不会在类型层面报错。属常规风险，但 trace 数据闭环对数据类型高度敏感，值得增加 schema 快照测试。",
+    "evidence": "shared/types/performance.ts 定义 PerformanceStep 等结构; 测试目录无与之对应的 snapshot/schema 校验。"
+  },
+  {
+    "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\cdp-client.ts",
+    "lineNumber": 169,
+    "severity": "minor",
+    "description": "pending waiter 解析时使用了非空断言 \"!\"（waiter.reject / waiter.resolve），但 pending.get 的 Key 在 socket onclose 触发 rejectAllPending 时可能已被 delete（例如超时后已从 map 中移除）。在非典型竞态下，has 检查与 get 之间 waiter 已被 clear 会抛出 TypeError。该分支在实际运行中概率极低（已被 has() gate 挡住大部分路径），但 TS 的非空断言屏蔽了更严谨的校验。",
+    "evidence": "ws.onmessage →\n  if (message.id != null && pending.has(message.id)) {\n    const waiter = pending.get(message.id)!;\n    pending.delete(message.id);\n    ...\n  }"
+  },
+  {
+    "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\cdp-client.test.ts",
+    "lineNumber": 1,
+    "severity": "major",
+    "description": "cdp-client.test.ts 没有覆盖 connectEventCdp 错误路径 + PerformanceRecorder 的相关分支测试。第 406-412 行的 .catch() 完全未经测试，上述 'connectCdp'/'connectEventCdp' bug 因而漏测。建议补充 PerformanceRecorder mock + connectEventCdp reject 路径的断言。",
+    "evidence": "cdp-client.test.ts 不含对 PerformanceRecorder 的 mock；connectEventCdp 仅测试 .then() 主流程，.catch() 路径完全未覆盖。"
+  },
+  {
+    "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\main\\cdp\\injection\\shared.ts",
+    "lineNumber": 150,
+    "severity": "minor",
+    "description": "waitForTheme 的 while 循环使用 performance.now() - start < timeoutMs 判断，与外层 minDelayMs 引入的 t0 独立于 start 计算。主成功返回时记录起始时间为 t0，但 fallback 路径也使用 t0，语义上「包含 minDelay」。此外，当 timeoutMs 极大（Infinity）且 verifyTheme 持续失败时，loop 会无限占用调用方微任务。建议对异常返回补 exit 保护。",
+    "evidence": "while (performance.now() - start < timeoutMs) {\n  const verification = await verifyTheme(session);\n  if (verification && isThemeFullyApplied(verification)) {\n    PerformanceRecorder.recordNamedStep('waitForTheme', performance.now() - t0);\n    return verification;\n  }\n  await delay(intervalMs);\n}"
+  },
+  {
+    "filePath": "C:\\Users\\snowb\\Desktop\\work\\desktop-main\\src\\engine\\types\\adapters.d.ts",
+    "lineNumber": 1,
+    "severity": "info",
+    "description": "engine/types/adapters.d.ts 定义了 engine 侧的 AdapterContract；而主进程侧 adapters/base.ts 是另一套实现。两者是否存在字段/方法名漂移（例如 rendererHints、coreId）需要契约脚本 check-injection-contract 校验。本次探索未见明确 engine-adapters.d.ts 与 base.ts 字段冲突证据，但鉴于 C-1 四源一致为项目核心不变量，建议将该对账列入巡检。",
+    "evidence": "src/engine/types/adapters.d.ts 与 src/adapters/base.ts 平行存在；未见单测直接比较两者结构一致性。"
+  }
+]

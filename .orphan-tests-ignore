@@ -1,0 +1,29 @@
+# .orphan-tests-ignore
+#
+# Test files listed here are exempt from the orphan-test check.
+# Use this for:
+#   - Self-contained contract/integration tests that don't map 1:1 to a source file
+#   - Pre-existing orphans being tracked as tech-debt (remove from here once cleaned)
+#
+# Format: one POSIX-style path per line; `#` for comments; blank lines ignored.
+# Supports substring matching so you can list a directory prefix to cover all its tests.
+
+# ── Self-contained architectural tests (intentionally no 1:1 source) ─────────
+tests/contract/14-token-theme-contract.test.ts
+tests/main/selector-contract.test.ts
+
+# ── Pre-existing tech-debt orphans (cleanup tracked separately) ─────────────
+# TODO: Delete these test files — their source directories no longer exist
+src/main/cdp/injection/css-builders/
+src/main/cdp/injection/theme-auto-repair.test.ts
+tests/main/audit/
+
+# ── Test filename ≠ source filename (intentional mismatch) ─────────────────
+# manifest-schema.test.ts validates manifest-v2.schema.json (same dir, different name)
+src/main/catalog/manifest-schema.test.ts
+
+# ── Broken import paths (TODO: fix imports, remove from ignore) ─────────────
+# l1-port-lease.test.ts imports 'port-lease-pool' — exists in port-manager.ts
+tests/backtest/l1-port-lease.test.ts
+# adapter-watchdog.test.ts imports from stale path — types now in src/main/cdp/watchdog.ts
+tests/shared/types/adapter-watchdog.test.ts

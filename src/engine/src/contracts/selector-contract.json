@@ -1,0 +1,151 @@
+{
+  "schema": "agentskin-selector-contract/1",
+  "verifiedAgainst": {
+    "date": "2026-08-31",
+    "agents": ["traework", "qoderwork", "workbuddy", "doubao", "codex", "zcode"]
+  },
+  "selectors": {
+    "traework": {
+      "root": {
+        "selector": "#root .panel-container, #root .solo-lite-layout, #root",
+        "tier": "L1",
+        "description": "TRAE solo-lite 主容器。home 路由渲染 panel-container；会话渲染 solo-lite-layout。"
+      },
+      "sidebar": {
+        "selector": ".task-list-base, [class*='task-list'], [class*='sidebar'], aside",
+        "tier": "L2",
+        "description": "左侧任务/会话列表"
+      },
+      "workspace": {
+        "selector": ".panel-container, .solo-lite-layout, .conversation-shell, main",
+        "tier": "L2",
+        "description": "主工作区"
+      },
+      "composer": {
+        "selector": ".chat-input-v2-input-box-editable[contenteditable='true'], [contenteditable='true'], textarea",
+        "tier": "L2",
+        "description": "用户输入区域"
+      },
+      "toolbar": {
+        "selector": ".solo-lite-header, [class*='header'], header",
+        "tier": "L2",
+        "description": "顶部工具栏"
+      }
+    },
+    "qoderwork": {
+      "root": {
+        "selector": "#root .agents-layout-root, .agents-layout-root, #root",
+        "tier": "L1",
+        "description": "QoderWork 主布局根节点。agents-layout-root 是其 React 布局容器。"
+      },
+      "sidebar": {
+        "selector": ".agents-sidebar, [data-resizable-sidebar], [class*='sidebar'], aside",
+        "tier": "L2",
+        "description": "左侧可拖拽调整大小的侧边栏"
+      },
+      "workspace": {
+        "selector": ".agents-content-area, .agents-layout-body, [class*='content-area'], main",
+        "tier": "L2",
+        "description": "主工作区内容面板"
+      },
+      "composer": {
+        "selector": ".chat-input-editor-text[contenteditable='true'], [contenteditable='true'], textarea",
+        "tier": "L2",
+        "description": "可编辑输入区域"
+      }
+    },
+    "workbuddy": {
+      "root": {
+        "selector": "#root > .teams-container, .teams-container, #root",
+        "tier": "L1",
+        "description": "WorkBuddy 主根节点。teams-container 是其标志性壳体；#root 为通用兜底。"
+      },
+      "sidebar": {
+        "selector": ".conversation-sidebar, .conversation-list, [class*='sidebar'], nav",
+        "tier": "L2",
+        "description": "左侧会话列表导航"
+      },
+      "workspace": {
+        "selector": ".teams-main-content, .main-content, .chat-container, [class*='chat'], main",
+        "tier": "L2",
+        "description": "主工作区内容容器"
+      },
+      "composer": {
+        "selector": "[role='textbox'][contenteditable='true'], .wb-home-composer [contenteditable='true'], [contenteditable='true']",
+        "tier": "L2",
+        "description": "用户消息输入区域"
+      },
+      "toolbar": {
+        "selector": ".wb-home-header, .app-header, header",
+        "tier": "L2",
+        "description": "顶部工具栏"
+      }
+    },
+    "doubao": {
+      "root": {
+        "selector": "#root, #app, body > div:first-child, body",
+        "tier": "L1",
+        "description": "豆包 React 根节点。结构较简单，主要靠 #root 兜底。"
+      },
+      "sidebar": {
+        "selector": "[class*='sidebar'], [class*='session-list'], aside, nav",
+        "tier": "L2",
+        "description": "侧边栏"
+      },
+      "messageList": {
+        "selector": "[class*='message-list'], [class*='chat-content'], [role='log']",
+        "tier": "L2",
+        "description": "消息列表滚动容器"
+      },
+      "composer": {
+        "selector": "[contenteditable='true'], textarea, [class*='input']",
+        "tier": "L2",
+        "description": "用户输入区域"
+      }
+    },
+    "codex": {
+      "root": {
+        "selector": "main.main-surface, main, #root, body > div",
+        "tier": "L1",
+        "description": "ChatGPT/Codex 主视图根节点。main-surface 是 Codex 桌面端的标志性类名。"
+      },
+      "sidebar": {
+        "selector": "aside.app-shell-left-panel, aside[class*='left'], [class*='sidebar'], aside",
+        "tier": "L2",
+        "description": "左侧历史对话面板"
+      },
+      "composer": {
+        "selector": ".composer-surface-chrome, form textarea, [contenteditable='true'], textarea",
+        "tier": "L2",
+        "description": "底部输入区域"
+      },
+      "workspace": {
+        "selector": ".conversation-shell, .chat-viewport, main > div",
+        "tier": "L2",
+        "description": "会话主内容区"
+      }
+    },
+    "zcode": {
+      "root": {
+        "selector": "#root, #app, body > div, body",
+        "tier": "L1",
+        "description": "ZCode Electron 根节点。React 应用挂载于 #root。"
+      },
+      "sidebar": {
+        "selector": "[class*='sidebar'], [class*='panel-left'], aside, nav",
+        "tier": "L2",
+        "description": "侧边栏"
+      },
+      "composer": {
+        "selector": "[contenteditable='true'], [role='textbox'], textarea",
+        "tier": "L2",
+        "description": "用户输入区域"
+      },
+      "workspace": {
+        "selector": "[class*='main'], [class*='editor'], main",
+        "tier": "L2",
+        "description": "主工作区"
+      }
+    }
+  }
+}

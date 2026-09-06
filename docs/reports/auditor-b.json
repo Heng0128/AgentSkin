@@ -1,0 +1,261 @@
+{
+  "auditor": "Auditor",
+  "issuesCoverage": {
+    "total": 20,
+    "fixed": 18,
+    "partial": 2,
+    "missing": 0,
+    "details": [
+      {
+        "id": "B-02",
+        "rc": "RC1",
+        "file": "src/main/cdp/session-pool.ts",
+        "line": "292-304",
+        "status": "fixed",
+        "evidence": "Capacity guard relocated BEFORE `await open()`. Explicit comment at L292-296 documents 'Capacity guard前置 (RC1-B)'. Condition `byTarget.size >= MAX_SESSIONS_PER_AGENT` checked at L297 before open() at L305."
+      },
+      {
+        "id": "M-03",
+        "rc": "RC1",
+        "file": "src/main/cdp/session-pool.ts",
+        "line": "140-147, 198-230",
+        "status": "fixed",
+        "evidence": "New `retiredScanTimer` + `scanRetiredEntries()` implemented. Force-discards retired sessions exceeding RETIRE_GRACE_MS even when refCount > 0. Warning logged via mainWarn with target details."
+      },
+      {
+        "id": "M-05",
+        "rc": "RC1",
+        "file": "src/main/cdp/reload-watchdog.ts + src/main/cdp/inspect-session.ts",
+        "line": "wd:79-85, is:71-77",
+        "status": "fixed",
+        "evidence": "Both modules now accept optional `pool?: CdpSessionPool` parameter. Session acquisition via `acquireSession(pool, ...)` and release via `releaseOrClose()` helper. When pool omitted, falls back to one-shot connect-then-close (backward compatible)."
+      },
+      {
+        "id": "B-05",
+        "rc": "RC1",
+        "file": "src/main/cdp/session-pool.ts",
+        "line": "118-132",
+        "status": "fixed",
+        "evidence": "Module-level `unknownTargetCounter` (L124) incremented on each call to generate unique keys `unknown-1`, `unknown-2`, ... Prevents silent session collapse. Test at session-pool.test.ts:178-186 confirms regex `/^unknown-\\d+$/`."
+      },
+      {
+        "id": "B-09",
+        "rc": "RC1",
+        "file": "src/main/cdp/apply-baseline.ts",
+        "line": "293-313",
+        "status": "fixed",
+        "evidence": "`openMainDomSession()` routes through `acquireSession(pool, ...)` wrapping `connectCdp`. Pool optional — callers without pool get one-shot backward-compatible path. No raw `connectCdp` bypasses pool when pool is available."
+      },
+      {
+        "id": "M-01",
+        "rc": "RC2",
+        "file": "src/main/cdp/cdp-client.ts",
+        "line": "409-418",
+        "status": "fixed",
+        "evidence": "The `.catch()` branch at L409-417 records step with correct name `'connectEventCdp'` (not the old wrong name). Both success/failure paths consistently pass the operation name. Test coverage at cdp-client.test.ts:762-807 verifies this."
+      },
+      {
+        "id": "M-06",
+        "rc": "RC2",
+        "file": "src/main/services/performance/performance-recorder.ts",
+        "line": "306-393",
+        "status": "fixed",
+        "evidence": "Static-only `ShadowTrace` eliminated. Per-agent `Map<string, ApplyTraceBuilder>` at L311 isolates concurrent traces. `finish()` calls `PerformanceRecorder.release(agentId, this)` (L258). `getActive(agentId?)` supports per-agent lookup. `wallClockStart` (L108) + monotonic `duration` used for `finishedAt` (L283) — single clock source."
+      },
+      {
+        "id": "B-08",
+        "rc": "RC2",
+        "file": "src/main/theme-apply-flow.ts",
+        "line": "641-663",
+        "status": "fixed",
+        "evidence": "`finishTrace()` moved from inline post-inject to inside `Promise.allSettled(backgroundTasks).then(...)` callback. Trace captures full duration including hardening/wallpaper/scheme sync completion. Original early-return race eliminated."
+      },
+      {
+        "id": "B-10",
+        "rc": "RC2",
+        "file": "src/main/services/performance/performance-logger.ts",
+        "line": "197-222",
+        "status": "fixed",
+        "evidence": "`traceOverflowCount` counter + `nextOverflowWarnAt` threshold (L125-127). Warning re-emitted every `OVERFLOW_WARN_INTERVAL = 100` discarded traces (L121) instead of only once. `getStats()` exposes `overflowCount` (L63, L193) for renderer visibility."
+      },
+      {
+        "id": "B-11",
+        "rc": "RC2",
+        "file": "src/main/ipc/performance-ipc.ts",
+        "line": "71-81",
+        "status": "fixed",
+        "evidence": "Push path implemented: `performanceLogger.subscribeTrace()` at L74 fans out to `ctx.mainWindow` and `ctx.studioWindow` via `IpcChannel.PERFORMANCE_NEW_TRACE`. Channel declared in ipc-channels.ts:218 with SEND_ONLY semantics documented."
+      },
+      {
+        "id": "B-04",
+        "rc": "RC3",
+        "file": "src/main/cdp/cdp-fanout.ts",
+        "line": "595-613",
+        "status": "fixed",
+        "evidence": "finally block at L596-613 checks `session !== firstSession` before releasing/closing. firstSession ownership transferred to health-check block (L784-791) which releases it exactly once. Comment at L597-598 explicitly documents the double-release prevention."
+      },
+      {
+        "id": "B-07",
+        "rc": "RC3",
+        "file": "src/main/services/performance/performance-recorder.ts",
+        "line": "324-335",
+        "status": "fixed",
+        "evidence": "Per-agent trace map (L311) replaces single active trace. Concurrent apply to same agent returns unregistered builder (L331-333) whose `release()` is a no-op. Concurrent apply to different agents each gets own registered builder. Tests at performance-recorder.test.ts:214-282 verify isolation."
+      },
+      {
+        "id": "B-07",
+        "rc": "RC3",
+        "file": "src/main/cdp/cdp-client.ts",
+        "line": "168-172",
+        "status": "fixed",
+        "evidence": "Defensive null-guard at L170-172: `if (!waiter) return;` after `pending.has(message.id)` check at L168. Protects against concurrent timeout/socket-close removing the entry between `.has()` and `.get()`. Test at cdp-client.test.ts:814-840 covers ghost response."
+      },
+      {
+        "id": "B-04",
+        "rc": "RC4",
+        "file": "src/shared/injection-runtime.ts",
+        "line": "69-95",
+        "status": "fixed",
+        "evidence": "New `isThemeFullyApplyVerdict()` returns `'full' | 'partial' | 'failed'`. L84: when `!v.layers` returns `'partial'` (not silently `'full'`). L86-89: required layers `['palette', 'tokens', 'cosmetic']` checked individually. L93: hero gating returns `'partial'` when unresolved."
+      },
+      {
+        "id": "B-09",
+        "rc": "RC4",
+        "file": "src/main/cdp/injection/shared.ts",
+        "line": "162-203",
+        "status": "fixed",
+        "evidence": "`waitForTheme()` returns `WaitForThemeResult` (L134-145) with `{ applied, verdict, verification }`. On timeout (L192-202), returns last observed verification + graded verdict instead of null. Caller can distinguish partial from total failure."
+      },
+      {
+        "id": "M-01",
+        "rc": "RC5",
+        "file": "src/main/cdp/cdp-client.test.ts",
+        "line": "762-807",
+        "status": "fixed",
+        "evidence": "New describe block 'connectEventCdp — error path records timing step' with two tests: (1) connection failure records step 'connectEventCdp' with success=false; (2) connect timeout also records step correctly. Verifies `PerformanceRecorder.recordNamedStep` call args."
+      },
+      {
+        "id": "B-06",
+        "rc": "RC5",
+        "file": "src/shared/types.ts",
+        "line": "N/A",
+        "status": "partial",
+        "evidence": "No dedicated schema snapshot test for types.ts barrel. However, `src/shared/types.test.ts` provides serialization round-trip tests for `ConcurrencyMetrics`, `DriftStatus`, `HealthCheckReport`. The key types modified in Phase 5-7 (`ThemeApplyTrace`, `PerformanceStep`, `ThemeVerification`, `WaitForThemeResult`) lack explicit snapshot coverage."
+      },
+      {
+        "id": "B-10",
+        "rc": "RC5",
+        "file": "src/shared/types.ts",
+        "line": "N/A",
+        "status": "partial",
+        "evidence": "Same as B-06: no schema snapshot test for the new `WaitForThemeResult` interface (injection/shared.ts:134-145) or the extended `ThemeApplyTrace.finishedAt` semantics. Existing round-trip tests cover only 3 of ~10 exported type families."
+      },
+      {
+        "id": "B-08",
+        "rc": "RC5",
+        "file": "src/main/cdp/cdp-client.test.ts",
+        "line": "470-548, 762-841",
+        "status": "fixed",
+        "evidence": "RC1 resource cleanup tests (L474-509), unexpected close tests (L515-548), connectEventCdp error path (L762-807), and pending ghost response tests (L814-841) all present. Coverage substantially expanded from pre-Phase-5 baseline."
+      }
+    ]
+  },
+  "regressionCheck": {
+    "passed": false,
+    "findings": [
+      {
+        "severity": "low",
+        "file": "src/main/cdp/session-pool.ts",
+        "line": "297",
+        "description": "Capacity guard counts retired sessions: `byTarget.size` includes retired entries (not yet swept by `scanRetiredEntries`). Under rapid epoch cycling, retired sessions accumulate between 10s scan intervals, potentially triggering premature capacity rejection. Mitigated by low steady-state target count (<20) vs high cap (64).",
+        "recommendation": "Consider counting only non-retired entries for the capacity check, or document that the cap is intentionally conservative."
+      },
+      {
+        "severity": "low",
+        "file": "src/main/ipc/performance-ipc.ts",
+        "line": "74-81",
+        "description": "Trace subscription in `registerPerformanceIpc` has no unsubscribe path. The returned unsubscribe function from `subscribeTrace()` is not stored. On app shutdown or ctx replacement, the closure referencing `ctx.mainWindow`/`ctx.studioWindow` may prevent GC of destroyed BrowserWindow references.",
+        "recommendation": "Store the unsubscribe function and call it in a shutdown hook, or use `ctx.lifecycle` teardown registry."
+      },
+      {
+        "severity": "info",
+        "file": "src/main/cdp/session-pool.ts",
+        "line": "124",
+        "description": "`unknownTargetCounter` is module-level and never reset. In long-running sessions with many transient targets, this counter grows unbounded (not a leak in itself, but a monotonically increasing integer).",
+        "recommendation": "Acceptable as-is; counter is diagnostic. No action required unless it overflows Number.MAX_SAFE_INTEGER (unlikely in practice)."
+      }
+    ]
+  },
+  "newIssues": {
+    "passed": false,
+    "findings": [
+      {
+        "severity": "low",
+        "file": "src/main/cdp/injection/shared.ts",
+        "line": "167-176",
+        "description": "Inconsistent clock source in `waitForTheme`: `t0` (L167) and `start` (L176) are both `performance.now()` captures taken microseconds apart. The `recordNamedStep` calls use `performance.now() - t0` (L184, L195-198) while the loop condition uses `performance.now() - start` (L178). Both are monotonic so functionally correct, but the dual-clock pattern is confusing and could diverge in intent during future refactoring.",
+        "recommendation": "Use a single `start` timestamp for both the loop condition and the step recording. Remove `t0`."
+      },
+      {
+        "severity": "info",
+        "file": "src/main/cdp/session-pool.ts",
+        "line": "212-229",
+        "description": "`scanRetiredEntries()` force-discards sessions with stale refCount > 0. If a caller is mid-operation (e.g. a long-running evaluate) on a pooled session that gets force-discarded, the evaluate promise will reject with 'CDP WebSocket closed unexpectedly'. The caller's error path may interpret this as a transient failure and retry, not realizing the session was forcibly reclaimed.",
+        "recommendation": "Document this behavior in the `CdpSessionPool` module doc: 'in-flight operations on pooled sessions may be terminated by the retired-session safety valve after RETIRE_GRACE_MS'."
+      }
+    ]
+  },
+  "consistencyCheck": {
+    "passed": true,
+    "findings": [
+      {
+        "severity": "info",
+        "description": "All Phase 5-7 modifications follow existing naming conventions (`scanXxxEntries`, `startXxxScanner`, `isThemeXxxVerdict`). Error handling uses the established `mainWarn` + return-null pattern. JSDoc comments are comprehensive and reference RC IDs (e.g. 'RC1-B', 'RC2-A', 'RC4-A', 'RC5-B').",
+        "recommendation": "No action required."
+      },
+      {
+        "severity": "info",
+        "description": "The `WaitForThemeResult` interface follows the same `{ applied, verdict, verification }` shape pattern used elsewhere. The `ThemeApplyVerdict` type (`'full' | 'partial' | 'failed'`) is consistent with the three-tier degradation model described in the module doc.",
+        "recommendation": "No action required."
+      }
+    ]
+  },
+  "documentationCheck": {
+    "passed": true,
+    "findings": [
+      {
+        "severity": "info",
+        "description": "Module-level JSDoc updated in session-pool.ts (L140-147: retired safety valve), cdp-client.ts (L395-418: connectEventCdp step name), performance-recorder.ts (L1-38: per-agent trace map + clock source), and injection-runtime.ts (L43-56: three-tier verdict). All public APIs have complete JSDoc.",
+        "recommendation": "No action required."
+      },
+      {
+        "severity": "info",
+        "description": "New `PERFORMANCE_NEW_TRACE` channel documented in ipc-channels.ts:214-218 with SEND_ONLY semantics. New `WaitForThemeResult` type exported from injection/shared.ts with full field-level JSDoc.",
+        "recommendation": "No action required."
+      }
+    ]
+  },
+  "summary": "Phase 5-7 modifications address 18 of 20 issues fully (90%) and 2 partially (10%). No issues are completely unaddressed. RC1 (Session Pool lifecycle) is fully resolved with the retired-session safety valve and capacity guard relocation. RC2 (Trace/observability) is fully resolved with per-agent trace map, unified clock source, and push channel. RC3 (Batch concurrency) is fully resolved with firstSession ownership transfer and pending map null-guard. RC4 (Theme validation) is fully resolved with three-tier verdict model. RC5 (Type contracts/tests) is substantially improved but lacks schema snapshot tests for the new/modified types (ThemeApplyTrace, WaitForThemeResult, ThemeVerification). Two low-severity regressions identified: capacity guard counts retired sessions, and trace subscription lacks unsubscribe path. Two low-severity new issues: dual-clock pattern in waitForTheme, and undocumented force-discard behavior during in-flight operations.",
+  "recommendations": [
+    {
+      "priority": "medium",
+      "description": "Add schema snapshot tests for Phase 5-7 modified types: ThemeApplyTrace (especially finishedAt monotonic-clock semantics), WaitForThemeResult, ThemeVerification (layers + artResolved fields), and ThemeApplyVerdict. This closes the β-06/10 partial gap."
+    },
+    {
+      "priority": "low",
+      "description": "Store the unsubscribe function returned by `performanceLogger.subscribeTrace()` in `registerPerformanceIpc` and call it on app shutdown to prevent potential BrowserWindow reference retention."
+    },
+    {
+      "priority": "low",
+      "description": "Refactor `waitForTheme` to use a single monotonic timestamp (`start`) for both the loop condition and the `recordNamedStep` call, removing the redundant `t0`."
+    },
+    {
+      "priority": "low",
+      "description": "Document the force-discard behavior during in-flight operations in the session-pool module doc so callers understand that pooled sessions may be terminated after RETIRE_GRACE_MS."
+    },
+    {
+      "priority": "info",
+      "description": "Consider counting only non-retired entries in the capacity guard check to prevent premature rejection under rapid epoch cycling."
+    }
+  ]
+}

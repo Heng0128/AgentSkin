@@ -1,0 +1,67 @@
+// SPDX-License-Identifier: MPL-2.0
+
+/**
+ * # handleApplyResult
+ *
+ * Pure classifier for an ApplyResponse IPC result, decoupling the three
+ * apply outcomes (success / requires-restart / port-occupied) from the
+ * state-mutation concerns in useThemes.
+ *
+ * The caller remains responsible for setStatus/setRestartPrompt/showToast —
+ * this function only decides WHICH of those should fire, so the three-way
+ * branch is unit-testable in isolation.
+ */
+
+import type { AgentId, ApplyResponse } from '@shared/types';
+
+export type ApplyOutcome =
+  | { kind: 'success' }
+  | {
+      kind: 'requires-restart';
+      themeId: string;
+      themeName: string;
+      appId: AgentId;
+      restartReason?: ApplyResponse['restartReason'];
+    }
+  | { kind: 'port-occupied'; message: string }
+  /** RFC §4.10: a concurrent apply was deduplicated against an in-flight one —
+   *  benign, the in-flight apply is already running. */
+  | { kind: 'skipped-concurrent' }
+  /**
+   * Unknown/unexpected status from main process. Treated as a transient
+   * failure — never silently classified as success to avoid misleading UI.
+   */
+  | { kind: 'unknown-status'; status: string; message: string };
+
+/**
+ * Map an IPC ApplyResponse to a typed ApplyOutcome.
+ *
+ * @param result  The ApplyResponse returned by `window.agentSkin.applyTheme`.
+ * @param ctx     Identifiers needed for the restart-prompt branch.
+ */
+export function handleApplyResult(
+  result: ApplyResponse,
+  ctx: { themeId: string; themeName: string; appId: AgentId },
+): ApplyOutcome {
+  switch (result.status) {
+    case 'requires-restart':
+      return { kind: 'requires-restart', ...ctx, restartReason: result.restartReason };
+    case 'port-occupied':
+      return { kind: 'port-occupied', message: result.message };
+    case 'applied':
+      return { kind: 'success' };
+    case 'skipped-concurrent':
+      return { kind: 'skipped-concurrent' };
+    default:
+      // Exhaustiveness guard: an unknown status from a future main process
+      // must not crash the renderer with a TypeError on outcome.kind.
+      // Never silently treat it as success — return a distinct outcome so
+      // the UI can show a generic error and the unknown status is logged.
+      console.warn(`[apply-result] unknown status from main process: ${result.status as string}`);
+      return {
+        kind: 'unknown-status',
+        status: result.status as string,
+        message: 'Unknown apply result status',
+      };
+  }
+}

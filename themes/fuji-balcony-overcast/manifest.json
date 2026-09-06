@@ -1,0 +1,58 @@
+{
+  "id": "fuji-balcony-overcast",
+  "name": "fuji-balcony-overcast",
+  "displayName": "Fuji Balcony Overcast",
+  "version": "2.0.0",
+  "description": "Schoolgirl on a grey rooftop with Mt. Fuji in the distance.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "anime",
+    "rooftop",
+    "fuji"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#667794",
+    "secondary": "#8492a9",
+    "background": "#221b20",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#393237",
+    "surfaceElevated": "#463f44",
+    "border": "#3e363c",
+    "codeBackground": "#1f191e",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#352d33",
+    "buttonBackground": "#667794",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#66779460"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

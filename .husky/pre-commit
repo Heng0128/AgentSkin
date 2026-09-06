@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+# Pre-commit: biome check on staged src files only.
+# Mirrors `npm run check` (which runs `biome check src/`).
+# Avoids npx lint-staged (not a dependency) and Windows cmd-line arg limits.
+cd "$(git rev-parse --show-toplevel)"
+
+if git diff --cached --name-only --diff-filter=ACMR --quiet -- 'src/**'; then
+  exit 0
+fi
+
+# biome check on src/ directory (handles its own glob expansion)
+npx biome check --write --no-errors-on-unmatched src/

@@ -1,0 +1,152 @@
+// SPDX-License-Identifier: MPL-2.0
+
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createElectronMock } from '../../../fixtures/mocks/electron';
+
+/**
+ * settings.ts resolves its on-disk path via Electron app.getPath('userData').
+ * Each test points getPath at a fresh temp dir and re-imports the module
+ * (vi.resetModules) so the cache starts empty.
+ */
+
+// Hoisted variables for vi.mock factory (must be defined at module top level)
+const { handlers, tmpDirRef } = vi.hoisted(() => ({
+  handlers: new Map<string, (...args: unknown[]) => unknown>(),
+  tmpDirRef: { current: '' },
+}));
+
+// Mock electron module at top level
+vi.mock('electron', () =>
+  createElectronMock(handlers, { app: { getPath: () => tmpDirRef.current } }),
+);
+
+describe('wallpaper settings (config/settings.ts)', () => {
+  beforeEach(async () => {
+    tmpDirRef.current = await fs.mkdtemp(path.join(os.tmpdir(), 'agentskin-settings-'));
+    vi.resetModules();
+  });
+
+  afterEach(async () => {
+    try {
+      await fs.rm(tmpDirRef.current, { recursive: true, force: true });
+    } finally {
+      vi.resetModules();
+    }
+  });
+
+  const settingsFile = () => path.join(tmpDirRef.current, 'wallpaper-settings.json');
+
+  it('returns the default threshold and writes a default config when no file exists', async () => {
+    const { getImageBlobThresholdBytes } = await import('./settings');
+    expect(getImageBlobThresholdBytes()).toBe(20 * 1024 * 1024);
+    // The default config file should now exist on disk.
+    const raw = await fs.readFile(settingsFile(), 'utf8');
+    expect(JSON.parse(raw).imageBlobThresholdMB).toBe(20);
+  });
+
+  it('reads a persisted custom threshold from the config file', async () => {
+    await fs.mkdir(path.dirname(settingsFile()), { recursive: true });
+    await fs.writeFile(
+      settingsFile(),
+      JSON.stringify({ imageBlobThresholdMB: 5 }, null, 2),
+      'utf8',
+    );
+    const { getImageBlobThresholdBytes } = await import('./settings');
+    expect(getImageBlobThresholdBytes()).toBe(5 * 1024 * 1024);
+  });
+
+  it('updateSetting persists a new value to disk and reflects it in the cache', async () => {
+    const { updateSetting, getImageBlobThresholdBytes } = await import('./settings');
+    updateSetting('imageBlobThresholdMB', 8);
+    expect(getImageBlobThresholdBytes()).toBe(8 * 1024 * 1024);
+    const raw = await fs.readFile(settingsFile(), 'utf8');
+    expect(JSON.parse(raw).imageBlobThresholdMB).toBe(8);
+  });
+
+  it('updateSetting rejects a value of the wrong type', async () => {
+    const { updateSetting } = await import('./settings');
+    // The only known key expects a number; a string must throw.
+    expect(() =>
+      // @ts-expect-error — intentionally wrong type for runtime validation.
+      updateSetting('imageBlobThresholdMB', 'big'),
+    ).toThrow('Invalid type');
+  });
+
+  it('loadSettings falls back to defaults when the config file is invalid JSON', async () => {
+    await fs.mkdir(path.dirname(settingsFile()), { recursive: true });
+    await fs.writeFile(settingsFile(), '{ not valid json !!!', 'utf8');
+    const { getImageBlobThresholdBytes, loadSettings } = await import('./settings');
+    expect(getImageBlobThresholdBytes()).toBe(20 * 1024 * 1024);
+    // The cache is populated with a defaults object.
+    expect(loadSettings().imageBlobThresholdMB).toBe(20);
+  });
+
+  it('loadSettings drops a type-mismatched field instead of using the bad value', async () => {
+    await fs.mkdir(path.dirname(settingsFile()), { recursive: true });
+    await fs.writeFile(
+      settingsFile(),
+      JSON.stringify({ imageBlobThresholdMB: 'not-a-number' }, null, 2),
+      'utf8',
+    );
+    const { loadSettings } = await import('./settings');
+    const result = loadSettings();
+    // The string value must not survive the type check — the field is dropped
+    // and replaced by the default finite number.
+    expect(result.imageBlobThresholdMB).toBe(20);
+    expect(Number.isFinite(result.imageBlobThresholdMB)).toBe(true);
+  });
+
+  // Test each bad value separately to get clear failure diagnostics.
+  // NaN is intentionally excluded here because JSON.stringify(NaN) => null,
+  // so a file-based write cannot exercise the !Number.isFinite(NaN) branch.
+  // That branch requires a raw runtime value and must be tested separately.
+  const valuesToTest = [
+    { value: -5, label: '-5' },
+    { value: 0, label: '0' },
+    { value: 1e10, label: '1e10' },
+  ];
+
+  it.each(valuesToTest.map(({ value }) => [value]))(
+    'loadSettings clamps out-of-range threshold %s back to default',
+    async (value) => {
+      // resetModules so each write is a fresh load
+      vi.resetModules();
+      await fs.mkdir(path.dirname(settingsFile()), { recursive: true });
+      await fs.writeFile(
+        settingsFile(),
+        JSON.stringify({ imageBlobThresholdMB: value }, null, 2),
+        'utf8',
+      );
+      const { getImageBlobThresholdBytes } = await import('./settings');
+      // Clamped to the default 20MB, never a nonsense cap.
+      expect(getImageBlobThresholdBytes()).toBe(20 * 1024 * 1024);
+    },
+  );
+
+  it('updateSetting rejects an out-of-range threshold', async () => {
+    const { updateSetting } = await import('./settings');
+    expect(() => updateSetting('imageBlobThresholdMB', 0)).toThrow(/between 1 and 1000/);
+    expect(() => updateSetting('imageBlobThresholdMB', -3)).toThrow(/between 1 and 1000/);
+    expect(() => updateSetting('imageBlobThresholdMB', 1e10)).toThrow(/between 1 and 1000/);
+    // A valid value still persists.
+    updateSetting('imageBlobThresholdMB', 100);
+    const { getImageBlobThresholdBytes } = await import('./settings');
+    expect(getImageBlobThresholdBytes()).toBe(100 * 1024 * 1024);
+  });
+
+  it('falls back to env-vars when app.getPath throws (non-Electron context)', async () => {
+    vi.resetModules();
+    vi.doMock('electron', () => ({
+      app: {
+        getPath: () => {
+          throw new Error('app not available');
+        },
+      },
+    }));
+    const { getImageBlobThresholdBytes } = await import('./settings');
+    expect(getImageBlobThresholdBytes()).toBe(20 * 1024 * 1024);
+  });
+});

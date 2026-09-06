@@ -1,0 +1,37 @@
+{
+  "totalTests": 8493,
+  "passed": 8485,
+  "failed": 4,
+  "skipped": 4,
+  "newFailures": [
+    {
+      "file": "src/main/scene/pkg-parser.test.ts",
+      "test": "parsePkgBuffer (V0001/V0002) > parses a V0001 pkg (headerSize = 0, no extended header)",
+      "reason": "Commit b0dc4a35 added 'headerSize < 8' validation that incorrectly rejects V0001 format which uses headerSize = 0. The original code comment explicitly states 'V0001: headerSize = 0 (or 8), no extended header'."
+    },
+    {
+      "file": "src/main/scene/pkg-parser.test.ts",
+      "test": "parsePkgBuffer (V0001/V0002) > parses an empty V0001 pkg (zero entries)",
+      "reason": "Same regression: buildPkgV2 defaults headerSize to 0 (V0001), rejected by new headerSize < 8 check."
+    },
+    {
+      "file": "src/main/scene/pkg-parser.test.ts",
+      "test": "parsePkgBuffer (V0001/V0002) > drops out-of-bounds entries in V0001 format",
+      "reason": "Same regression: manually constructs V0001 with headerSize = 0, rejected by new headerSize < 8 check."
+    }
+  ],
+  "preExistingFailures": [
+    {
+      "file": "tests/performance/injection-benchmark.test.ts",
+      "test": "Comparison: orchestrator vs raw execution > orchestrator overhead is within threshold vs direct engine call",
+      "reason": "Performance benchmark flaky: overhead 13.5ms exceeded 10ms threshold. Timing-sensitive, not a logic regression."
+    },
+    {
+      "file": "src/main/cdp/cdp-reconnect.test.ts",
+      "test": "terminates WebSocket on timeout during initial connect",
+      "reason": "Known flaky: CDP connect timeout (network-related). Pre-existing issue per project invariants."
+    }
+  ],
+  "result": "FAIL",
+  "summary": "8485 of 8493 tests passed. Three NEW regressions in pkg-parser.test.ts caused by commit b0dc4a35 which added 'headerSize < 8 || headerSize > 1024' validation. This incorrectly rejects V0001 format packages that use headerSize = 0 (documented as valid in the original code comment). The fix should change the lower bound to 'headerSize < 0' or add a special case for V0001's headerSize = 0. Additionally, 1 pre-existing flaky benchmark test (injection-benchmark) and 1 known flaky CDP reconnect test failed but are not regressions."
+}

@@ -1,0 +1,1310 @@
+// SPDX-License-Identifier: MPL-2.0
+
+/**
+ * # AgentEngineService — Facade
+ *
+ * AgentSkin's control-layer orchestrator (thin facade after god-object
+ * teardown).  Covers only cross-cutting concerns that do not fit a single
+ * extracted module:
+ *
+ *   - State registry — owned by {@link AgentEngineRegistry} (./services/agent-engine-registry)
+ *   - Persistence — owned by {@link PersistChain} (./services/agent-engine-persist)
+ *   - Apply/restore option merging — pure functions from ./services/agent-engine-options
+ *   - Epoch management (`EpochManager`) — the cross-cutting cancellation guard
+ *   - Concurrency (inflight / applyingTheme / mutex) — retained on the Facade
+ *   - Logging (`log` / `logStructured`) — shared by every deps slice
+ *   - The `apply` / `restore` flow itself — the top-level orchestration that
+ *     sequences the extracted modules in the right order
+ *
+ * Everything else has been peeled off into cohesive modules:
+ *   - {@link ./app-discovery}       — port discovery, CDP-ready, status probe
+ *   - {@link ./services/agent-engine-options} — render option merging
+ *   - {@link ./services/agent-engine-persist}  — PersistedState shape, persist chain
+ *   - {@link ./services/agent-engine-registry} — per-agent state CRUD
+ */
+
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import type { ApplicationAdapter } from '../adapters/base';
+import { requireAdapter } from '../adapters/registry';
+import { toMessage } from '../shared/errors';
+import type { CdpTargetMinimal } from '../shared/injection/renderer-stable-wait';
+import { IpcChannel } from '../shared/ipc-channels';
+import {
+  AGENT_IDS,
+  AGENT_META,
+  type AgentId,
+  type ApplyRequest,
+  type ApplyResponse,
+  type AppStatus,
+  type ConcurrencyMetrics,
+  type Platform,
+  type SystemStatus,
+  type WallpaperRenderOptions,
+} from '../shared/types';
+import { pLimit } from '../shared/utils/async-utils';
+import {
+  ensureCdpReady,
+  hardeningPass,
+  hardeningRemove,
+  inferRestartReason,
+  injectAgentWallpaperFromApply,
+  probeAppStatus,
+  reconcileZombiePorts,
+  removeAgentVideoWallpaper,
+  resolveLivePort,
+  restoreOriginalScheme,
+  syncSchemeWithStability,
+  tryEngineInjection,
+  type WithPageSessionDeps,
+  withPageSession,
+} from './agent-engine/delegates';
+import { type DiscoveryDeps, LivePortCache } from './app-discovery';
+import { stopAudioLevelPolling } from './audio-level';
+import {
+  ApplyBaselineCache,
+  captureBaselineOnPort,
+  probeThemeLiveOnPort,
+} from './cdp/baseline-capture';
+import { type CdpFanoutDeps, injectSecondaryTargets } from './cdp/cdp-fanout';
+import { captureFingerprintOnPort } from './cdp/cdp-fingerprint';
+import { clearTargetsCache, listTargets } from './cdp/cdp-targets';
+import { disposeReloadWatchdogs } from './cdp/reload-watchdog';
+import type { RendererHints } from './cdp/renderer-tools';
+import { CdpSessionPool } from './cdp/session-pool';
+import { getRendererStableWaitAdapters } from './config/settings';
+import { EpochManager } from './epoch-manager';
+import { appendLogLine, writeJsonAtomic } from './fs-utils';
+import { ctx, notifyPersistFailure } from './main-context';
+import { resolveEngineDirDefault } from './palette-builder';
+import type { SchemeSyncDeps } from './scheme-sync';
+import { mergeRenderOptions, themeRenderOptions } from './services/agent-engine-options';
+import {
+  isPersistedState,
+  PersistChain,
+  type PersistedState,
+} from './services/agent-engine-persist';
+import { AgentEngineRegistry } from './services/agent-engine-registry';
+import { getAppRunStateCoordinator } from './services/app-run-state-coordinator';
+import type {
+  AgentEngineServiceApi,
+  LoggerApi,
+  SettingsServiceApi,
+  StructuredLogEvent,
+  ThemeLibraryApi,
+  WallpaperResolver,
+} from './services/contracts';
+import { PerformanceRecorder } from './services/performance/performance-recorder';
+import { disposeThemeAssetCache } from './theme/utils';
+import { type ApplyFlowDeps, applyThemeFlow as applyThemeFlowImpl } from './theme-apply-flow';
+import { notifyThemeHotReload } from './theme-hot-reload';
+import { type ThemeEntry, toInstalledTheme } from './theme-library';
+import {
+  type RestoreFlowDeps,
+  restoreThemeFlow as restoreThemeFlowImpl,
+} from './theme-restore-flow';
+import {
+  cleanupWallpaperStateForAgent,
+  disposeWallpaperInjectionState,
+} from './wallpaper/injection-state';
+import {
+  applyAgentWallpaperNow as applyAgentWallpaperNowImpl,
+  applyWallpaperToAgent as applyWallpaperToAgentImpl,
+  getCapturedTokensSize,
+  getDeferredSelfHealsSize,
+  removeWallpaperFromAgent as removeWallpaperFromAgentImpl,
+  type WallpaperInjectorDeps,
+} from './wallpaper-injector';
+
+/**
+ * Canonical product display names for each AgentId, derived from AGENT_META
+ * (the single source of truth in shared/types). The UI never leaks internal
+ * names like "TRAE", "Qoder", etc.
+ */
+const PRODUCT_DISPLAY_NAMES: Readonly<Record<AgentId, string>> = Object.freeze(
+  Object.fromEntries(
+    (Object.entries(AGENT_META) as [AgentId, { displayName: string }][]).map(([id, meta]) => [
+      id,
+      meta.displayName,
+    ]),
+  ) as Record<AgentId, string>,
+);
+
+function platform(): Platform {
+  return process.platform === 'darwin' || process.platform === 'win32'
+    ? process.platform
+    : 'unsupported';
+}
+
+/**
+ * RFC §4.8: per-agent min verify delay (ms) for the hardening/verify loop.
+ * Fast-applying agents can lower this from the 500ms default to shave latency
+ * off the apply hot path. The map is keyed by `AgentId`; agents absent from it
+ * keep the 500ms default. Populate entries only after confirming an agent's
+ * theme applies reliably within the reduced window.
+ */
+const APPLY_VERIFY_DELAY_OVERRIDES: Partial<Record<AgentId, number>> = Object.freeze({});
+
+// ---------------------------------------------------------------------------
+// RC6-S6-A: Named constants for hardening/verify loop timing
+// ---------------------------------------------------------------------------
+
+/** Default interval (ms) between consecutive CDP evaluate calls during the hardening verify pass. */
+const DEFAULT_VERIFY_INTERVAL_MS = 50;
+
+/**
+ * Phase 4 cohort — agents that use `addScriptToEvaluateOnNewDocument`
+ * for persistent adapter injection across SPA navigations and page reloads.
+ * Extended beyond the initial zcode + workbuddy pilot to cover all stable
+ * Electron apps with deterministic route patterns.
+ */
+const PERSIST_SCRIPT_AGENT_IDS: ReadonlySet<AgentId> = new Set<AgentId>([
+  'zcode',
+  'workbuddy',
+  'qoderwork',
+  'traework',
+  'codex',
+]);
+
+// ---------------------------------------------------------------------------
+// Facade class
+// ---------------------------------------------------------------------------
+
+export class AgentEngineService implements AgentEngineServiceApi {
+  // -----------------------------------------------------------------------
+  // State (delegated to extracted modules)
+  // -----------------------------------------------------------------------
+
+  /** Per-agent state — owned by the registry module. */
+  private readonly registry = new AgentEngineRegistry();
+  /** Persistence serialisation chain — owned by the persist module. */
+  private readonly persist = new PersistChain();
+
+  // -----------------------------------------------------------------------
+  // Concurrency primitives (kept on the Facade — cross-cutting concerns)
+  // -----------------------------------------------------------------------
+
+  private logListener: ((line: string) => void) | null = null;
+  /**
+   * Apps currently undergoing a user-initiated applyTheme. Used to prevent
+   * concurrent apply/restore from racing each other on the same CDP target.
+   */
+  private readonly applyingTheme = new Set<AgentId>();
+  /**
+   * Set to true during dispose() to short-circuit any inflight callbacks
+   * (especially fire-and-forget self-heal thunks) that try to operate on
+   * already-disposed CDP sessions / media tokens.
+   */
+  private disposed = false;
+
+  /**
+   * RC1-FIX: Cached disposal promise. When disposeAsync() is called, the
+   * resulting promise is stored here so concurrent callers (sync dispose()
+   * racing with await disposeAsync()) share a single cleanup lifecycle instead
+   * of running dispose logic twice. Cleared on dispose completion so a future
+   * re-initialization (if ever supported) can dispose again cleanly.
+   */
+  private _disposePromise: Promise<void> | null = null;
+
+  /**
+   * Unified in-flight operations per agent. Replaces the previous pair of
+   * separate maps (inflightApply / inflightRestore) so apply↔restore races
+   * are globally ordered.
+   */
+  private readonly inflightOperations = new Map<
+    AgentId,
+    {
+      kind: 'apply' | 'restore';
+      promise: Promise<unknown>;
+      cleanup: Promise<void>;
+    }
+  >();
+
+  /**
+   * Monotonic epoch per agent — bumped at the start of every apply / restore
+   * / reapply. Background tasks capture the epoch when they start and abort
+   * early if it changes.
+   */
+  private readonly epochs = new EpochManager();
+
+  /**
+   * Per-agent CDP session pool. Reuses a target's WebSocket across the
+   * fan-out sub-tasks (secondary inject + hardening + remove) within a single
+   * epoch, and is invalidated on every epoch bump so sessions never leak
+   * across apply/restore operations (RFC §4.1).
+   */
+  private readonly cdpSessionPool = new CdpSessionPool();
+
+  /**
+   * Per-agent live CDP port cache (RFC §4.2) — 30s TTL, invalidated on every
+   * epoch bump so a freshly-restarted app's new port is never shadowed by a
+   * stale entry.
+   */
+  private readonly livePortCache = new LivePortCache();
+
+  /**
+   * Per-agent {@link BaselineSnapshot} cache (RFC §4.5) — LRU(3) + 60s TTL,
+   * keyed by `{appId, url, themeId}`. Seeds after a successful apply and is
+   * read on the theme-switch fast path; invalidated on probe failure and on
+   * every epoch bump so a stale baseline never crosses an apply boundary.
+   */
+  private readonly applyBaselineCache = new ApplyBaselineCache();
+
+  /**
+   * Bump the epoch for an agent AND invalidate its pooled CDP sessions. Every
+   * apply/restore bumps the epoch at its start, so pooled sessions are closed
+   * at each operation boundary and never reused across operations (RFC §4.1).
+   */
+  private bumpEpoch(appId: AgentId): number {
+    const epoch = this.epochs.bumpEpoch(appId);
+    this.cdpSessionPool.invalidateEpoch(appId);
+    this.livePortCache.clear(appId);
+    this.applyBaselineCache.clearAgent(appId);
+    clearTargetsCache();
+    return epoch;
+  }
+
+  // -----------------------------------------------------------------------
+  // Concurrency-metrics broadcast state
+  // -----------------------------------------------------------------------
+
+  /** Cached size of wallpaperStore's `companionBusyByAgent` Set (renderer-side). */
+  private cachedCompanionBusySize = 0;
+  /** Cached size of environmentStore's `switchEpochByAgent` Map (renderer-side). */
+  private cachedSwitchEpochSize = 0;
+  /** Count of persistence failures since last reset — surfaced via ConcurrencyMetrics. */
+  private persistFailures = 0;
+  /**
+   * Message of the most recent persistence failure (or null when the last
+   * write succeeded). Additive observability so operators can detect the
+   * in-memory/disk desync window (see `writeState`) without waiting for the
+   * threshold-based user notification. Does NOT change the swallow contract.
+   */
+  private lastPersistErrorMessage: string | null = null;
+  /** Handle for the 5-second metrics broadcast interval (null when stopped). */
+  private concurrencyMetricsTimer: ReturnType<typeof setInterval> | null = null;
+  /**
+   * Callback used to deliver the metrics payload to the renderer. Injected at
+   * start time so the service does not depend on main-context's `ctx` singleton.
+   */
+  private sendMetricsToRenderer: ((metrics: ConcurrencyMetrics) => void) | null = null;
+
+  // -----------------------------------------------------------------------
+  // Constructor & injected services
+  // -----------------------------------------------------------------------
+
+  /** Absolute path of the human-readable agent detection report. */
+  private readonly detectionLogFile: string;
+  /** Absolute path of the engine log (apply/reapply/reconcile diagnostics). */
+  private readonly engineLogFile: string;
+
+  constructor(
+    private readonly library: ThemeLibraryApi,
+    private readonly stateFile: string,
+    private readonly settings: SettingsServiceApi,
+  ) {
+    // Detection report lives next to the persisted state, under userData/logs.
+    this.detectionLogFile = path.join(path.dirname(stateFile), 'logs', 'agent-detection.log');
+    this.engineLogFile = path.join(path.dirname(stateFile), 'logs', 'agent-engine.log');
+    // R7: Surface persist failures via structured log + diagnostic counter.
+    // Single increment point: writeState() does NOT catch errors internally —
+    // they propagate to PersistChain.safe()'s .catch() which fires onError.
+    // This eliminates the fragile "writeState catches so onError won't fire"契约
+    // and prevents double-counting if writeState is ever refactored to throw.
+    this.persist.onError = (error) => {
+      this.persistFailures++;
+      const message = error instanceof Error ? error.message : String(error);
+      this.lastPersistErrorMessage = message;
+      this.log(`[persist] write failed: ${message}`);
+      // Structured, locale-independent signal for operators/renderers so the
+      // in-memory/disk desync window is observable even before the threshold
+      // notification fires.
+      this.logStructured({
+        type: 'persist_failed',
+        agentId: '*',
+        timestamp: new Date().toISOString(),
+        reason: message,
+      });
+      // Threshold-based notification: alert user after 3 consecutive failures.
+      if (this.persistFailures >= 3) {
+        notifyPersistFailure(this.persistFailures);
+      }
+    };
+  }
+
+  setLogListener(listener: (line: string) => void): void {
+    this.logListener = listener;
+  }
+
+  /** Wallpaper service reference for resolving theme video/image paths. */
+  private wallpaperService: WallpaperResolver | null = null;
+  setWallpaperService(svc: WallpaperResolver): void {
+    this.wallpaperService = svc;
+  }
+
+  // -----------------------------------------------------------------------
+  // Logging (kept on the Facade — shared by every deps slice)
+  // -----------------------------------------------------------------------
+
+  private log(line: string): void {
+    this.logListener?.(line);
+    // Also append to the engine log file so failures are diagnosable even
+    // when the UI is not open or the user closed the log panel.
+    // RC3-S3-B: Swallow append errors without incrementing persistFailures.
+    // Rationale: persistFailures tracks registry persistence health, not log
+    // file write health. The onError callback already handles persist failures.
+    const ts = new Date().toISOString();
+    try {
+      const result = appendLogLine(this.engineLogFile, `[${ts}] ${line}\n`);
+      // Defensive: appendLogLine may return undefined in tests or when disabled.
+      if (result && typeof result.catch === 'function') {
+        void result.catch(() => {
+          // intentionally swallowed — log file write is best-effort
+        });
+      }
+    } catch {
+      // appendLogLine threw synchronously — best-effort, ignore.
+    }
+  }
+
+  /**
+   * Emit a structured log entry that useEnvironments can parse reliably
+   * regardless of UI locale.  The renderer splits on the first "|" and
+   * parses the JSON payload; human-readable log lines remain unaffected.
+   */
+  private logStructured(event: StructuredLogEvent): void {
+    this.log(`[STRUCTURED]|${JSON.stringify(event)}`);
+  }
+
+  /**
+   * Expose the logger as a {@link LoggerApi} so consumers (boot sequence,
+   * future services, tests) can depend on the interface rather than the
+   * concrete class. Returns bound methods so the resulting object can be
+   * passed around without `this` rebinding concerns.
+   */
+  asLogger(): LoggerApi {
+    return {
+      log: (line: string) => this.log(line),
+      logStructured: (event: StructuredLogEvent) => this.logStructured(event),
+    };
+  }
+
+  // -----------------------------------------------------------------------
+  // Wallpaper-id resolution (delegates to options helpers)
+  // -----------------------------------------------------------------------
+
+  /**
+   * Resolve the effective wallpaper id for an agent. Priority:
+   * 1. Per-agent wallpaper setting (settings.agentWallpaper) when enabled
+   * 2. Active theme's bundled wallpaper (theme.wallpaper.workshopId or video)
+   * 3. null (no wallpaper)
+   */
+  private async resolveAgentWallpaperId(
+    appId: AgentId,
+    entry?: ThemeEntry,
+  ): Promise<{
+    id: string | null;
+    render?: WallpaperRenderOptions;
+  }> {
+    // When actively applying a theme (entry provided), the theme is the SOLE
+    // authority on wallpaper.
+    // RC3-S3-B: Wrap in try-catch to prevent malformed entry from throwing
+    // through the entire apply chain. The non-entry branch already has this guard.
+    if (entry) {
+      try {
+        const installed = toInstalledTheme(entry);
+        const wp = installed.wallpaper;
+        if (wp) {
+          const themeId = installed.id;
+          if (wp.workshopId)
+            return {
+              id: wp.workshopId,
+              render: themeRenderOptions(wp),
+            };
+          if (wp.video)
+            return {
+              id: `theme:${themeId}`,
+              render: themeRenderOptions(wp),
+            };
+        }
+        return { id: null };
+      } catch (error) {
+        this.log(`[wallpaper] ${appId}: failed to resolve entry wallpaper — ${toMessage(error)}`);
+        return { id: null };
+      }
+    }
+
+    // Not applying a theme (restart/reconnect) — resolve with the full
+    // per-agent → global → theme precedence.
+    const agentWp = this.settings.agentWallpaper(appId);
+    const globalWp = this.settings.wallpaper();
+    if (agentWp.enabled && agentWp.id) {
+      return {
+        id: agentWp.id,
+        render: mergeRenderOptions(globalWp.render, agentWp.render),
+      };
+    }
+
+    // No per-agent setting — look up the persisted active theme's wallpaper.
+    const themeId = this.registry.getActiveThemeId(appId);
+    if (!themeId) return { id: null };
+    try {
+      const found = await this.library.find(themeId);
+      const installed = toInstalledTheme(found);
+      const wp = installed.wallpaper;
+      if (!wp) return { id: null };
+      if (wp.workshopId)
+        return {
+          id: wp.workshopId,
+          render: mergeRenderOptions(globalWp.render, themeRenderOptions(wp)),
+        };
+      if (wp.video)
+        return {
+          id: `theme:${themeId}`,
+          render: mergeRenderOptions(globalWp.render, themeRenderOptions(wp)),
+        };
+    } catch (error) {
+      // RC3-FIX: Log the error instead of silently swallowing — a transient
+      // FS error here would otherwise trigger wallpaper removal (false positive).
+      this.log(`[wallpaper] ${appId}: failed to resolve theme wallpaper — ${toMessage(error)}`);
+      return { id: null };
+    }
+    return { id: null };
+  }
+
+  // -----------------------------------------------------------------------
+  // Bootstrap
+  // -----------------------------------------------------------------------
+
+  async initialize(): Promise<void> {
+    try {
+      const parsed: unknown = JSON.parse(await fs.readFile(this.stateFile, 'utf8'));
+      if (isPersistedState(parsed)) {
+        this.registry.loadFrom(parsed);
+      }
+    } catch {
+      // Fresh install or legacy state - defaults apply.
+    }
+    // Clean up zombie ports in the background — this only touches persisted
+    // state (clearing dead ports), and status() independently re-probes all
+    // ports on every call, so blocking startup for the cleanup is unnecessary.
+    void reconcileZombiePorts(AGENT_IDS, this.discoveryDeps()).catch((error) => {
+      this.log(`[state] zombie port reconciliation failed: ${toMessage(error)}`);
+    });
+
+    // NOTE: Boot-time auto-restore was removed. AgentSkin no longer
+    // auto-launches agents or auto-injects themes on startup — that behavior
+    // killed user workflows by force-restarting apps the user was actively
+    // using. Themes are now applied ONLY when the user explicitly clicks
+    // "Apply". The persisted activeThemeId is preserved so the UI shows
+    // "themed" state and the user can re-apply with one click.
+  }
+
+  // -----------------------------------------------------------------------
+  // Deps slice builders
+  // -----------------------------------------------------------------------
+
+  /**
+   * Build the {@link DiscoveryDeps} slice that backs all calls into
+   * `app-discovery`.
+   */
+  private discoveryDeps(): DiscoveryDeps {
+    return {
+      adapter: (appId) => this.adapter(appId),
+      settings: {
+        appPathFor: (appId) => this.settings.overridesFor(appId).appPath ?? null,
+        portOverrideFor: (appId) => this.settings.overridesFor(appId).port ?? null,
+      },
+      log: (line) => this.log(line),
+      logStructured: (event) => this.logStructured(event),
+      detectionLogFile: this.detectionLogFile,
+      displayName: (appId) => PRODUCT_DISPLAY_NAMES[appId],
+      getAppPort: (appId) => this.registry.getApp(appId) ?? null,
+      clearAppPort: (appId) => this.registry.clearPort(appId),
+      getDetectedPath: (appId) => this.registry.getDetectedPath(appId),
+      setDetectedPath: (appId, detectedPath) => this.registry.setDetectedPath(appId, detectedPath),
+      persist: () => this.persist.safe(() => this.writeStateAndClearError()),
+      activeThemeId: (appId) => this.registry.getActiveThemeId(appId),
+      activeSchemeId: (appId) => this.registry.getActiveSchemeId(appId),
+      livePortCache: this.livePortCache,
+    };
+  }
+
+  /**
+   * Build the {@link SchemeSyncDeps} slice that backs all calls into
+   * `scheme-sync`.
+   */
+  private schemeSyncDeps(): SchemeSyncDeps {
+    const withPageSessionDeps: WithPageSessionDeps = {
+      adapter: (appId) => this.adapter(appId),
+      resolveLivePort: (appId, knownDeadPort) =>
+        resolveLivePort(appId, this.discoveryDeps(), knownDeadPort ?? null),
+      isDisposed: () => this.disposed,
+      log: (line) => this.log(line),
+      shouldUseStableWait: (appId) => getRendererStableWaitAdapters().includes(appId),
+      listTargets: async (port) => listTargets(port) as unknown as CdpTargetMinimal[],
+    };
+    return {
+      withPageSession: (appId, port, fn, retries) =>
+        withPageSession(appId, port, fn, retries ?? 8, withPageSessionDeps),
+      getSchemeSnapshot: (appId) => this.registry.getSchemeSnapshot(appId),
+      setSchemeSnapshot: (appId, snapshot) => this.registry.setSchemeSnapshot(appId, snapshot),
+      persist: () => this.persist.safe(() => this.writeStateAndClearError()),
+      isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
+      resolveLivePort: (appId) => resolveLivePort(appId, this.discoveryDeps()),
+      log: (line) => this.log(line),
+      logStructured: (event) => this.logStructured(event),
+    };
+  }
+
+  /**
+   * Build the {@link WallpaperInjectorDeps} slice that backs all calls
+   * into `wallpaper-injector`.
+   */
+  private wallpaperDeps(): WallpaperInjectorDeps {
+    return {
+      wallpaperService: this.wallpaperService,
+      isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
+      bumpEpoch: (appId) => this.bumpEpoch(appId),
+      resolveAgentWallpaperId: (appId, entry) => this.resolveAgentWallpaperId(appId, entry),
+      ensureCdpReady: (appId, timeoutMs, forceRestart) =>
+        ensureCdpReady(appId, this.discoveryDeps(), timeoutMs ?? 30000, forceRestart),
+      resolveLivePort: (appId) => resolveLivePort(appId, this.discoveryDeps()),
+      inferRestartReason: (appId, cdpFailureReason) =>
+        inferRestartReason(appId, this.discoveryDeps(), cdpFailureReason ?? null),
+      findAgentTargets: (appId, port) => this.adapter(appId).findTargets(port, 1200),
+      setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
+      rendererHints: (appId): RendererHints | undefined => this.adapter(appId).rendererHints(),
+      isApplyingTheme: (appId) => this.applyingTheme.has(appId),
+      isDisposed: () => this.disposed,
+      log: (line) => this.log(line),
+    };
+  }
+
+  /**
+   * Build the {@link CdpFanoutDeps} slice that backs all calls into
+   * `cdp-fanout`.
+   */
+  private fanoutDeps(): CdpFanoutDeps {
+    return {
+      adapter: (appId) => this.adapter(appId),
+      isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
+      tryEngineInjection: (session, appId, bundle, targetTheme, imageDataUrls, imageFilePaths) =>
+        tryEngineInjection(session, appId, bundle, targetTheme, imageDataUrls, imageFilePaths, {
+          resolveEngineDir: resolveEngineDirDefault,
+          log: (line) => this.log(line),
+          customThemeCss: () => this.settings.customThemeCss(),
+          // RFC §4.8: per-agent verification tuning. Fast-applying agents can
+          // lower the min verify delay (200ms) and poll interval (50ms default)
+          // to shave latency off the hardening pass; the map is a no-op until
+          // an agent is added here.
+          verifyDelayMs: APPLY_VERIFY_DELAY_OVERRIDES[appId] ?? 500,
+          verifyIntervalMs: DEFAULT_VERIFY_INTERVAL_MS,
+          // Phase 4: enable addScriptToEvaluateOnNewDocument for stable agents.
+          // zcode + workbuddy are the pilot cohort — sufficient route stability
+          // to validate the persist-script path without risking less-tested apps.
+          usePersistScript: PERSIST_SCRIPT_AGENT_IDS.has(appId),
+        }),
+      log: (line) => this.log(line),
+      // Reuse target sessions across the fan-out sub-tasks within one epoch.
+      sessions: this.cdpSessionPool,
+      // Forward secondary-injection progress/summary to the renderer so the UI
+      // can render a per-target injection timeline. The discriminator ('targetId'
+      // vs 'injected') distinguishes progress events from the summary event.
+      onSecondaryProgress: (event) => {
+        const win = ctx.mainWindow;
+        if (win && !win.isDestroyed()) {
+          const channel =
+            'targetId' in event
+              ? IpcChannel.THEME_SECONDARY_INJECT_PROGRESS
+              : IpcChannel.THEME_SECONDARY_INJECT_SUMMARY;
+          win.webContents.send(channel, event);
+        }
+      },
+      // Theme Health Report 推送目标窗口 — hardeningPass 通过此字段将健康
+      // 报告推送到渲染进程（WorkspacePage / useStudioStore 订阅消费）。
+      mainWindow: ctx.mainWindow,
+      // Studio window — 双窗口 fan-out，确保 Studio 诊断面板也能收到
+      // 健康报告、引擎注入失败等 IPC 推送。
+      studioWindow: ctx.studioWindow,
+    };
+  }
+
+  /**
+   * Build the {@link RestoreFlowDeps} slice that backs the restore flow.
+   */
+  private restoreFlowDeps(): RestoreFlowDeps {
+    return {
+      adapter: (appId) => this.adapter(appId),
+      isApplyingTheme: (appId) => this.applyingTheme.has(appId),
+      lockAgent: (appId) => this.applyingTheme.add(appId),
+      unlockAgent: (appId) => this.applyingTheme.delete(appId),
+      resolveLivePort: (appId) => resolveLivePort(appId, this.discoveryDeps()),
+      bumpEpoch: (appId) => this.bumpEpoch(appId),
+      getSchemeSnapshot: (appId) => this.registry.getSchemeSnapshot(appId),
+      clearActiveTheme: (appId, port) => this.registry.clearActiveTheme(appId, port),
+      persist: () => this.persist.safe(() => this.writeStateAndClearError()),
+      setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
+      hardeningRemove: (appId, port, epoch) =>
+        hardeningRemove(appId, port, epoch, this.fanoutDeps()),
+      removeAgentVideoWallpaper: (appId, port, epoch) =>
+        removeAgentVideoWallpaper(appId, port, epoch, this.wallpaperDeps()),
+      restoreOriginalScheme: (appId, port, snapshot, epoch) =>
+        restoreOriginalScheme(appId, port, snapshot, epoch, this.schemeSyncDeps()),
+      cleanupModuleStateForAgent: (appId) => {
+        cleanupWallpaperStateForAgent(appId);
+      },
+      status: () => this.status(),
+      log: (line) => this.log(line),
+      logStructured: (event) => this.logStructured(event),
+    };
+  }
+
+  /**
+   * Build the {@link ApplyFlowDeps} slice that backs the apply flow.
+   */
+  private applyFlowDeps(): ApplyFlowDeps {
+    return {
+      adapter: (appId) => this.adapter(appId),
+      isApplyingTheme: (appId) => this.applyingTheme.has(appId),
+      lockAgent: (appId) => this.applyingTheme.add(appId),
+      unlockAgent: (appId) => this.applyingTheme.delete(appId),
+      ensureCdpReady: (appId, timeoutMs, forceRestart) =>
+        ensureCdpReady(appId, this.discoveryDeps(), timeoutMs ?? 30000, forceRestart),
+      resolveLivePort: (appId) => resolveLivePort(appId, this.discoveryDeps()),
+      inferRestartReason: (appId, cdpFailureReason) =>
+        inferRestartReason(appId, this.discoveryDeps(), cdpFailureReason ?? null),
+      cachedPort: (appId) => this.livePortCache.get(appId),
+      baselineGet: (appId, url, themeId) => this.applyBaselineCache.get(appId, url, themeId),
+      baselinePut: (snap) => this.applyBaselineCache.put(snap),
+      baselineInvalidate: (appId) => this.applyBaselineCache.invalidate(appId),
+      probeThemeLiveOnPort: (port, appId) => probeThemeLiveOnPort(port, appId, this.cdpSessionPool),
+      captureBaselineOnPort: (port, appId, themeId) =>
+        captureBaselineOnPort(port, appId, themeId, this.cdpSessionPool),
+      captureFingerprintOnPort: (port, appId, themeId, colors, themeDir) =>
+        captureFingerprintOnPort(port, appId, themeId, colors, themeDir),
+      findTheme: (themeId) => this.library.find(themeId),
+      bumpEpoch: (appId) => this.bumpEpoch(appId),
+      isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
+      setActiveTheme: (appId, themeId, port, schemeId) => {
+        this.registry.patchApp(appId, {
+          activeThemeId: themeId,
+          activeSchemeId: schemeId ?? null,
+          port,
+        });
+      },
+      persist: () => this.persist.safe(() => this.writeStateAndClearError()),
+      getAppPath: (appId) => this.settings.overridesFor(appId).appPath,
+      setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
+      injectSecondaryTargets: (appId, port, bundle, epoch) =>
+        injectSecondaryTargets(appId, port, bundle, epoch, this.fanoutDeps()),
+      hardeningPass: (appId, port, bundle, epoch) =>
+        hardeningPass(appId, port, bundle, epoch, this.fanoutDeps()),
+      injectAgentWallpaperFromApply: (appId, port, entry, epoch) =>
+        injectAgentWallpaperFromApply(appId, port, entry, epoch, this.wallpaperDeps()),
+      syncSchemeWithStability: (appId, port, mode, epoch) =>
+        syncSchemeWithStability(appId, port, mode, epoch, this.schemeSyncDeps()),
+      status: () => this.status(),
+      displayName: (appId) => PRODUCT_DISPLAY_NAMES[appId],
+      log: (line) => this.log(line),
+      logStructured: (event) => this.logStructured(event),
+      notifyHotReload: (payload) =>
+        notifyThemeHotReload(
+          { mainWindow: ctx.mainWindow, studioWindow: ctx.studioWindow },
+          payload,
+        ),
+      notifyBackgroundTaskFailure: (payload) => {
+        // Fan-out to both mainWindow and studioWindow so the user sees the
+        // failure toast regardless of which window is active.
+        if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+          ctx.mainWindow.webContents.send(IpcChannel.THEME_BACKGROUND_TASK_FAILURE, payload);
+        }
+        if (ctx.studioWindow && !ctx.studioWindow.isDestroyed()) {
+          ctx.studioWindow.webContents.send(IpcChannel.THEME_BACKGROUND_TASK_FAILURE, payload);
+        }
+      },
+    };
+  }
+
+  // -----------------------------------------------------------------------
+  // Persistence (delegates to PersistChain)
+  // -----------------------------------------------------------------------
+
+  /**
+   * Serialise the current registry snapshot to disk.
+   *
+   * Errors are NOT caught here — they propagate to PersistChain.safe()'s
+   * .catch() handler, which fires onError (the single increment/callback point
+   * for persist failures). This avoids the fragile "writeState swallows so
+   * onError won't fire"契约 and prevents double-counting regressions.
+   *
+   * On success, lastPersistErrorMessage is reset via the `.then()` continuation
+   * returned by PersistChain.safe().
+   */
+  private async writeState(): Promise<void> {
+    await writeJsonAtomic(this.stateFile, this.registry.snapshot() as PersistedState);
+  }
+
+  /**
+   * Write state and reset lastPersistErrorMessage on success.
+   * Wraps writeState() so success clears the error signal (idempotent).
+   */
+  private writeStateAndClearError(): Promise<void> {
+    return this.writeState().then(() => {
+      this.lastPersistErrorMessage = null;
+    });
+  }
+
+  /**
+   * Message of the most recent persistence failure, or null when the last
+   * write succeeded. Additive observability for the in-memory/disk desync
+   * window; does not change persistence-failure handling semantics.
+   */
+  lastPersistError(): string | null {
+    return this.lastPersistErrorMessage;
+  }
+
+  /** Expose the per-agent CDP session pool for cross-subsystem reuse (e.g. Studio live-inspect). */
+  getCdpSessionPool(): CdpSessionPool {
+    return this.cdpSessionPool;
+  }
+
+  // -----------------------------------------------------------------------
+  // State accessors (delegated to registry)
+  // -----------------------------------------------------------------------
+
+  /** Look up the adapter for an app id via the registry. */
+  private adapter(appId: AgentId): ApplicationAdapter {
+    return requireAdapter(appId);
+  }
+
+  portFor(appId: AgentId): number | null {
+    return this.settings.overridesFor(appId).port ?? this.registry.getPort(appId);
+  }
+
+  activeThemeId(appId: AgentId): string | null {
+    return this.registry.getActiveThemeId(appId);
+  }
+
+  /** Active color-scheme id for an agent (null/undefined = default colors). */
+  activeSchemeId(appId: AgentId): string | null {
+    return this.registry.getActiveSchemeId(appId);
+  }
+
+  // -----------------------------------------------------------------------
+  // Status
+  // -----------------------------------------------------------------------
+
+  /** Cached status result with a TTL (ms). */
+  private statusCache: SystemStatus | null = null;
+  private statusCacheAt = 0;
+  private static readonly STATUS_CACHE_TTL = 2000;
+
+  /**
+   * In-flight status computation shared by concurrent callers.
+   *
+   * Without coalescing, every SYSTEM_STATUS poll that outlives its 15s IPC
+   * timeout spawns a fresh full 6-agent probe chain on the next poll (the
+   * 2s TTL cache only holds successful results), piling up discovery work
+   * under load and guaranteeing the following polls time out too.
+   */
+  private statusInFlight: Promise<SystemStatus> | null = null;
+
+  /** Interval (ms) for pushing concurrency metrics to the renderer. */
+  private static readonly METRICS_BROADCAST_INTERVAL_MS = 5000;
+
+  async status(): Promise<SystemStatus> {
+    const now = Date.now();
+    if (this.statusCache && now - this.statusCacheAt < AgentEngineService.STATUS_CACHE_TTL) {
+      return this.statusCache;
+    }
+    // Coalesce concurrent polls onto one probe chain.
+    if (!this.statusInFlight) {
+      this.statusInFlight = this.computeStatus().finally(() => {
+        this.statusInFlight = null;
+      });
+    }
+    return this.statusInFlight;
+  }
+
+  /** Full 6-agent probe chain — runs at most once at a time (see statusInFlight). */
+  private async computeStatus(): Promise<SystemStatus> {
+    // RC5-S5-A: Use Promise.allSettled for per-agent error isolation.
+    // A single agent's probeAppStatus failure should not prevent status()
+    // from returning partial results for the other 5 agents.
+    const settledResults = await Promise.allSettled(
+      AGENT_IDS.map((appId) =>
+        probeAppStatus(appId, this.discoveryDeps(), (id) => this.portFor(id)),
+      ),
+    );
+    const apps: AppStatus[] = [];
+    for (const [index, result] of settledResults.entries()) {
+      if (result.status === 'fulfilled' && result.value) {
+        apps.push(result.value);
+      } else if (result.status === 'rejected') {
+        // Log the individual agent's failure for debugging but continue.
+        const appId = AGENT_IDS[index];
+        this.log(`[status] ${appId}: probe failed — ${result.reason}`);
+      }
+      // fulfilled but undefined → skip (probeAppStatus contract says non-null, but be defensive)
+    }
+    const result = { platform: platform(), apps };
+    this.statusCache = result;
+    this.statusCacheAt = Date.now();
+
+    // Sync runtime fields to coordinator (change-detected to avoid no-op emits).
+    // This ensures coordinator reflects apps started outside the launcher
+    // (e.g., already running at boot, or spawned by ensureCdpReady).
+    const coordinator = getAppRunStateCoordinator();
+    for (const app of apps) {
+      if (!app) continue; // Guard: probeAppStatus may return undefined in tests
+      const prev = coordinator.getState(app.appId);
+      if (
+        !prev ||
+        prev.running !== app.running ||
+        prev.port !== app.port ||
+        prev.debugReady !== app.debugReady
+      ) {
+        coordinator.updateState(app.appId, {
+          running: app.running,
+          pid: 0, // probeAppStatus doesn't return pid
+          port: app.port,
+          debugReady: app.debugReady,
+        });
+      }
+    }
+
+    return result;
+  }
+
+  // -----------------------------------------------------------------------
+  // Wallpaper entry points
+  // -----------------------------------------------------------------------
+
+  async applyAgentWallpaperNow(
+    appId: AgentId,
+    options?: { restartExisting?: boolean },
+  ): Promise<{ ok: boolean; reason?: string; detail?: string }> {
+    return applyAgentWallpaperNowImpl(appId, this.wallpaperDeps(), options);
+  }
+
+  async applyWallpaperToAgent(
+    wallpaperId: string,
+    appId: AgentId,
+    options?: { restartExisting?: boolean },
+  ): Promise<{ ok: boolean; reason?: string; detail?: string }> {
+    return applyWallpaperToAgentImpl(wallpaperId, appId, this.wallpaperDeps(), options);
+  }
+
+  async removeWallpaperFromAgent(appId: AgentId): Promise<{ ok: boolean }> {
+    return removeWallpaperFromAgentImpl(appId, this.wallpaperDeps());
+  }
+
+  // -----------------------------------------------------------------------
+  // Apply / Restore orchestration
+  // -----------------------------------------------------------------------
+
+  /** Maximum number of times apply() will wait for in-flight operations before aborting. */
+  private static readonly APPLY_MAX_RETRY = 5;
+
+  async apply(request: ApplyRequest): Promise<ApplyResponse> {
+    const appId = request.appId;
+    let retries = 0;
+    // RC2-FIX: Convert recursion to iteration with bounded retries to prevent
+    // unbounded stack growth if inflightOperations keeps getting new entries.
+    while (true) {
+      const existing = this.inflightOperations.get(appId);
+      if (existing && existing.kind === 'apply') {
+        return existing.promise as Promise<ApplyResponse>;
+      }
+      if (existing && existing.kind === 'restore') {
+        if (retries >= AgentEngineService.APPLY_MAX_RETRY) {
+          this.log(
+            `[apply] ${appId}: max retries (${AgentEngineService.APPLY_MAX_RETRY}) exceeded — aborting`,
+          );
+          throw new Error(`AgentEngineService apply aborted: max retries exceeded for ${appId}`);
+        }
+        retries++;
+        this.log(
+          `[apply] ${appId}: restore in progress — queued behind in-flight retry ${retries}`,
+        );
+        try {
+          await existing.cleanup;
+        } catch (error) {
+          this.log(
+            `[apply] ${appId}: queued restore failed — proceeding anyway: ${toMessage(error)}`,
+          );
+        }
+        if (this.disposed) {
+          this.log(`[apply] ${appId}: service disposed during restore cleanup — aborting`);
+          throw new Error('AgentEngineService disposed');
+        }
+        continue;
+      }
+      break;
+    }
+    let cleanupResolve!: () => void;
+    const cleanup = new Promise<void>((resolve) => {
+      cleanupResolve = resolve;
+    });
+    // Capture reference synchronously to prevent race: if a new operation for the
+    // same appId is inserted after this cleanup settles but before the finally
+    // callback runs, we must NOT accidentally delete the newer entry.
+    const capturedCleanup = cleanup;
+    void cleanup.finally(() => {
+      // Only delete if the map still points to THIS cleanup (not a newer one).
+      if (this.inflightOperations.get(appId)?.cleanup === capturedCleanup) {
+        this.inflightOperations.delete(appId);
+      }
+    });
+    // biome-ignore lint/style/useConst: deferred assignment pattern
+    let promise!: Promise<ApplyResponse>;
+    promise = (async () => {
+      try {
+        const { response, background } = await this.applyInternal(request);
+        if (background) {
+          void background.catch(() => undefined).finally(cleanupResolve);
+        } else {
+          cleanupResolve();
+        }
+        return response;
+      } catch (error) {
+        cleanupResolve();
+        throw error;
+      }
+    })();
+    this.inflightOperations.set(appId, { kind: 'apply', promise, cleanup });
+    return promise;
+  }
+
+  private async applyInternal(request: ApplyRequest): Promise<{
+    response: ApplyResponse;
+    background: Promise<void>;
+  }> {
+    this.statusCache = null;
+    return applyThemeFlowImpl(request, this.applyFlowDeps());
+  }
+
+  /** Maximum number of times restore() will wait for in-flight operations before aborting. */
+  private static readonly RESTORE_MAX_RETRY = 5;
+
+  async restore(appId: AgentId): Promise<SystemStatus> {
+    let retries = 0;
+    // RC1-FIX: Convert recursion to iteration with bounded retries to prevent
+    // unbounded stack growth — mirrors apply()'s APPLY_MAX_RETRY pattern.
+    while (true) {
+      const existing = this.inflightOperations.get(appId);
+      if (existing && existing.kind === 'restore') {
+        return existing.promise as Promise<SystemStatus>;
+      }
+      if (existing && existing.kind === 'apply') {
+        if (retries >= AgentEngineService.RESTORE_MAX_RETRY) {
+          this.log(
+            `[restore] ${appId}: max retries (${AgentEngineService.RESTORE_MAX_RETRY}) exceeded — aborting`,
+          );
+          throw new Error(`AgentEngineService restore aborted: max retries exceeded for ${appId}`);
+        }
+        retries++;
+        this.log(
+          `[restore] ${appId}: apply in progress — queued behind in-flight retry ${retries}`,
+        );
+        try {
+          await existing.cleanup;
+        } catch (error) {
+          this.log(
+            `[restore] ${appId}: queued apply failed — proceeding anyway: ${toMessage(error)}`,
+          );
+        }
+        if (this.disposed) {
+          this.log(`[restore] ${appId}: service disposed during apply cleanup — aborting`);
+          throw new Error('AgentEngineService disposed');
+        }
+        continue;
+      }
+      break;
+    }
+    let cleanupResolve!: () => void;
+    const cleanup = new Promise<void>((resolve) => {
+      cleanupResolve = resolve;
+    });
+    void cleanup.finally(() => {
+      if (this.inflightOperations.get(appId)?.cleanup === cleanup) {
+        this.inflightOperations.delete(appId);
+      }
+    });
+    // biome-ignore lint/style/useConst: deferred assignment pattern
+    let promise!: Promise<SystemStatus>;
+    promise = (async () => {
+      try {
+        const status = await this.restoreInternal(appId);
+        cleanupResolve();
+        return status;
+      } catch (error) {
+        cleanupResolve();
+        throw error;
+      }
+    })();
+    this.inflightOperations.set(appId, { kind: 'restore', promise, cleanup });
+    return promise;
+  }
+
+  private async restoreInternal(appId: AgentId): Promise<SystemStatus> {
+    this.statusCache = null;
+    // Idempotent restore (RFC 2026-08-19 R4): when the agent has no active
+    // theme AND no wallpaper preference, there is nothing to tear down —
+    // skip the CDP round-trip entirely and return the current snapshot.
+    // Repeated delete/restore calls (e.g. double-clicks, delete-then-restore
+    // flows) are therefore safe no-ops instead of error paths.
+    if (!this.registry.getActiveThemeId(appId) && !this.settings.agentWallpaper(appId)?.enabled) {
+      this.log(`[restore] ${appId}: nothing to restore — no-op (idempotent)`);
+      return this.status();
+    }
+    return restoreThemeFlowImpl(appId, this.restoreFlowDeps());
+  }
+
+  async restoreAll(): Promise<void> {
+    // Collect agents that have either an active theme or a wallpaper preference.
+    // restore() handles theme teardown + wallpaper-preference clearing, but for
+    // wallpaper-only agents (no active theme) it does NOT call removeWallpaperFromAgent
+    // — that requires a separate explicit call to remove the live wallpaper from
+    // the running agent's DOM.
+    const toRestore: AgentId[] = [];
+    const wallpaperOnly: AgentId[] = [];
+    for (const appId of AGENT_IDS) {
+      if (this.registry.getActiveThemeId(appId)) {
+        toRestore.push(appId);
+      } else if (this.settings.agentWallpaper(appId)?.enabled) {
+        toRestore.push(appId);
+        wallpaperOnly.push(appId);
+      }
+    }
+    // Phase 1: restore() for all agents with theme or wallpaper preference.
+    // Bound concurrency to prevent CDP channel overload (max 3 concurrent restores).
+    await pLimit(
+      toRestore.map((appId) => () => this.restore(appId).catch(() => undefined)),
+      3,
+    );
+    // Phase 2: Explicit wallpaper removal for wallpaper-only agents.
+    // restoreThemeFlow clears the preference (setAgentWallpaper) and removes
+    // video wallpaper from DOM (removeAgentVideoWallpaper), but for image
+    // wallpaper on wallpaper-only agents we need removeWallpaperFromAgent.
+    await pLimit(
+      wallpaperOnly.map(
+        (appId) => () => this.removeWallpaperFromAgent(appId).catch(() => undefined),
+      ),
+      3,
+    );
+  }
+
+  // -----------------------------------------------------------------------
+  // Theme reconciliation
+  // -----------------------------------------------------------------------
+
+  /**
+   * Drop persisted active-theme references that no longer exist in the library.
+   */
+  async reconcileActiveThemes(availableIds: Set<string>): Promise<void> {
+    let dirty = false;
+    this.registry.forEachApp((appId, appState) => {
+      if (appState?.activeThemeId && !availableIds.has(appState.activeThemeId)) {
+        this.log(
+          `[state] ${appId}: dropping reference to removed theme "${appState.activeThemeId}"`,
+        );
+        appState.activeThemeId = null;
+        appState.activeSchemeId = null;
+        dirty = true;
+        return;
+      }
+      // RC-A2: Clean up orphaned schemeId when activeThemeId is null (theme removed
+      // externally or state corrupted). Without this, a dangling schemeId would persist
+      // and resurface if a theme is later re-added to this appId.
+      if (!appState?.activeThemeId && appState?.activeSchemeId) {
+        this.log(`[state] ${appId}: clearing orphaned schemeId "${appState.activeSchemeId}"`);
+        appState.activeSchemeId = null;
+        dirty = true;
+        return;
+      }
+      // RC5-S5-A: Guard against null activeThemeId generating 'null--schemeId' composite key.
+      // When activeThemeId is null (cleared above or never set), there's no theme to look up
+      // schemes for. Skip scheme reconciliation entirely in this case.
+      if (
+        appState?.activeSchemeId &&
+        appState?.activeThemeId &&
+        !availableIds.has(`${appState.activeThemeId}--${appState.activeSchemeId}`)
+      ) {
+        this.log(
+          `[state] ${appId}: scheme "${appState.activeSchemeId}" of "${appState.activeThemeId}" no longer available, falling back to default`,
+        );
+        appState.activeSchemeId = null;
+        dirty = true;
+      }
+    });
+    if (dirty) await this.persist.safe(() => this.writeStateAndClearError());
+  }
+
+  // -----------------------------------------------------------------------
+  // Concurrency-metrics broadcast
+  // -----------------------------------------------------------------------
+
+  collectConcurrencyMetrics(): ConcurrencyMetrics {
+    return {
+      companionBusyByAgent: this.cachedCompanionBusySize,
+      inflightOperations: this.inflightOperations.size,
+      // The self-heal module was removed and replaced by the pipeline retry
+      // policy (see `recordInjectionFailure` stub in `wallpaper-injector`).
+      // Always reports 0 until a future self-heal module is re-introduced.
+      selfHealingAgents: 0,
+      capturedTokens: getCapturedTokensSize(),
+      persistChainDepth: this.persist.depth,
+      deferredSelfHeals: getDeferredSelfHealsSize(),
+      switchEpochByAgent: this.cachedSwitchEpochSize,
+      persistFailures: this.persistFailures,
+    };
+  }
+
+  updateConcurrencyMetricsFromRenderer(companionBusy: number, switchEpoch: number): void {
+    this.cachedCompanionBusySize = Math.max(0, companionBusy);
+    this.cachedSwitchEpochSize = Math.max(0, switchEpoch);
+  }
+
+  private broadcastConcurrencyMetrics(): void {
+    if (!this.sendMetricsToRenderer) return;
+    try {
+      this.sendMetricsToRenderer(this.collectConcurrencyMetrics());
+    } catch (error) {
+      this.log(`[metrics] broadcast failed: ${toMessage(error)}`);
+    }
+  }
+
+  startConcurrencyMetricsTimer(sender: (metrics: ConcurrencyMetrics) => void): void {
+    if (this.concurrencyMetricsTimer !== null) return;
+    this.sendMetricsToRenderer = sender;
+    this.concurrencyMetricsTimer = setInterval(() => {
+      this.broadcastConcurrencyMetrics();
+    }, AgentEngineService.METRICS_BROADCAST_INTERVAL_MS);
+    // RC-A1: unref() the timer so it does not keep the Node.js event loop
+    // alive after the service is disposed — allows graceful process exit.
+    this.concurrencyMetricsTimer.unref();
+    this.broadcastConcurrencyMetrics();
+  }
+
+  stopConcurrencyMetricsTimer(): void {
+    if (this.concurrencyMetricsTimer !== null) {
+      clearInterval(this.concurrencyMetricsTimer);
+      this.concurrencyMetricsTimer = null;
+    }
+    this.sendMetricsToRenderer = null;
+  }
+
+  // -----------------------------------------------------------------------
+  // Lifecycle
+  // -----------------------------------------------------------------------
+
+  dispose(): void {
+    // RC4-FIX: Fire-and-forget async disposal. The synchronous dispose() API
+    // is preserved for backward compatibility; new code should use disposeAsync().
+    void this.disposeAsync();
+  }
+
+  /**
+   * Async disposal that waits for in-flight operations before releasing resources.
+   *
+   * RC4-FIX: Prevents background tasks from operating on already-released
+   * resources (cdpSessionPool, livePortCache) by awaiting all in-flight
+   * operation cleanup promises before disposing.
+   *
+   * RC1-FIX: Caches the disposal promise so concurrent calls (sync dispose()
+   * racing with an await disposeAsync()) share a single cleanup lifecycle.
+   * Subsequent calls return the same promise, preventing double-dispose races.
+   */
+  async disposeAsync(): Promise<void> {
+    if (this._disposePromise) return this._disposePromise;
+    this._disposePromise = this._doDispose();
+    try {
+      return await this._disposePromise;
+    } catch (e) {
+      this._disposePromise = null;
+      throw e;
+    }
+  }
+
+  private async _doDispose(): Promise<void> {
+    this.stopConcurrencyMetricsTimer();
+    this.disposed = true;
+    // RC4-FIX: Wait for all in-flight operations to complete before releasing
+    // resources. This prevents background tasks from accessing disposed
+    // cdpSessionPool / livePortCache.
+    const pendingCleanups = Array.from(this.inflightOperations.values()).map((op) => op.cleanup);
+    this.inflightOperations.clear();
+    await Promise.allSettled(pendingCleanups);
+    // RC-C1: Stop audio level sampler (kills PowerShell proc + clears watchdog
+    // timer) so it does not outlive the service on shutdown.
+    stopAudioLevelPolling();
+    disposeWallpaperInjectionState();
+    disposeReloadWatchdogs();
+    disposeThemeAssetCache();
+    // RC-C1: Reset PerformanceRecorder static singleton to release any
+    // in-flight trace and reset sequence counter for clean re-initialization.
+    PerformanceRecorder.reset();
+    // RC-C1: Clear EpochManager Map to release internal state.
+    this.epochs.clear();
+    this.applyingTheme.clear();
+    this.cdpSessionPool.dispose();
+    this.livePortCache.clearAll();
+    this.statusCache = null;
+    // RC3-S3-B: Reset persist failure counter so a future service instance
+    // (if the lifecycle ever supports re-initialization) starts clean.
+    this.persistFailures = 0;
+    this.lastPersistErrorMessage = null;
+    // RC1-FIX: Clear cached dispose promise so a future re-initialization
+    // (if ever supported) can dispose again cleanly.
+    this._disposePromise = null;
+  }
+
+  // -----------------------------------------------------------------------
+  // RC4-D1: @internal test accessors — replace `as unknown as` casts in tests
+  // -----------------------------------------------------------------------
+  // These methods expose private state STRICTLY for test assertions.
+  // They compile to the same JavaScript as the private members, but carry
+  // TSDoc `@internal` tags so they are excluded from the public API surface.
+  // Do NOT call from production code — use the public API instead.
+
+  /**
+   * @internal
+   * Test-only: read the inflight-operations map for assertion.
+   * Replaces `svc as unknown as { inflightOperations: Map<...> }` casts.
+   */
+  __test_getInflightOperations(): ReadonlyMap<
+    AgentId,
+    { kind: 'apply' | 'restore'; promise: Promise<unknown>; cleanup: Promise<void> }
+  > {
+    return this.inflightOperations;
+  }
+
+  /**
+   * @internal
+   * Test-only: check whether the service has been disposed.
+   * Replaces `(svc as unknown as { disposed: boolean }).disposed` casts.
+   */
+  __test_isDisposed(): boolean {
+    return this.disposed;
+  }
+
+  /**
+   * @internal
+   * Test-only: invoke writeState directly for failure-path testing.
+   * Replaces `(svc as unknown as { writeState: () => Promise<void> }).writeState()` casts.
+   */
+  async __test_writeState(): Promise<void> {
+    return this.writeState();
+  }
+
+  /**
+   * @internal
+   * Test-only: access the log method for spy assertions.
+   * Replaces `vi.spyOn(svc as unknown as { log: ... }, 'log')` casts.
+   */
+  __test_log(line: string): void {
+    this.log(line);
+  }
+}

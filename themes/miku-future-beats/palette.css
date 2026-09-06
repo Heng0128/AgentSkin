@@ -1,0 +1,26 @@
+/* palette.css — miku-future-beats (初音未来 · Future Beats) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #f0f8fa;
+  --agentskin-surface: #ffffff;
+  --agentskin-surface-elevated: #ffffff;
+  --agentskin-text: #163f4b;
+  --agentskin-muted: #557480;
+  --agentskin-accent: #0d9aa0;
+  --agentskin-secondary: #74dce4;
+  --agentskin-border: rgba(13, 154, 160, .24);
+  --agentskin-code-bg: #eefbff;
+  --agentskin-code-fg: #163f4b;
+  --agentskin-focus-ring: rgba(13, 154, 160, .6);
+  --agentskin-selection: color-mix(in srgb, #0d9aa0 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 13, 154, 160;
+  --agentskin-secondary-raw: 116, 220, 228;
+  --agentskin-text-raw: 22, 63, 75;
+  --agentskin-muted-raw: 85, 116, 128;
+  --agentskin-surface-raw: 255, 255, 255;
+  --agentskin-surface-elevated-raw: 255, 255, 255;
+  --agentskin-bg-raw: 240, 248, 250;
+  --agentskin-border-raw: 13, 154, 160;
+}

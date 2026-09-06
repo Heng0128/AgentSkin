@@ -1,0 +1,173 @@
+/* ============================================================
+   ENGINE: codex — Layer 2: Cosmetic Enhancement
+   ============================================================ */
+
+/* === Selection === */
+html.agentskin-host-codex ::selection {
+  background: var(
+    --agentskin-selection,
+    color-mix(in srgb, var(--agentskin-accent) 32%, transparent)
+  ) !important;
+}
+
+/* === Scrollbars === */
+html.agentskin-host-codex ::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+html.agentskin-host-codex ::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+html.agentskin-host-codex ::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 30%, transparent) 100%
+  ) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+html.agentskin-host-codex ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 50%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 50%, transparent) 100%
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* === Reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+  html.agentskin-host-codex *,
+  html.agentskin-host-codex *::before,
+  html.agentskin-host-codex *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+/* ============================================================
+   ENGINE: codex — Layer 4-5: Structural (migrated from adapter-config.mjs)
+   ============================================================ */
+
+/* === Art layer: body::before fixed hero === */
+html.agentskin-host-codex body {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+html.agentskin-host-codex body::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background: var(--agentskin-art, none) cover no-repeat !important;
+  background-position:
+    calc(var(--ag-art-focus-x, 100%) + var(--ag-art-offset-x, 0px))
+    calc(var(--ag-art-focus-y, 50%) + var(--ag-art-offset-y, 0px)) !important;
+}
+
+/* === Main app surface: transparent for art punch-through === */
+html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* === App header tint: semi-transparent frosted bar === */
+html.agentskin-host-codex header:is(.app-header-tint, [data-app-shell-header-edge-scroll], [class*="_Header_"]) {
+  background: color-mix(in srgb, var(--agentskin-surface) 8%, transparent) !important;
+}
+
+/* === Sidebar: frosted glass === */
+html.agentskin-host-codex aside.app-shell-left-panel {
+  background: var(--sidebar-bg, color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-md), transparent)) !important;
+  backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  border-right: 1px solid var(--ag-glass-border) !important;
+}
+html.agentskin-host-codex button.sidebar-item:hover,
+html.agentskin-host-codex [data-app-action-sidebar-project-id]:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+}
+html.agentskin-host-codex button.sidebar-item[data-app-action-sidebar-thread-selected="true"],
+html.agentskin-host-codex [data-app-action-sidebar-thread-selected="true"],
+html.agentskin-host-codex [data-app-action-sidebar-thread-active="true"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 16%, transparent) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
+}
+
+/* === Composer / input area: frosted glass === */
+html.agentskin-host-codex :is(.composer-surface-chrome, [class*="_ComposerLayoutRoot_"], [data-composer-surface-variant][data-composer-radius-variant]) {
+  background: var(--input-bg, color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-lg), transparent)) !important;
+  border: 1px solid var(--ag-glass-border) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
+}
+html.agentskin-host-codex :is(.composer-surface-chrome [class*="_footer_"], [class*="_ComposerLayoutRoot_"] [class*="_ComposerLayoutFooter_"], [data-composer-surface-variant][data-composer-radius-variant] :is([data-composer-footer-responsive], [class*="_ComposerLayoutFooter_"], [class*="_footer_"])) {
+  border-top: 1px solid var(--ag-glass-border) !important;
+}
+html.agentskin-host-codex [contenteditable="true"]:focus,
+html.agentskin-host-codex textarea:focus {
+  outline: none !important;
+  border-color: var(--agentskin-accent) !important;
+}
+
+/* === Home utility bar === */
+html.agentskin-host-codex :is([class*="_homeUtilityBar_"], [class*="_ComposerHomeUtilityBar_"]) {
+  background: color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-sm), transparent) !important;
+  backdrop-filter: blur(var(--ag-glass-blur-sm)) saturate(var(--ag-glass-sat-sm)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-sm)) saturate(var(--ag-glass-sat-sm)) !important;
+}
+
+/* === Home suggestions === */
+html.agentskin-host-codex .group\\/home-suggestions {
+  background: transparent !important;
+}
+
+/* === Thread surface === */
+html.agentskin-host-codex .thread-scroll-container {
+  background: transparent !important;
+}
+
+/* === Messages: user and assistant === */
+html.agentskin-host-codex :is([data-message-author-role], [data-local-conversation-user-anchor], [data-local-conversation-final-assistant]) {
+  background: transparent !important;
+}
+html.agentskin-host-codex [data-message-author-role="user"] {
+  background: color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-md), transparent) !important;
+  border-radius: 12px !important;
+}
+
+/* === Markdown content === */
+html.agentskin-host-codex [class*="_markdown"] {
+  background: color-mix(in srgb, var(--agentskin-surface) 5%, transparent) !important;
+  border-radius: 8px !important;
+}
+
+/* === Code blocks === */
+html.agentskin-host-codex pre {
+  background: var(--code-bg, var(--agentskin-code-bg)) !important;
+  color: var(--code-fg, var(--agentskin-code-fg)) !important;
+}
+html.agentskin-host-codex code {
+  background: var(--code-bg, var(--agentskin-code-bg)) !important;
+  color: var(--code-fg, var(--agentskin-code-fg)) !important;
+}
+html.agentskin-host-codex pre code { border: none !important; background: transparent !important; }
+
+/* === Links === */
+html.agentskin-host-codex a { color: var(--agentskin-accent) !important; }
+
+/* === Popovers / modals / dialogs: frosted glass === */
+html.agentskin-host-codex [role="dialog"],
+html.agentskin-host-codex [role="menu"],
+html.agentskin-host-codex [role="tooltip"],
+html.agentskin-host-codex [role="listbox"],
+html.agentskin-host-codex [data-radix-popper-content-wrapper] {
+  background: color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent) !important;
+  border: 1px solid var(--ag-glass-border) !important;
+}

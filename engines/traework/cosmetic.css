@@ -1,0 +1,340 @@
+/* ============================================================
+   ENGINE: traework — Layer 2: Cosmetic Enhancement
+   ============================================================ */
+
+/* === Selection === */
+html.agentskin-host-traework ::selection {
+  background: color-mix(in srgb, var(--agentskin-accent) 28%, transparent) !important;
+}
+
+/* === Scrollbars === */
+html.agentskin-host-traework ::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+html.agentskin-host-traework ::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+html.agentskin-host-traework ::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 30%, transparent) 100%
+  ) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+html.agentskin-host-traework ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 50%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 50%, transparent) 100%
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* === TRAE browser automation anchors (data-trae-ref) ===
+   2026-08-30: TRAE uses data-trae-ref for browser snapshot navigation
+   (ASAR scan: 17+ occurrences). Ensure these tagged elements inherit
+   theme text color so browser automation UI stays on-theme.
+   NOTE: color WITHOUT !important so host per-element colors survive. */
+html.agentskin-host-traework [data-trae-ref] {
+  color: var(--agentskin-text);
+}
+
+/* === Reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+  html.agentskin-host-traework *,
+  html.agentskin-host-traework *::before,
+  html.agentskin-host-traework *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+/* ============================================================
+   ENGINE: traework — Layer 4-5: Structural (migrated from adapter-config.mjs)
+   ============================================================ */
+
+/* === Art layer on #root::before ===
+   #root establishes its own stacking context (isolation) so #root::before
+   with z-index: -1 renders above #root's transparent background but below
+   #root's content. <html> MUST also have background: transparent (set in
+   tokens.css) so the art shows through from behind the root context.
+   NOTE: color is set WITHOUT !important so host's per-element colors
+   (error red, link accent, button on-accent, syntax highlighting) survive.
+   Only the fallback color (when the host sets nothing) is themed here. */
+html.agentskin-host-traework #root {
+  color: var(--agentskin-text);
+  background: transparent !important;
+  isolation: isolate !important;
+}
+html.agentskin-host-traework #root::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background-image: var(--agentskin-art, none) !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  background-position:
+    calc(var(--ag-art-focus-x, 100%) + var(--ag-art-offset-x, 0px))
+    calc(var(--ag-art-focus-y, 50%) + var(--ag-art-offset-y, 0px)) !important;
+}
+
+/* === Punch-through: route surfaces transparent ===
+   CDP 2026-08-30: .solo-lite-chat-panel-container confirmed with classes
+   "solo-lite-chat-panel-container solo-lite-panel-box-shadow solo-lite-panel-border". */
+html.agentskin-host-traework .solo-lite-layout,
+html.agentskin-host-traework .solo-lite-chat-panel-container,
+html.agentskin-host-traework .solo-lite-panel-box-shadow,
+html.agentskin-host-traework [class*="chat-panel"],
+html.agentskin-host-traework [class*="message-list"],
+html.agentskin-host-traework [class*="conversation"],
+html.agentskin-host-traework [class*="main-content"],
+html.agentskin-host-traework [class*="workspace"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--agentskin-text) !important;
+}
+/* Remove native panel box-shadow/border that would show as hard edges */
+html.agentskin-host-traework .solo-lite-panel-box-shadow {
+  box-shadow: none !important;
+}
+html.agentskin-host-traework .solo-lite-panel-border {
+  border-color: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+}
+
+/* === Sidebar (frosted glass) === */
+html.agentskin-host-traework .task-list-base,
+html.agentskin-host-traework .task-list-panel {
+  background: color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-md), transparent) !important;
+  backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-md)) saturate(var(--ag-glass-sat-md)) !important;
+  border-right: 1px solid var(--ag-glass-border) !important;
+  color: var(--agentskin-text) !important;
+}
+/* PROBE-VERIFIED 2026-08-23: TRAE task rows are div.task-list-new-task-item
+   (exact BEM-ish class; active = trailing "active" class, aria-selected for
+   tabs). [class*="item"] matched 105 unrelated elements — replaced with the
+   exact task-list-* item classes. */
+html.agentskin-host-traework .task-list-base [class*="task-list-new-task-item"]:hover,
+html.agentskin-host-traework .task-list-base [class*="task-list-skills-item"]:hover,
+html.agentskin-host-traework .task-list-panel [class*="task-list-new-task-item"]:hover,
+html.agentskin-host-traework .task-list-panel [class*="task-list-skills-item"]:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+}
+html.agentskin-host-traework .task-list-base [class*="task-list-new-task-item"].active,
+html.agentskin-host-traework .task-list-base [class*="task-list-skills-item"].active,
+html.agentskin-host-traework .task-list-panel [class*="task-list-new-task-item"].active,
+html.agentskin-host-traework .task-list-panel [class*="task-list-skills-item"].active {
+  background: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+}
+
+/* === Sidebar separator shadow: themeable divider where the app shows a
+   native grey/solid border that follows its own light/dark theme === */
+html.agentskin-host-traework .task-list-base,
+html.agentskin-host-traework .task-list-panel {
+  box-shadow: 1px 0 0 color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
+}
+
+/* === Sidebar list bottom fade shadow: the app paints a sticky gradient
+   (.task-list-shadow-bottom) with a HARD-CODED color (rgb(38,38,38) in dark /
+   light-grey in light). In the host's own themes this fade blended with the
+   flat background and was invisible; our frosted/art surface makes it stand
+   out jarringly. Match the host "invisible" state by removing it entirely. === */
+html.agentskin-host-traework .task-list-shadow-bottom,
+html.agentskin-host-traework .task-list-shadow-top {
+  background-image: none !important;
+  background: transparent !important;
+}
+
+/* === Sidebar circular group/new buttons (conversation-list round thumbs
+   that otherwise use native grey rgba(212,212,212)/rgb(229,229,229)
+   following the host theme) === */
+html.agentskin-host-traework .task-list-group-new-btn,
+html.agentskin-host-traework .solo-mobile-compact-btn {
+  background: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  border-color: color-mix(in srgb, var(--agentskin-accent) 28%, transparent) !important;
+  color: var(--agentskin-text) !important;
+}
+html.agentskin-host-traework .task-list-group-new-btn:hover,
+html.agentskin-host-traework .solo-mobile-compact-btn:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 22%, transparent) !important;
+}
+
+/* === Composer === */
+html.agentskin-host-traework .chat-input-v2-input-box-editable {
+  background: color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-lg), transparent) !important;
+  color: var(--agentskin-text) !important;
+  caret-color: var(--agentskin-accent) !important;
+  border: 1px solid var(--ag-glass-border) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
+  -webkit-backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
+}
+html.agentskin-host-traework .chat-input-v2-input-box-editable:focus,
+html.agentskin-host-traework .chat-input-v2-input-box-editable:focus-within {
+  border-color: color-mix(in srgb, var(--agentskin-accent) 50%, transparent) !important;
+}
+html.agentskin-host-traework [class*="chat-input-v2"] [class*="placeholder"] {
+  color: var(--agentskin-muted) !important;
+}
+html.agentskin-host-traework [class*="chat-input-primary-glow"] {
+  background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 40%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
+  box-shadow: none !important;
+}
+html.agentskin-host-traework [class*="chat-input-primary-glow"]:focus-within {
+  border-color: color-mix(in srgb, var(--agentskin-accent) 45%, transparent) !important;
+}
+
+/* === Composer outer editor part: neutralize the native opaque grey
+   (rgb(23,23,23) in dark / light equivalent in light) so the frosted inner
+   input stays the visual subject and the art punches through === */
+/* Specificity: the host wins with !!important on the (0,4,0) selector
+   .solo-lite .messageInputContainer .messageInputChatInput .chat-input-v2-editor-part,
+   which beats our plain (0,2,1). Replicate the ancestor chain + host class so
+   our transparent (0,5,1) outranks it. */
+html.agentskin-host-traework .solo-lite .messageInputContainer .messageInputChatInput .chat-input-v2-editor-part,
+html.agentskin-host-traework .solo-lite .messageInputChatInput .chat-input-v2-editor-part,
+html.agentskin-host-traework .chat-input-v2-editor-part {
+  background: transparent !important;
+}
+
+/* === Composer plugin toolbar icons: repaint native grey pills
+   (host uses #292929 / var(--bg-bg-white) following its theme) with an
+   accent-tinted frosted pill so toolbar buttons keep our theme === */
+html.agentskin-host-traework [class*="messageInputPluginToolbarIconWrapper"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--agentskin-accent) 22%, transparent) !important;
+  color: var(--agentskin-text) !important;
+}
+html.agentskin-host-traework [class*="messageInputPluginToolbarIconWrapper"]:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
+}
+html.agentskin-host-traework [class*="messageInputPluginToolbar"] {
+  background: transparent !important;
+  border-color: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* === Send button ===
+   CDP-confirmed: .chat-input-v2-send-button is the primary action button.
+   ASAR scan: uses native accent color; theme it with accent bg + on-accent fg. */
+html.agentskin-host-traework .chat-input-v2-send-button {
+  background: var(--agentskin-accent) !important;
+  color: var(--agentskin-bg) !important;
+  border: none !important;
+}
+html.agentskin-host-traework .chat-input-v2-send-button:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 85%, white 15%) !important;
+}
+html.agentskin-host-traework .chat-input-v2-send-button:disabled,
+html.agentskin-host-traework .chat-input-v2-send-button[class*="disabled"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
+  color: var(--agentskin-muted) !important;
+}
+
+/* === Composer action/toolbar buttons (new-button coverage) ===
+   Host renders icon buttons with native grey paints; theme themaccent-tinted. */
+html.agentskin-host-traework [class*="chat-input-v2-action"],
+html.agentskin-host-traework [class*="chat-input-v2-toolbar-btn"],
+html.agentskin-host-traework [class*="messageInputToolbarBtn"],
+html.agentskin-host-traework [class*="messageInputToolbarButton"] {
+  color: var(--agentskin-text) !important;
+  background: color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
+  border-color: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+}
+html.agentskin-host-traework [class*="chat-input-v2-action"]:hover,
+html.agentskin-host-traework [class*="chat-input-v2-toolbar-btn"]:hover,
+html.agentskin-host-traework [class*="messageInputToolbarBtn"]:hover,
+html.agentskin-host-traework [class*="messageInputToolbarButton"]:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  color: var(--agentskin-accent) !important;
+}
+
+/* === Message text ===
+   PROBE-VERIFIED 2026-08-23: [class*="message"] matched 120 elements
+   (messageInputContainer, messageInputToolbar, message-count, message-icon…)
+   — over-broad. Use role-scoped + article only.
+   NOTE: color WITHOUT !important so host per-element colors survive. */
+html.agentskin-host-traework [role="log"],
+html.agentskin-host-traework article {
+  color: var(--agentskin-text);
+}
+
+/* === Message bubbles: kill native squared box-shadow on side bubbles ===
+   The host applies a harsh square box-shadow to chat bubbles; our frosted
+   surface tint replaces it, so the native shadow must be removed.
+   Scoped to explicit bubble-ish classes only (no bare [class*="bubble"]). */
+html.agentskin-host-traework [class*="message-bubble"],
+html.agentskin-host-traework [class*="messageBubble"],
+html.agentskin-host-traework [class*="msg-bubble"],
+html.agentskin-host-traework [class*="chat-bubble"],
+html.agentskin-host-traework [class*="message-content"],
+html.agentskin-host-traework [class*="msg-content"] {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* === User-message bubble surface: the native grey rounded box
+   (.user-message__text-box paints rgba(212,212,212,0.06) + 16px radius in
+   the host's default theme) reads as a leftover "<bubble ring>" against our
+   art surface once the box-shadow is gone. Match the host "flat" state by
+   clearing its surface and letting the art / text-only bubble take over. === */
+html.agentskin-host-traework .user-message__text-box,
+html.agentskin-host-traework [class*="user-message__text-box"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+}
+
+/* === Message-navigator fade mask: the app overlays a sticky HARD-CODED dark
+   gradient (.user-message-navigator__mask--top/bottom paints rgb(23,23,23)
+   to transparent) at the top/bottom of the message list. Same class of issue
+   as .task-list-shadow-bottom — on our art surface it reads as a shadow band
+   behind the bubbles. Match the host "invisible" state by removing it. === */
+html.agentskin-host-traework [class*="user-message-navigator__mask"] {
+  background-image: none !important;
+  background: transparent !important;
+}
+
+/* === Avatar badges === */
+html.agentskin-host-traework [class*="agent-avatar"],
+html.agentskin-host-traework [class*="avatar"] {
+  background: var(--agentskin-surface) !important;
+  color: var(--agentskin-text) !important;
+  border-color: var(--agentskin-border) !important;
+}
+
+/* === File links === */
+html.agentskin-host-traework .markdown-file-link,
+html.agentskin-host-traework [class*="file-link"],
+html.agentskin-host-traework a[class*="link"] {
+  color: var(--agentskin-accent) !important;
+}
+html.agentskin-host-traework .markdown-file-link:hover,
+html.agentskin-host-traework [class*="file-link"]:hover,
+html.agentskin-host-traework a[class*="link"]:hover {
+  color: var(--agentskin-secondary) !important;
+}
+
+/* === Mode switcher / tabs ===
+   PROBE-VERIFIED 2026-08-23: TRAE uses exact classes — mode-switcher-btn,
+   tab-* (CSS-module hash) with aria-selected for active state. Drop
+   [class*="segmented"] [class*="item"] and bare [class*="active"] guesses
+   ([class*="item"] matched 105 elements). */
+html.agentskin-host-traework [class*="mode-switcher-btn"] {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+html.agentskin-host-traework [class*="mode-switcher-btn"][class*="active"],
+html.agentskin-host-traework button[role="tab"][aria-selected="true"] {
+  color: var(--agentskin-accent) !important;
+  background: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+}

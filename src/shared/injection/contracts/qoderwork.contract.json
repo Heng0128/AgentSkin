@@ -1,0 +1,169 @@
+{
+  "$schema": "../verification-contract.schema.json",
+  "targets": {
+    "qoderwork": {
+      "verification": {
+        "required": [
+          {
+            "name": "host-class-present",
+            "any": ["html.agentskin-host-qoderwork"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "palette-accent-applied",
+            "any": [":root[style*='--agentskin-accent']", "html[style*='--agentskin-accent']"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "recommended": [
+          {
+            "name": "adapter-marker-present",
+            "any": ["body"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "tokens-layer-present",
+            "any": [
+              ":root[style*='--agentskin-background']",
+              "html[style*='--agentskin-background']"
+            ],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "contexts": [
+          {
+            "name": "editor-area-visible",
+            "when": { "any": ["[class*='editor']", "[class*='Editor']", "[class*='monaco']"] },
+            "required": [
+              {
+                "name": "editor-themed",
+                "any": [
+                  "[class*='editor'] [style*='--agentskin']",
+                  "[class*='editor'][style*='--agentskin']"
+                ],
+                "provenance": {
+                  "source": "reporter",
+                  "strength": "medium",
+                  "knownGaps": ["editor class selector may vary across qoderwork versions"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "voice-overlay-renderer",
+            "when": {
+              "any": ["body[voice-overlay]", "[class*='voice-overlay']", "html[voice-overlay]"]
+            },
+            "required": [
+              {
+                "name": "voice-overlay-themed",
+                "any": ["html.agentskin-host-qoderwork.agentskin-renderer-voice-overlay"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["voice-overlay.html is a separate renderer window"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "mcp-app-preview-renderer",
+            "when": {
+              "any": ["body[mcp-app-preview]", "iframe[src*='mcp']", "[class*='mcp-preview']"]
+            },
+            "required": [
+              {
+                "name": "mcp-preview-themed",
+                "any": ["html.agentskin-host-qoderwork.agentskin-renderer-mcp-app-preview"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["mcp-app-preview.html is a separate renderer window"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "artifact-preview-renderer",
+            "when": { "any": ["[class*='artifact-preview']", "[class*='artifactPreview']"] },
+            "required": [
+              {
+                "name": "artifact-preview-themed",
+                "any": ["html.agentskin-host-qoderwork.agentskin-renderer-artifact-preview"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["artifact-preview.html is a separate renderer window"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "quickpick-renderer",
+            "when": {
+              "any": ["[class*='quickpick']", "[class*='quick-pick']", "[class*='command-palette']"]
+            },
+            "required": [
+              {
+                "name": "quickpick-themed",
+                "any": ["html.agentskin-host-qoderwork.agentskin-renderer-quickpick"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["quickpick.html is a separate renderer window"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "multi-window-ipc",
+            "when": { "any": ["[class*='window-controls']", "[data-desktop-api]"] },
+            "required": [
+              {
+                "name": "desktop-api-available",
+                "any": ["html.agentskin-host-qoderwork[data-desktop-api]"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["desktopApi.setVibrancy() availability varies by platform"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

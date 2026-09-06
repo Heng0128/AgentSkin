@@ -1,0 +1,58 @@
+{
+  "id": "void-donut-boy",
+  "name": "void-donut-boy",
+  "displayName": "Void Donut Boy",
+  "version": "2.0.0",
+  "description": "Pale boy clutching a pink donut in a dim room lit by a laptop screen.",
+  "author": {
+    "name": "Auto-generated"
+  },
+  "mode": "dark",
+  "category": "photo",
+  "tags": [
+    "dark",
+    "photo",
+    "anime",
+    "monochrome",
+    "horror"
+  ],
+  "icon": "icon.webp",
+  "preview": "preview.webp",
+  "colors": {
+    "accent": "#d7ecc4",
+    "secondary": "#dff0d0",
+    "background": "#020201",
+    "foreground": "#f4f0eb",
+    "muted": "#cbc9c6",
+    "surface": "#161615",
+    "surfaceElevated": "#252525",
+    "border": "#1b1b1a",
+    "codeBackground": "#020201",
+    "codeForeground": "#f4f0eb",
+    "inputBackground": "#111110",
+    "buttonBackground": "#d7ecc4",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#d7ecc460"
+  },
+  "license": "MPL-2.0",
+  "hero": "hero.jpg",
+  "schemaVersion": 3,
+  "semanticVersion": 1,
+  "themeCss": "theme.css",
+  "apps": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "overrides": {
+    "traework": "overrides/traework.css",
+    "qoderwork": "overrides/qoderwork.css",
+    "workbuddy": "overrides/workbuddy.css",
+    "doubao": "overrides/doubao.css",
+    "codex": "overrides/codex.css",
+    "zcode": "overrides/zcode.css"
+  }
+}

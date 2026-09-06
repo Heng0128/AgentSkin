@@ -1,0 +1,163 @@
+{
+  "$schema": "../verification-contract.schema.json",
+  "targets": {
+    "doubao": {
+      "verification": {
+        "required": [
+          {
+            "name": "host-class-present",
+            "any": ["html.agentskin-host-doubao"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "palette-accent-applied",
+            "any": [":root[style*='--agentskin-accent']", "html[style*='--agentskin-accent']"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "recommended": [
+          {
+            "name": "adapter-marker-present",
+            "any": ["body"],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "tokens-layer-present",
+            "any": [
+              ":root[style*='--agentskin-background']",
+              "html[style*='--agentskin-background']"
+            ],
+            "provenance": {
+              "source": "maintainer",
+              "strength": "strong",
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          },
+          {
+            "name": "background-self-heal-active",
+            "any": ["div.agentskin-background-layer"],
+            "provenance": {
+              "source": "fixture",
+              "strength": "medium",
+              "knownGaps": ["only verified when background self-heal is triggered"],
+              "coveredVersions": ["current"],
+              "lastVerified": "2026-08-30"
+            }
+          }
+        ],
+        "contexts": [
+          {
+            "name": "main-window-visible",
+            "when": { "any": ["[class*='container']", "[class*='main']", "#app"] },
+            "required": [
+              {
+                "name": "container-themed",
+                "any": [
+                  "[class*='container'] [style*='--agentskin']",
+                  "#app[style*='--agentskin']"
+                ],
+                "provenance": {
+                  "source": "reporter",
+                  "strength": "medium",
+                  "knownGaps": ["container class selector may vary across doubao versions"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "cdp-injected",
+            "when": { "any": ["html[data-cdp-injected]", "body[data-cdp-injected]"] },
+            "required": [
+              {
+                "name": "cdp-state-tracked",
+                "any": ["html.agentskin-host-doubao[data-cdp-state]"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "strong",
+                  "knownGaps": ["Doubao is non-Electron, requires --remote-debugging-port=9222"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "local-extension-page",
+            "when": {
+              "any": ["[class*='options-page']", "[class*='popup-page']", "[class*='side-panel']"]
+            },
+            "required": [
+              {
+                "name": "local-page-lightweight",
+                "any": ["html.agentskin-host-doubao.agentskin-local-page"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": [
+                    "local_webcontents/extensions/ai-views/ has options/popup/side_panel"
+                  ],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "chromium-engine",
+            "when": { "any": ["[class*='browser-container']", "[class*='web-content']"] },
+            "required": [
+              {
+                "name": "chromium-version-tracked",
+                "any": ["html.agentskin-host-doubao[data-chromium-version]"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "medium",
+                  "knownGaps": ["Doubao.dll 306MB C++ compiled, Chromium v147.x"],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          },
+          {
+            "name": "dll-modules",
+            "when": { "any": ["[data-doubao-module]"] },
+            "required": [
+              {
+                "name": "module-aware",
+                "any": ["html.agentskin-host-doubao[data-doubao-ready]"],
+                "provenance": {
+                  "source": "reverse-engineering",
+                  "strength": "weak",
+                  "knownGaps": [
+                    "aha_net.dll / sscronet.dll / ffmpeg.dll / VolcEngineRTCAudio.dll etc."
+                  ],
+                  "coveredVersions": ["current"],
+                  "lastVerified": "2026-08-30"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

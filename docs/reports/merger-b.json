@@ -1,0 +1,336 @@
+{
+  "merger": "Merger (合并归纳子智能体)",
+  "scannedAt": "2026-08-20",
+  "sources": ["Scout-α (15 issues)", "Scout-β (10 issues)"],
+  "deduplication": {
+    "totalRaw": 25,
+    "mergedPairs": [
+      {
+        "α": "B-01 (major, cdp-client.ts:407)",
+        "β": "cdp-client.ts:407 (critical)",
+        "action": "合并，取 critical"
+      },
+      {
+        "α": "B-03 (major, session-pool.ts:153)",
+        "β": "session-pool.ts:306 (major)",
+        "action": "合并：同属 session-pool 退休/生命周期安全，保留双行号"
+      },
+      {
+        "α": "B-05 (major, reload-watchdog.ts:110)",
+        "α2": "B-06 (major, inspect-session.ts:71)",
+        "action": "合并：同属绕过 pool 的长生命周期会话，保留双文件"
+      },
+      {
+        "α": "B-07 (major, performance-recorder.ts:392)",
+        "α2": "B-14 (info, performance-recorder.ts:270)",
+        "action": "合并：同属 performance-recorder 可观测性缺陷，取 major"
+      },
+      {
+        "β": "performance/types.ts (minor)",
+        "β2": "engine/types/adapters.d.ts (info)",
+        "action": "合并：同属契约/类型覆盖缺口，取 minor"
+      }
+    ],
+    "finalCount": 20
+  },
+  "deduplicatedIssues": [
+    {
+      "id": "M-01",
+      "filePath": "src/main/cdp/cdp-client.ts",
+      "lineNumber": 407,
+      "severity": "critical",
+      "title": "connectEventCdp 失败路径 trace step 名拼写错误",
+      "description": "connectEventCdp 的 .then() 分支（第396行）使用 'connectEventCdp' 作为 PerformanceRecorder step 名，但 .catch() 分支（第406-408行）却写成了 'connectCdp'。导致所有 EventCDP 连接失败被错误归因，Apply Trace 分类统计产生噪声。该 bug 仅在连接失败时触发，现有测试套件（cdp-client.test.ts）未覆盖此错误路径，因此一直未被发现。",
+      "evidence": "L396: PerformanceRecorder.recordNamedStep('connectEventCdp', performance.now() - t0);\n...\nL406-411:\n.catch((error) => {\n  PerformanceRecorder.recordNamedStep(\n    'connectCdp',\n    performance.now() - t0,\n    false,\n    error instanceof Error ? error.message : String(error),\n  );\n  throw error;\n});\n// catch 中应为 'connectEventCdp' 以与 then 路径对齐",
+      "scouts": ["α", "β"],
+      "fixDirection": "将 catch 块第一步名由 'connectCdp' 改为 'connectEventCdp'；补充 connectEventCdp 错误路径测试覆盖"
+    },
+    {
+      "id": "B-02",
+      "filePath": "src/main/cdp/session-pool.ts",
+      "lineNumber": 246,
+      "severity": "major",
+      "title": "Session pool 容量守卫在 open() 之后才检查上限",
+      "description": "acquire() 方法先执行 await open() 建立 WebSocket 连接（约200ms握手），之后才检查 byTarget.size >= MAX_SESSIONS_PER_AGENT(64)。达到上限时新目标仍会先连接再立即关闭返回 null，浪费资源并增加 CDP 目标进程负担。",
+      "evidence": "const session = await open();\nif (!session) return null;\nif (!existing && byTarget.size >= MAX_SESSIONS_PER_AGENT) {\n  mainWarn('SessionPool', `per-agent session cap (${MAX_SESSIONS_PER_AGENT}) reached...`);\n  try { session.close(); } catch { /* ignore */ }\n  return null;\n}",
+      "scouts": ["α"],
+      "fixDirection": "将容量守卫前置到 open() 调用前，避免无效握手"
+    },
+    {
+      "id": "M-03",
+      "filePath": "src/main/cdp/session-pool.ts",
+      "lineNumber": 153,
+      "additionalLine": 306,
+      "severity": "major",
+      "title": "Session pool 退休会话缺乏强制回收安全阀且 epoch 切换堆积",
+      "description": "scanIdleEntries 对 retired + refCount>0 的 session 仅记录警告但永不强制关闭。invalidateEpoch 软退休 refCount>0 的会话；epoch 暴涨时退休会话堆在池里，idle scanner 每10s 才清扫且需 >30s idle TTL。高频 epoch 切换下可能短期堆积到 per-agent cap(64) 个 session 而无强制切断。",
+      "evidence": "L153-161:\nif (entry.refCount > 0) {\n  if (entry.retired && now - entry.retiredAt > RETIRE_GRACE_MS) {\n    mainWarn('SessionPool', `retired session still in use (refCount=${entry.refCount}): ...`);\n  }\n  continue;\n}\n---\nL306-321 (invalidateEpoch):\nfor (const [targetKey, entry] of byTarget) {\n  if (entry.refCount > 0) {\n    entry.retired = true;\n    entry.retiredAt = now;\n  } else {\n    this.discard(appId, targetKey, entry);\n  }\n}",
+      "scouts": ["α", "β"],
+      "fixDirection": "超过 RETIRE_GRACE_MS 后强制 discard（关闭连接而非仅 warn）；invalidateEpoch 内增加 'forceCloseAfterGrace' 第二阶段"
+    },
+    {
+      "id": "B-04",
+      "filePath": "src/main/cdp/cdp-fanout.ts",
+      "lineNumber": 580,
+      "severity": "major",
+      "title": "firstSession 在 finally 块中存在双重 releaseSession 路径",
+      "description": "hardeningPass 为 page 类型的 firstSession 若为 pooled 模式，既在 finally（第581-583行）中 releaseSession，又可能在后续逻辑（约第762-764行健康检查路径）中再次 releaseSession。虽然 release() 用 Math.max(0, ...) 做了下界保护，但语义混乱导致 refCount 生命周期不清晰。",
+      "evidence": "} finally {\n  if (handle.pooled) {\n    releaseSession(deps.sessions, appId, targetKeyFor(target.id, target.webSocketDebuggerUrl));\n  } else if (session !== firstSession) {\n    try { session.close(); } catch { /* ignore */ }\n  }\n}\n// firstSession 的 pooled 释放逻辑与后续健康检查路径冲突",
+      "scouts": ["α"],
+      "fixDirection": "重构 firstSession 释放为单一所有权方（owner-pattern），由 fanout 入口一次性统一释放，移除 finally 中针对 firstSession 的释放"
+    },
+    {
+      "id": "M-05",
+      "filePath": "src/main/cdp/reload-watchdog.ts",
+      "lineNumber": 110,
+      "additionalFile": "src/main/cdp/inspect-session.ts",
+      "additionalLine": 71,
+      "severity": "major",
+      "title": "长生命周期 CDP 会话绕过 session-pool 管理",
+      "description": "reload-watchdog 通过 connectEventCdp 建立的长生命周期会话完全绕过 session-pool，无 heartbeat、无 idle TTL、无 refCount 保护。inspect-session 同样直接调用 connectEventCdp 并依赖调用方显式 stop/close。若宿主应用崩溃或用户手动关闭，watchdog 会话成为孤儿连接直到下次全局 dispose；inspect 模式则完全依赖调用方生命周期正确性。",
+      "evidence": "// reload-watchdog.ts L106-114:\nasync function openWatchdogSession(state: ReloadWatchdogState): Promise<void> {\n  session = await connectEventCdp(state.options.pageTargetUrl!);\n}\n---\n// inspect-session.ts L70-71:\nexport async function startInspect(opts: StartInspectOptions): Promise<InspectController> {\n  const session = await connectEventCdp(opts.webSocketDebuggerUrl);\n  // 依赖调用方 stop()，无 heartbeat/idle 保护",
+      "scouts": ["α"],
+      "fixDirection": "将长生命周期会话纳入 session-pool 的变种（无 idle TTL / 有 heartbeat），或建立独立的 LongLivedSessionRegistry 提供孤儿清理"
+    },
+    {
+      "id": "M-06",
+      "filePath": "src/main/services/performance/performance-recorder.ts",
+      "lineNumber": 392,
+      "additionalLine": 270,
+      "severity": "major",
+      "title": "performance-recorder 单迹模型与时钟源不一致导致可观测性降级",
+      "description": "(a) PerformanceRecorder 采用单迹并发模型——第二个并发 apply 返回 ShadowTrace（no-op），导致并发 apply 丢失完整 trace 数据。(b) finish() 中 startedAt 来自 performance.now() 但 finishedAt 使用 new Date().toISOString()，两种时钟源混用可能产生 trace duration 与 startedAt/finishedAt 跨度不一致。",
+      "evidence": "L392-395:\nstatic start(agentId: string, themeId?: string): ApplyTraceBuilder | ShadowTrace {\n  if (PerformanceRecorder.active) {\n    return new ShadowTrace(agentId, themeId);\n  }\n}\n---\nL270-275:\nreturn {\n  id: this.traceId,\n  startedAt: this.startedAt,           // performance.now() offset\n  finishedAt: new Date().toISOString(), // wall-clock ISO\n  duration: totalDuration,             // performance.now() based\n  ...\n};",
+      "scouts": ["α"],
+      "fixDirection": "(a) 升级为 per-agent ApplyTraceBuilder Map 支持并发 trace；(b) 统一 finishedAt 时钟源为 performance.now() + 起始时间戳计算，避免混合时钟源"
+    },
+    {
+      "id": "B-08",
+      "filePath": "src/main/theme-apply-flow.ts",
+      "lineNumber": 637,
+      "severity": "major",
+      "title": "finishTrace() 在后台任务完成前截断 trace",
+      "description": "theme-apply-flow 在第637行调用 finishTrace() 关闭并记录 trace 后，才对 backgroundTasks 执行 Promise.allSettled（第644行）。这意味着所有后台任务（watchdog 更新、wallpaper 处理等）的耗时和失败信息不会被记录在当次 trace 中，trace 数据不完整，难以诊断 background 阶段的延迟或错误。",
+      "evidence": "L637: finishTrace();\n...\nL644: background: Promise.allSettled(backgroundTasks).then((results) => {\n  const failed = results.filter((r) => r.status === 'rejected');\n  ...\n});",
+      "scouts": ["α"],
+      "fixDirection": "将 finishTrace() 延迟到 Promise.allSettled(backgroundTasks) 完成之后；background 任务中的步骤通过 recordNamedStep 写入 trace"
+    },
+    {
+      "id": "B-09",
+      "filePath": "src/main/cdp/apply-baseline.ts",
+      "lineNumber": 265,
+      "severity": "minor",
+      "title": "apply-baseline 多模块直接使用 connectCdp 未走 pool",
+      "description": "apply-baseline 的 openMainDomSession 等函数直接调用 connectCdp 而不经过 session-pool，导致每次 baseline 探测都需要独立握手，且无法复用已有的 DOM target session。",
+      "evidence": "L261-265:\nasync function openMainDomSession(port: number): Promise<CdpSession | null> {\n  const targets = await findDomTargets(port);\n  if (!targets.length || !targets[0].webSocketDebuggerUrl) return null;\n  return await connectCdp(targets[0].webSocketDebuggerUrl, 3000);\n}",
+      "scouts": ["α"],
+      "fixDirection": "改为调用 session-pool.acquire()，对短期探测使用 refCount 池化"
+    },
+    {
+      "id": "B-10",
+      "filePath": "src/main/services/performance/performance-logger.ts",
+      "lineNumber": 187,
+      "severity": "minor",
+      "title": "环形缓冲区溢出仅首次警告",
+      "description": "traceOverflowCount 递增但 overflowWarned 标志在首次警告后置 true，后续溢出静默丢弃。长运行中可能积累大量溢出事件但永远不会再次告警，导致用户/开发者无法感知历史数据已被截断的程度。",
+      "evidence": "L186-195:\nlog(trace: ThemeApplyTrace): void {\n  buffer.push(trace);\n  if (buffer.length > MAX_HISTORY) {\n    buffer.shift();\n    traceOverflowCount += 1;\n    if (!overflowWarned) {\n      overflowWarned = true;\n      console.warn(`[PerformanceLogger] ring buffer overflow: MAX_HISTORY=${MAX_HISTORY} exceeded...`);\n    }\n  }\n}",
+      "scouts": ["α"],
+      "fixDirection": "改为周期性检测并打印 overflowCount summary（如每100次 overflow 重新 warn），或在 getStats() 中暴露 overflowCount 让消费者判断"
+    },
+    {
+      "id": "B-11",
+      "filePath": "src/main/ipc/performance-ipc.ts",
+      "lineNumber": 37,
+      "severity": "minor",
+      "title": "性能数据仅拉取接口无推送",
+      "description": "registerPerformanceIpc 仅注册 ipcMain.handle('performance:get') 被动接口，渲染端必须轮询数据变化。对于实时监控面板效率低下，且 UI 线程轮询会引入不必要的 IPC 开销。",
+      "evidence": "L37-43:\nexport function registerPerformanceIpc(): void {\n  ipcMain.handle(\n    IpcChannel.PERFORMANCE_GET,\n    (_event, count: unknown): PerformanceHistoryResponse => {\n      return performanceLogger.getHistory(clampCount(count, MAX_COUNT));\n    },\n  );\n}\n// 无 ipcMain.send / webContents.send 推送通道",
+      "scouts": ["α"],
+      "fixDirection": "在 trace 完成时通过 webContents.send('performance:new-trace', ...) 推送新增记录，UI 仅在收到推送时增量更新"
+    },
+    {
+      "id": "B-12",
+      "filePath": "src/main/cdp/session-pool.ts",
+      "lineNumber": 358,
+      "severity": "minor",
+      "title": "heartbeat ping 发送 Runtime.evaluate 未先 Runtime.enable",
+      "description": "startHeartbeat 周期调用 ping() 发送 Runtime.evaluate，但前提是 Runtime domain 已被启用。若初始化 paths 漏调 Runtime.enable，ping 会静默失败或触发 CDP 错误，且 heartbeat 错误累积可能导致误判 session 失效。",
+      "evidence": "L358-361:\nprivate startHeartbeat(...): ReturnType<typeof setInterval> | null {\n  return setInterval(() => {\n    void this.ping(appId, targetKey, entry);\n  }, HEARTBEAT_INTERVAL_MS);\n}\n---\nL363-369:\nawait entry.session.send('Runtime.evaluate', {\n  expression: '1',\n  returnByValue: true,\n  awaitPromise: false,\n});",
+      "scouts": ["α"],
+      "fixDirection": "在 acquire 完成后确保 Runtime.enable 已调用；ping 失败时增加 enabledDomains 校验并重试 enable"
+    },
+    {
+      "id": "B-13",
+      "filePath": "src/main/cdp/cdp-client.ts",
+      "lineNumber": 225,
+      "severity": "minor",
+      "title": "openCdpSocket 域匹配正则假设方法名为 [A-Za-z]+.enable 格式",
+      "description": "exec(/^([A-Za-z]+)\\.enable$/) 仅匹配字母方法名，无法覆盖某些包含数字、下划线或连字符的 CDP 域（如 'DOMSnapshot.enable'、'Log.enable' 之外的新域格式）。非标准格式会被 matchedDomains tracking 漏掉，close 时产生未 disable 的残留 CDP listener。",
+      "evidence": "L225-227:\nconst enableMatch = /^([A-Za-z]+)\\.enable$/.exec(method);\nif (enableMatch) {\n  enabledDomains.add(enableMatch[1]);\n}",
+      "scouts": ["α"],
+      "fixDirection": "正则改为 /^([A-Za-z][A-Za-z0-9_]*)\\.enable$/ 覆盖更多 CDP 域；或改用 CDP 官方 domain 列表校验"
+    },
+    {
+      "id": "B-15",
+      "filePath": "src/main/ipc/with-monitored-timeout.ts",
+      "lineNumber": 37,
+      "severity": "info",
+      "title": "isIpcTimeoutError 不验证属性存在性",
+      "description": "isIpcTimeoutError(reason) 可能仅根据鸭子类型推断，但未校验必要属性（channel, ms）是否存在。若抛出的错误恰好有 isIpcTimeoutError=true 但缺少字段，后续属性访问会得到 undefined。",
+      "evidence": "L37-43:\nreturn withTimeout(channel, ms, promise, signal).catch((reason) => {\n  if (isIpcTimeoutError(reason)) {\n    performanceLogger.logTimeout({\n      channel: reason.channel,\n      ms: reason.ms,\n      timestamp: Date.now(),\n    });\n  }\n  throw reason;\n});",
+      "scouts": ["α"],
+      "fixDirection": "在 isIpcTimeoutError 守卫内增加 typeof reason.channel === 'string' 和 typeof reason.ms === 'number' 校验"
+    },
+    {
+      "id": "β-02",
+      "filePath": "src/main/services/performance/performance-logger.ts",
+      "lineNumber": 131,
+      "severity": "major",
+      "title": "getRecent(0) 语义违反直觉：slice(-0) 返回全量",
+      "description": "getRecent(count): 当 count=0 时，n=0，buffer.slice(-0) 等价于 slice(0) 返回整个 buffer 副本而非空数组。调用方预期 count=0 返回空却拿到全量数据，与 clampCount 的 floor-to-1 语义不一致。直接内部调用或未来绕 clamp 调用会引发数据泄露或性能异常。",
+      "evidence": "L140-143:\nfunction getRecent(count: number): ThemeApplyTrace[] {\n  const n = Math.max(0, Math.min(count, buffer.length));\n  return buffer.slice(-n).reverse();\n}\n// 当 n === 0，buffer.slice(-0) === buffer.slice(0) === 全量",
+      "scouts": ["β"],
+      "fixDirection": "使用 Math.max(1, n) 或 count === 0 时显式返回 []，并在 docstring 中明确 0 的语义"
+    },
+    {
+      "id": "β-04",
+      "filePath": "src/shared/injection-runtime.ts",
+      "lineNumber": 70,
+      "severity": "major",
+      "title": "isThemeFullyApplied 在 layers 缺失时退化仅校验 accent + sheetCount",
+      "description": "当 renderer 客户端未传 layers（旧版或兼容模式），isThemeFullyApplied 退化为仅检查 accent 和 adoptedSheetCount，跳过了 palette/tokens/cosmetic 层级的完整性校验。对 requireHero=false 的主题尤其危险——只要 accent 非空且至少一个 sheet 就视为完全应用，可能遗漏关键引擎层缺失。",
+      "evidence": "L65-70:\nif (!v || v.adoptedSheetCount <= 0) return false;\nif (!v.accent) return false;\nif (!v.layers) return opts?.requireHero ? v.artResolved === true : true;\n// 当 requireHero=false 时直接返回 true，不校验 palette/tokens/cosmetic",
+      "scouts": ["β"],
+      "fixDirection": "layers 缺失时返回 false（要求新版客户端始终汇报 layers 摘要），或单独引入 requireLayers 严格模式"
+    },
+    {
+      "id": "β-05",
+      "filePath": "src/main/cdp/session-pool.ts",
+      "lineNumber": 123,
+      "severity": "major",
+      "title": "targetKeyFor 在 id 与 url 均缺失时返回 'unknown-target' 造成 key 冲突",
+      "description": "当 CDP target 的 id 和 webSocketDebuggerUrl 都为 null/undefined 时，targetKeyFor 返回字面量 'unknown-target'。多个无法辨识的 target 共享同一 key，在 pool map 中互相覆盖或命中错误条目，导致 refCount/retired 误操作另一个 target。",
+      "evidence": "L119-124:\nexport function targetKeyFor(\n  id: string | null | undefined,\n  webSocketDebuggerUrl: string | null | undefined,\n): string {\n  return id || webSocketDebuggerUrl || 'unknown-target';\n}",
+      "scouts": ["β"],
+      "fixDirection": "改为抛出 Error 或在 targetKeyFor 内部使用递增唯一标识（如 `unknown-${++counter}`）避免冲突"
+    },
+    {
+      "id": "β-07",
+      "filePath": "src/main/cdp/cdp-client.ts",
+      "lineNumber": 169,
+      "severity": "minor",
+      "title": "pending waiter 解析使用非空断言缺乏防御",
+      "description": "在 ws.onmessage 处理中，虽然 pending.has(message.id) 先做了存在性校验，但 typeof waiter = pending.get(message.id)! 使用了非空断言。若 rejectAllPending 等并发清理路径在 has() 与 get() 之间执行，TypeScript 无法在编译期捕获此竞态，waiter 可能为 undefined。",
+      "evidence": "L168-175:\nif (message.id != null && pending.has(message.id)) {\n  const waiter = pending.get(message.id)!;\n  pending.delete(message.id);\n  if (message.error) {\n    waiter.reject(new Error(`${message.error.message} (${message.error.code})`));\n  } else {\n    waiter.resolve(message.result);\n  }\n}",
+      "scouts": ["β"],
+      "fixDirection": "用 if (!waiter) return; 的非空守卫替代 TS 非空断言，防止竞态下的 TypeError"
+    },
+    {
+      "id": "β-08",
+      "filePath": "src/main/cdp/cdp-client.test.ts",
+      "lineNumber": null,
+      "severity": "major",
+      "title": "测试套件未覆盖 connectEventCdp 错误路径",
+      "description": "B-01 / M-01 暴露了一个持续存在的 bug（step 名拼写错误），但该 bug 暗藏在一个 catch 分支里—只在 CDP 连接失败时触发。现有 cdp-client.test.ts 未覆盖此失败分支，导致代码审查与 ci 都未能捕获此回归。",
+      "evidence": "cdp-client.test.ts 中未见 connectEventCdp reject 路径的 .catch() 测试\n// 对比 t 内成功路径测试已存在 (L396 .then 分支)",
+      "scouts": ["β"],
+      "fixDirection": "使用 mock WebSocket 模拟连接失败断言 recordNamedStep 以 'connectEventCdp' 为 step 名被调用"
+    },
+    {
+      "id": "β-09",
+      "filePath": "src/main/cdp/injection/shared.ts",
+      "lineNumber": 150,
+      "severity": "minor",
+      "title": "waitForTheme 可能因 verifyTheme 持续返回 falsy 而完成不彻底",
+      "description": "waitForTheme 的 while 循环在 verifyTheme 返回 null/falsy 时继续等待直到 timeoutMs 耗尽，最终第160行再次调用 verifyTheme 后仅记录 step，但未将最终结果返回给调用方（无 return 当前最终 judgment）。若 timeout 触发后验证仍返回 null，调用方只能看到一个 'waitForTheme' step 但无法判断主题是否真正被应用或只是超时放弃。",
+      "evidence": "L150-165:\nwhile (performance.now() - start < timeoutMs) {\n  const verification = await verifyTheme(session);\n  if (verification && isThemeFullyApplied(verification)) {\n    PerformanceRecorder.recordNamedStep('waitForTheme', performance.now() - t0);\n    return verification;\n  }\n  await delay(intervalMs);\n}\nconst verification = await verifyTheme(session);\nPerformanceRecorder.recordNamedStep('waitForTheme', performance.now() - t0, verification !== null);\n// 无返回，调用方无法得知最终结果",
+      "scouts": ["β"],
+      "fixDirection": "循环结束后显式返回 { applied: boolean, verification }；考虑将超时视为明确的 applied=false 而非 null"
+    },
+    {
+      "id": "β-10",
+      "filePath": "src/main/services/performance/types.ts",
+      "additionalFile": "src/engine/types/adapters.d.ts",
+      "additionalLine": null,
+      "severity": "minor",
+      "title": "核心 trace/adapter 类型缺乏 schema 快照测试且契约平行",
+      "description": "(a) ThemeApplyTrace / PerformanceStep 等核心 trace 类型定义在 performance/types.ts 中，无对应 schema 快照或类型守卫测试。字段数值类型变更（如 startedAt 从 number 改为 ISO string）下游不会在类型层面报错。(b) engine/types/adapters.d.ts 与主进程 shared 模块中的 Adapter 类型形成平行契约，双向同步无自动化保障。",
+      "evidence": "// performance/types.ts: PerformanceStep { name, startedAt, duration, success }\n// performance-recorder.test.ts 中未见 snapshot/schema 校验\n---\n// engine/types/adapters.d.ts:\nexport { AppAdapter, CdpTarget, SupportedPlatform, ... }\n// 与 src/shared 中的相似类型定义平行",
+      "scouts": ["β"],
+      "fixDirection": "(a) 增加 ThemeApplyTrace schema 快照测试（如 expect(trace).toMatchSchema(traceSchema)）；(b) 明确 engine/adapter contract 为 shared adapter types 的单向导入源，消除平行定义；或在代码评审流程中增加 adapter drift 校验"
+    }
+  ],
+  "rootCauses": [
+    {
+      "id": "RC1",
+      "title": "Session Pool 生命周期完整性与安全阀缺失",
+      "description": "session-pool 在容量守卫时序、退休 session 强制回收、长生命周期连接 pool 准入、targetKey 唯一性保证四个层面存在设计/实现缺陷。在长时间运行或多 agent 场景下，这些缺陷叠加可能表现为 CDP socket 堆积、连接泄漏或 refCount 混乱，直接影响注入稳定性与目标进程健康。",
+      "issues": ["B-02", "M-03", "M-05", "β-05", "B-09"],
+      "severity": "critical",
+      "fixDirections": [
+        "容量守卫前置到 open() 调用之前，避免无效握手",
+        "退休 session 超过 RETIRE_GRACE_MS 后强制执行 discard()，不再仅记 warn",
+        "watchdog 和 inspect 长生命周期连接纳入 pool 统一生命周期管理（LongLivedSessionRegistry 或专用 pool 策略）",
+        "targetKeyFor 在 id/url 同时缺失时改为 throw 或返回唯一标识，杜绝 'unknown-target' key 冲突",
+        "apply-baseline 改为经过 session-pool.acquire() 复用已有连接"
+      ]
+    },
+    {
+      "id": "RC2",
+      "title": "Trace / 可观测性信号完整性与正确性缺陷",
+      "description": "Apply Trace 作为性能诊断与用户体验度量的核心数据来源，在 step 命名一致性、并发 trace 模型、记录时钟源、记录截断时机四个维度存在缺陷。叠加效应：并发 apply 数据部分丢失 + clock skew + step mislabel + 后台任务截断 = 真实故障下 trace 数据几乎不可信。",
+      "issues": ["M-01", "M-06", "B-08", "B-10", "B-11"],
+      "severity": "critical",
+      "fixDirections": [
+        "catch 块 step 名由 'connectCdp' 改为 'connectEventCdp'，与 then 路径对齐",
+        "PerformanceRecorder 升级为 per-trace（agentId-keyed）并发队列，消除 ShadowTrace no-op",
+        "finishedAt 与 duration 统一使用 performance.now() 派生，避免 mixed clock source",
+        "finishTrace 延迟到 allSettled(backgroundTasks) 之后，确保后台任务记录在 trace 中",
+        "环形缓冲改为周期性 overflow summary 或暴露 overflowCount 让消费者监控"
+      ]
+    },
+    {
+      "id": "RC3",
+      "title": "批量 / 并发操作的资源所有权与完成信号处理缺陷",
+      "description": "fanout hardening pass 的 firstSession 双重释放、theme-apply 的 finishTrace 在 allSettent 之前调用、以及 cdp-client waiter 非空断言，本质上是并发资源所有权与异步完成信号管理不当。这些 bug 在日常低频率触发下影响不大，但并发度提升时（多 agent 同时 apply、快速切换）会导致 refCount 语义混乱或诊断数据缺失。",
+      "issues": ["B-04", "B-08", "β-07"],
+      "severity": "major",
+      "fixDirections": [
+        "firstSession 释放改为单一 owner 持有，仅在 fanout 末尾统一释放一次",
+        "finishTrace 迁移到 allSettled 之后，并使用 backgroundTasks 的 steps 丰富 trace",
+        "cdp-client waiter 用 if (!waiter) return 替代 TS 非空断言，并增加竞态覆盖率测试"
+      ]
+    },
+    {
+      "id": "RC4",
+      "title": "Theme 验证与完整性判定过度降级",
+      "description": "isThemeFullyApplied 在 layers 不可旧时退化为仅看 accent+sheetCount，waitForTheme 超时后仅丢 step 不返回 verdict。这两个逻辑组合意味着旧客户端或层不全的注入可以以 '成功' 状态蒙混过关，watchdog 不会被触发补注入，真实用户可见到半应用的主题。",
+      "issues": ["β-04", "β-09"],
+      "severity": "major",
+      "fixDirections": [
+        "layers 缺失时默认视为 incomplete（要求新版 renderer 始终汇报 layers 摘要字段）",
+        "waitForTheme 超时后返回明确 { applied: false, reason: 'timeout' } 而非静默 drop",
+        "为不兼容旧客户端增加独立的 legacy apply path 与注入回退策略"
+      ]
+    },
+    {
+      "id": "RC5",
+      "title": "类型契约漂移与测试覆盖系统性缺口",
+      "description": "performance/types.ts 和 adapters.d.ts 两个核心类型文件缺少 schema 快照测试和防漂移机制；connectEventCdp 错误路径（M-01）的测试空白使得低概率但关键错误得以常年潜伏。",
+      "issues": ["M-01", "β-06", "β-08", "β-10"],
+      "severity": "major",
+      "fixDirections": [
+        "为 ThemeApplyTrace / PerformanceStep 引入 schema 快照测试（如使用 zod 校验）",
+        "建立 engine adapter contract 源单一化（合并 engine/types/adapters.d.ts 中的平行定义，或显式 import from shared）",
+        "补充 connectEventCdp catch 分支的单元测试，确保 step 名与 then 路径一致",
+        "增加 heartbeat ping 未 Runtime.enable 的回归测试"
+      ]
+    }
+  ],
+  "severityDistribution": {
+    "critical": 1,
+    "major": 10,
+    "minor": 8,
+    "info": 1
+  }
+}
