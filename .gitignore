@@ -191,3 +191,13 @@ C*Users*
 # 重定向误产物：名为单个逗号 / 分号的 0 字节空文件（已实测生效）
 \,
 \;
+
+# Sandbox / harness transient directories (electron download cache, node compile cache)
+.sandbox-tmp/
+
+# --- Cleanup round 6: raw CDP dumps + runtime stray (2026-08-31) ---
+# 原始 CDP/asar 提取转储：体积大、可由在线 agent 经 scripts/extract-asar-summary.mjs
+# 与 scripts/cdp-full-extract 重新生成，属 §10.2「探针/调试产物」，禁止入库。
+docs/apps/*/raw/
+# automation-lock.mjs 按需自建的运行时锁目录（相对项目根），属运行时状态，非源码。
+.agentskin/
