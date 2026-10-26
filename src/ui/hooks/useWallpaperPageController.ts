@@ -16,9 +16,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
+import { findAppStatus } from '@/lib/status-utils';
 import { useWallpaperVideoUrl } from '@/lib/wallpaperVideo';
 import { describeWallpaperFailure } from '@/pages/wallpaper/describeWallpaperFailure';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useStatusStore } from '@/stores/statusStore';
 import { isCompanionBusy, useWallpaperStore } from '@/stores/wallpaperStore';
 
 import type { AgentId, WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
@@ -138,13 +140,21 @@ export function useWallpaperPageController(controller: AppController): Wallpaper
   }, [wallpaper.wallpapers, filter, search, sortBy]);
 
   // ── Derived: agent counts ────────────────────────────────────────────
+  // appStatusFor reads statusStore on demand, so it must NOT be a memo dep —
+  // it is a module-level function whose reference never changes, which made
+  // these counts compute exactly once at mount (when status was still null)
+  // and stick at 0 forever: every apply button rendered gray regardless of
+  // actually-running agents. Subscribing to the polled status gives the memo
+  // a real invalidation trigger; findAppStatus is the same lookup the helper
+  // performs, just with the snapshot passed in explicitly.
+  const polledStatus = useStatusStore((s) => s.status);
   const runningAgentCount = useMemo(
-    () => AGENT_IDS.filter((id) => appStatusFor(id)?.running).length,
-    [appStatusFor],
+    () => AGENT_IDS.filter((id) => findAppStatus(polledStatus, id)?.running).length,
+    [polledStatus],
   );
   const readyAgentCount = useMemo(
-    () => AGENT_IDS.filter((id) => appStatusFor(id)?.debugReady).length,
-    [appStatusFor],
+    () => AGENT_IDS.filter((id) => findAppStatus(polledStatus, id)?.debugReady).length,
+    [polledStatus],
   );
 
   // ── Streaming video URL for selected wallpaper ───────────────────────

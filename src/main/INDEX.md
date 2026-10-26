@@ -80,7 +80,7 @@ Electron 主进程入口，承载所有后端服务：CDP 注入、应用发现�
 | `landmark-preflight.ts` | 注入前 DOM 锚点预检（验证目标页面有所需 landmark） | `engine-strategy`, `cdp-fanout` | `cdp/cdp-client` | — |
 | `markdown-injector.ts` | Markdown 运行时样式注入（通过 CDP 插入 style 标签） | Studio | `cdp/cdp-client` | — |
 | `node-cascade.ts` | DevTools 级单节点探针（CSS.getMatchedStylesForNode + 盒模型） | `snapshot-theme`, `inspect-session`, `baseline-css-capture` | `cdp/cdp-client` | — |
-| `port-config.ts` | 每适配器首选 CDP 端口配置（9222-9227 + 回退范围） | `port-resolver` | 无 | — |
+| `port-config.ts` | 每适配器端口配置（2026-09-07 起全部 `preferredPort: 0` 随机端口 + 9222-9357 校验带；不固定、不预留） | `port-resolver` | 无 | — |
 | `port-lease-pool.ts` | 固定端口池 + 文件系统原子锁（mkdir 互斥） | `port-resolver` | 无 | — |
 | `port-resolver.ts` | CDP 端口可用性检测 + 自动递增 + 租约管理 | `app-discovery`, `electron-launcher` | `port-config`, `port-lease-pool` | — |
 | `reload-watchdog.ts` | 页面重载守护（Page.loadEventFired → 重新注入丢失的 adoptedStyleSheets） | `cdp-fanout/hardeningPass` | `cdp/cdp-client`, `cdp/injection/engine-strategy` | RFC 2026-08-18 P3 |
@@ -298,7 +298,11 @@ Electron 主进程入口，承载所有后端服务：CDP 注入、应用发现�
 | `ce-parser.ts` | Cyclone Engine (CE) 二进制场景格式解析 | `scene-extractor` | 无 | — |
 | `scene-extractor.ts` | 场景提取编排器（PKG + TEX + scene.json → 统一 SceneData） | `scene-pkg-parser` | `pkg-parser`, `tex-parser`, `scene-json-parser`, `particle-parser` | — |
 | `scene-json-parser.ts` | Wallpaper Engine scene.json 解析（general + objects + tags） | `scene-extractor` | 无 | — |
+| `texture-decode-core.ts` | 纹理解码纯逻辑（DXT1/3/5、BC7、R8、RG88、RGBA8888 → RGBA8888；**无副作用**，库代码唯一合法导入点） | `texture-decode-worker`, `texture-decode-pool` | `tex-parser/bc7-decompress`, `tex-parser/dxt-decompress`, `tex-parser/tex-types` | — |
+| `texture-decode-pool.ts` | 纹理解码 Worker 池（并行解码，不可用时进程内同步回退） | `scene-pkg-parser` barrel, `boot-sequence` | `texture-decode-core`（禁止导入 worker entry，见 import-guard 测试） | — |
+| `texture-decode-worker.ts` | 纹理解码 worker_threads **entry**（顶层 `parentPort.on` 副作用，仅限 worker 线程加载） | 运行时 spawn | `texture-decode-core` | — |
 | `_workshop-test-helpers.ts` | 场景解析测试辅助（合成 scene.pkg 二进制 fixture） | scene 测试文件 | `binary-reader` | — |
+| `we/` | **完整 WE 场景渲染器**（自 dsh-wallpaper-engine v0.7.1 平移，MIT→MPL-2.0 OR MIT）：PKGV/LZ4 解包 + 20+ 官方 shader 效果 CPU 复刻 + puppet 骨骼 + 粒子 + NSL 脚本运行时 + GLSL 第三方效果解释器；`full-frame-renderer.ts` 经独立 worker entry（out/main/scene-render-worker.js）出完整场景帧，`static-frame-extractor` Level 0 与 PreviewCache 场景预览（查缓存 + 后台渲染，不阻塞 IPC）消费 | `static-frame-extractor`, `wallpaper/preview-cache` | `we-renderer/*`, `pkg-extract`, `scene-scripts` | `docs/reports/dsh-wallpaper-engine-analysis-2026-09-07.md` |
 
 ### agent-engine/ — Agent 引擎委托
 

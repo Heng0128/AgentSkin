@@ -154,6 +154,32 @@ export class WallpaperService implements WallpaperServiceApi {
     await this.scan();
     const item = this.items.get(id);
     if (!item?.previewPath) return null;
+    // Scene wallpapers: prefer a full WE scene render (ported renderer, see
+    // ../scene/we/) over WE's low-res preview.jpg. NON-BLOCKING: serve the
+    // cached render when present; otherwise schedule a background render and
+    // fall through to preview.jpg now — the next card view upgrades to the
+    // full render once it lands. Never await the renderer here: preview-url
+    // runs under a 15s IPC timeout and heavy scenes render for tens of
+    // seconds (that deadlock is exactly what this split prevents).
+    if (item.type === 'scene' && item.pkgPath && this.previewCache) {
+      try {
+        const stat = await fs.stat(item.pkgPath);
+        const rendered = this.previewCache.getCachedSceneRenderPreview(item.pkgPath, stat.mtimeMs);
+        if (rendered) {
+          try {
+            const filePath = fileURLToPath(rendered);
+            const url = await this.media.registerFile(filePath, 'image/png', id);
+            if (url) return url;
+          } catch {
+            // file URL parse failed — fall through to media server.
+          }
+        } else {
+          this.previewCache.scheduleSceneRenderPreview(item.pkgPath, stat.mtimeMs);
+        }
+      } catch {
+        // stat failed — fall through.
+      }
+    }
     // PreviewCache path: stat the source to get mtime for cache key, then
     // generate or retrieve the L1 preview. The cache returns `file://` URLs
     // which the renderer's CSP blocks — convert to a loopback `http://` URL

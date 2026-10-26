@@ -51,6 +51,19 @@ export interface WallpaperRenderOptions {
   /** 音频响应灵敏度 0-100（0=关闭，默认 0）。 */
   audioLevel?: number;
   /**
+   * 遮挡暂停三档（对齐 Wallpaper Engine 的省电行为，见
+   * dsh-wallpaper-engine 分析报告 P1-4）：页面隐藏（最小化/切页）、窗口
+   * 失焦（大概率被遮挡）、电池供电（未充电）。三档独立开关，默认
+   * hidden/focus 开、battery 关（保持旧行为，避免笔记本用户意外静止）。
+   * 暂停仅影响视频解码（video.pause() 即停 rVFC → 解码引擎归零）；
+   * iframe/图片无解码开销，不受影响。
+   */
+  pauseOnHidden?: boolean;
+  /** 窗口失焦时暂停（默认 true）。 */
+  pauseOnBlur?: boolean;
+  /** 电池供电时暂停（默认 false）。 */
+  pauseOnBattery?: boolean;
+  /**
    * 粒子特效配置（可选）。当存在时在壁纸上方渲染 CSS 粒子动画层。
    * 对齐 workbuddy-skin-lab 的粒子系统设计：pointer-events:none、
    * 尊重 prefers-reduced-motion、最大 150 粒子。

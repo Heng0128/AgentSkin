@@ -102,7 +102,16 @@ export async function handleRenderRequest(request: RenderRequest): Promise<Worke
         : renderSceneToHtml(request.pkgPath, request.options);
     return { requestId: request.requestId, html };
   } catch (error) {
-    return { requestId: request.requestId, html: null, error: String(error) };
+    // Include the stack in the error string: the parent pool surfaces only
+    // this message, and String(error) alone hides WHERE in the render
+    // pipeline a partially-bundled dependency failed (seen in the wild as
+    // "Buffer.from(...) Received undefined" with no location).
+    const err = error instanceof Error ? error : new Error(String(error));
+    return {
+      requestId: request.requestId,
+      html: null,
+      error: `${err.message}\n${err.stack ?? ''}`,
+    };
   }
 }
 

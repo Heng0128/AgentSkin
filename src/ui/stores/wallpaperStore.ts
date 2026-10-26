@@ -25,7 +25,6 @@
 
 import { api } from '@/api/agentSkinClient';
 import { useNotificationStore } from '@/stores/notificationStore';
-import { useStatusStore } from '@/stores/statusStore';
 import { registerWallpaperHandler } from '@/stores/wallpaper-handler-registry';
 
 import { toMessage } from '@shared/errors';

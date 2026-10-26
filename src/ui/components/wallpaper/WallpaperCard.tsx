@@ -86,7 +86,7 @@ export function WallpaperPreview({
 
 export const WallpaperCard = memo(function WallpaperCard({
   wallpaper,
-  index: _index,
+  index,
   selected,
   isUiBackground,
   previewOnly,
@@ -144,10 +144,15 @@ export const WallpaperCard = memo(function WallpaperCard({
   return (
     <div
       ref={cardRef}
+      // Staggered entrance: the first cards cascade in with a capped delay
+      // (page-enter has animation-fill-mode: backwards so the delayed cards
+      // stay hidden until their turn instead of flashing). Cards beyond the
+      // cap mount with no delay; the animation itself plays once per mount.
+      style={{ animationDelay: index <= 8 ? `${index * 50}ms` : undefined }}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-lg border border-transparent bg-card text-left transition-[transform,border-color,box-shadow] duration-base ease-spring as-shine',
+        'page-enter group relative flex flex-col overflow-hidden rounded-lg border border-transparent bg-card text-left transition-[transform,border-color,box-shadow] duration-base ease-spring as-shine',
         'hover:-translate-y-[2px] hover:border-border-strong hover:shadow-elev2',
-        selected && 'border-primary ring-2 ring-primary/30',
+        selected && 'border-primary as-glow',
       )}
     >
       <button type="button" onClick={() => onSelect(wallpaper)} className="flex flex-1 flex-col">
@@ -196,7 +201,9 @@ export const WallpaperCard = memo(function WallpaperCard({
                       ? t.weTypeWeb
                       : t.weTypeScene}
               </span>
-              <span className="tabular-nums text-muted-foreground">{formatSize(wallpaper.sizeBytes)}</span>
+              <span className="tabular-nums text-muted-foreground">
+                {formatSize(wallpaper.sizeBytes)}
+              </span>
             </div>
           </div>
           {/* Single status badge — top-left */}

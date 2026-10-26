@@ -147,7 +147,7 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
         config={{ header: true, toolbar: true, body: 'grid', count: 12, aspect: '16/9' }}
         className="h-full flex-1"
       >
-        <div className="we-app flex h-full min-h-0 flex-col min-w-0 gap-3 overflow-hidden">
+        <div className="flex h-full min-h-0 flex-col min-w-0 gap-3 overflow-hidden">
           {/* Page header */}
           <PageHeader
             title={t.wallpaperSection}
@@ -202,7 +202,7 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
 
           {/* Grid + detail sidebar (desktop) / Sheet (mobile) */}
           <div className="flex min-h-0 flex-1 gap-3">
-            <div className="we-grid min-h-0 flex-1 overflow-y-auto overscroll-behavior-contain">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <WallpaperGrid
                 wallpapers={filtered}
                 selectedId={selected?.id ?? null}
@@ -217,7 +217,7 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
 
             {/* Desktop: right detail panel (visible md+) */}
             {selected && (
-              <div className="hidden md:block">
+              <div className="hidden h-full min-h-0 md:block">
                 <InjectResultsPanel
                   selected={selected}
                   renderDraft={renderDraft}

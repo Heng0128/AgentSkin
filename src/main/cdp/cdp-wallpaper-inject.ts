@@ -34,7 +34,9 @@
  * Re-export contract preserved for all existing consumers.
  */
 
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import {
   MAX_VIDEO_BLOB_BYTES,
   WALLPAPER_CHUNK_SIZE,
@@ -156,6 +158,58 @@ function evalWallpaper(
 }
 
 // ---------------------------------------------------------------------------
+// Page-side namespace installation
+// ---------------------------------------------------------------------------
+
+/**
+ * Page-side wallpaper mounts live in `engines/shared/wallpaper-ns.mjs` and are
+ * evaluated into the target page BEFORE any apply call. The wallpaper pipeline
+ * does not run the theme engine (whose adapterJs carries `window.__agentskin__`),
+ * so the namespace cannot be assumed to exist — skipping this step made every
+ * mount throw `Cannot read properties of undefined (reading 'wallpaper')` on
+ * pages that had never received a theme injection.
+ *
+ * The installer IIFE is idempotent (re-evaluating on an already-injected page
+ * is a no-op), so calling it before every mount is cheap and safe.
+ */
+let wallpaperNsSource: string | null = null;
+
+function getWallpaperNsSource(): string {
+  if (wallpaperNsSource === null) {
+    // __dirname = <app>/out/main at runtime (electron-vite output); engines/
+    // ships at the app root — one relative hop covers both dev and prod.
+    // The second candidate covers vitest, which executes from src/.
+    const candidates = [
+      join(__dirname, '../../engines/shared/wallpaper-ns.mjs'),
+      join(__dirname, '../../../../engines/shared/wallpaper-ns.mjs'),
+    ];
+    for (const p of candidates) {
+      try {
+        wallpaperNsSource = readFileSync(p, 'utf8');
+        break;
+      } catch {
+        // try next candidate
+      }
+    }
+    if (wallpaperNsSource === null) throw new Error('wallpaper-ns.mjs not found');
+  }
+  return wallpaperNsSource;
+}
+
+/** Evaluate the namespace installer (idempotent) before any NS.wallpaper call. */
+export async function ensureWallpaperNamespace(session: CdpSession): Promise<boolean> {
+  try {
+    const r = await session.evaluate(getWallpaperNsSource());
+    return r === 'ok';
+  } catch (e) {
+    console.warn(
+      `[cdp-wallpaper] namespace install failed: ${e instanceof Error ? e.message : String(e)}`,
+    );
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Public injectors
 // ---------------------------------------------------------------------------
 
@@ -175,6 +229,7 @@ export async function injectImageWallpaperByUrl(
   // The engine requires the leading "url(...)" wrapper; preserve prior behaviour.
   const payload = `url(${url})`;
   try {
+    await ensureWallpaperNamespace(session);
     const r = await session.evaluate(evalWallpaper('applyImage', { src: payload, render }));
     const v = String(r);
     return { ok: v === 'ok', verdict: v };
@@ -205,6 +260,7 @@ export async function injectImageWallpaper(
     // Cap is enforced by the stat() check upstream; this module trusts caller.
     const base64 = buf.toString('base64');
     const mime = imageMimeForPath(imagePath);
+    await ensureWallpaperNamespace(session);
     await initChunks(session);
     const totalChunks = Math.ceil(base64.length / WALLPAPER_CHUNK_SIZE);
     for (let i = 0; i < totalChunks; i++) {
@@ -255,6 +311,7 @@ export async function injectVideoWallpaper(
   if (!url || typeof url !== 'string') return { ok: false, verdict: 'invalid-url' };
   try {
     await bypassPageCsp(session);
+    await ensureWallpaperNamespace(session);
     const r = await session.evaluate(
       evalWallpaper('applyVideo', { src: url, mime, speed, loop, render }),
     );
@@ -288,6 +345,7 @@ export async function injectVideoWallpaperByBase64(
     const base64 = buf.toString('base64');
     const mime = videoMimeForPath(videoPath);
     await bypassPageCsp(session);
+    await ensureWallpaperNamespace(session);
     await initChunks(session);
     const totalChunks = Math.ceil(base64.length / WALLPAPER_CHUNK_SIZE);
     for (let i = 0; i < totalChunks; i++) {
@@ -326,6 +384,7 @@ export async function injectWebWallpaper(
   if (!url || typeof url !== 'string') return { ok: false, verdict: 'invalid-url' };
   try {
     await bypassPageCsp(session);
+    await ensureWallpaperNamespace(session);
     const r = await session.evaluate(evalWallpaper('applyWeb', { url, render }));
     const v = String(r);
     return { ok: v === 'ok', verdict: v };
@@ -337,6 +396,7 @@ export async function injectWebWallpaper(
 /** Remove any injected wallpaper (image/video/web) from an agent's page. */
 export async function removeAllWallpapers(session: CdpSession): Promise<void> {
   try {
+    await ensureWallpaperNamespace(session);
     await session.evaluate(evalWallpaper('removeAll'));
   } catch {
     // best-effort

@@ -13,6 +13,15 @@
  * injected mount script in `cdp-wallpaper-inject.ts`; this module only
  * broadcasts to the currently-registered agents tracked by
  * `wallpaper-injector.ts`.
+ *
+ * Tier coverage note (cf. dsh-wallpaper-engine analysis P1-4): the desktop
+ * DynamicBackground implements the full three-tier occlusion pause
+ * (hidden / blur / battery — see WallpaperRenderOptions.pauseOn*). Agent
+ * pages only get the power-event tiers (suspend / on-battery) here because
+ * the page-side `NS.wallpaper` engine (external build artifact) does not
+ * expose document visibility/focus state to the main process; wiring those
+ * tiers would require polling each agent page over CDP, whose per-session
+ * cost outweighs the decode savings for typically-single-digit agent counts.
  */
 
 import { app, powerMonitor } from 'electron';

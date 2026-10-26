@@ -21,6 +21,7 @@ import { compositeScene } from './composite-renderer';
 import { extractScene, type SceneData } from './scene-extractor';
 import { rgbaToPngDataUrl } from './tex-parser';
 import { createScoringContext, selectBestTexture, type TextureCandidate } from './texture-scorer';
+import { renderSceneFrame } from './we/full-frame-renderer';
 
 /** Result of static frame extraction. */
 export interface StaticFrameResult {
@@ -31,7 +32,7 @@ export interface StaticFrameResult {
   /** Image height in pixels */
   height: number;
   /** Which degradation level produced the output */
-  source: 'composite' | 'main-texture' | 'preview' | 'solid-color' | 'transparent';
+  source: 'full-render' | 'composite' | 'main-texture' | 'preview' | 'solid-color' | 'transparent';
   /** Score of the selected main texture (only for 'main-texture' source) */
   score?: number;
 }
@@ -107,7 +108,20 @@ export class StaticFrameExtractor {
       return this.createFallback(fallbackColor);
     }
 
-    // Level 0: Try composite rendering (optional)
+    // Level 0: Full WE scene renderer (ported from dsh-wallpaper-engine).
+    // Complete replay — object tree, shader effects, puppet, particles, text.
+    // A blank (clear-color-only) or failed render falls through to the
+    // original chain below, which stays as the degradation fallback.
+    if (!options.skipComposite) {
+      try {
+        const full = await this.tryFullRender(pkgPath, scene, maxDim);
+        if (full) return full;
+      } catch {
+        // Full render failed — continue to next level
+      }
+    }
+
+    // Level 0b: Try composite rendering (optional)
     if (!options.skipComposite) {
       try {
         const composite = await this.tryComposite(scene, maxDim);
@@ -146,7 +160,41 @@ export class StaticFrameExtractor {
   }
 
   /**
-   * Level 0: Composite all layers using software rendering.
+   * Level 0: Full WE scene frame via the ported renderer worker.
+   *
+   * Renders at the scene's projection aspect scaled to `maxDim`, then applies
+   * the empty-frame gate: when <0.1% of sampled pixels differ from the scene
+   * clear color the render is treated as failed (e.g. shader-only scenes the
+   * CPU pipeline cannot draw) so the degradation chain produces a better
+   * image than a blank frame would.
+   */
+  private async tryFullRender(
+    pkgPath: string,
+    scene: SceneData,
+    maxDim: number,
+  ): Promise<StaticFrameResult | null> {
+    const projSize = scene.general.orthogonalProjection;
+    const sceneWidth = projSize.width || 1920;
+    const sceneHeight = projSize.height || 1080;
+    const scale = Math.min(1, maxDim / Math.max(sceneWidth, sceneHeight));
+    const width = Math.max(1, Math.round(sceneWidth * scale));
+    const height = Math.max(1, Math.round(sceneHeight * scale));
+
+    const result = await renderSceneFrame({ pkgPath, width, height });
+    if (!result) return null;
+    // Empty-frame gate — same threshold semantics as the dsh plugin.
+    if (result.checked === 0 || result.diff / result.checked < 0.001) return null;
+
+    return {
+      dataUrl: `data:image/png;base64,${result.png.toString('base64')}`,
+      width,
+      height,
+      source: 'full-render',
+    };
+  }
+
+  /**
+   * Level 0b: Composite all layers using software rendering.
    * Renders all visible layers (textures, solid colors) into a single image.
    */
   private async tryComposite(scene: SceneData, maxDim: number): Promise<StaticFrameResult | null> {

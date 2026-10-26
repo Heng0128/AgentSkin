@@ -13,8 +13,14 @@
 
 import path from 'node:path';
 import { Worker } from 'node:worker_threads';
-import type { DecodeRequest, DecodeResponse } from './texture-decode-worker';
-import { handleDecodeRequest } from './texture-decode-worker';
+// Import from the side-effect-free core, NOT from `./texture-decode-worker`:
+// that file is a worker entry whose top-level parentPort message registration
+// is a side effect. Importing it from library code previously caused the
+// bundler to inline it into other worker bundles (scene-renderer-worker),
+// where its handler intercepted foreign requests and failed every scene
+// render with `Buffer.from(undefined)` (see texture-decode-core.ts).
+import type { DecodeRequest, DecodeResponse } from './texture-decode-core';
+import { handleDecodeRequest } from './texture-decode-core';
 
 /** Task pending completion. */
 interface PendingTask {

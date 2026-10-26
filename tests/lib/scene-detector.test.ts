@@ -5,6 +5,12 @@
  *
  * 覆盖场景类型检测、场景变化回调、CSS 类名生成、
  * 多应用配置、错误处理、启动/停止生命周期。
+ *
+ * 稳定性（flake 稳化 2026-09-07）：本文件历史上使用真实
+ * `setTimeout(100)` 赌 50ms 轮询在负载下按时触发——全量并行时
+ * 线程池争抢会让定时器延迟，偶发断言失败。现全部改用
+ * `vi.useFakeTimers()` + `advanceTimersByTimeAsync()`，轮询时机
+ * 完全确定，不再依赖真实调度。
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -49,11 +55,14 @@ beforeEach(() => {
   mockDocument = createMockDocument();
   // @ts-expect-error - 模拟 DOM 环境
   globalThis.document = mockDocument;
+  // 确定性时钟：SceneDetector 内部用 setInterval 轮询（pollInterval 50ms）
+  vi.useFakeTimers();
 });
 
 afterEach(() => {
   // @ts-expect-error - 清理
   delete globalThis.document;
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -77,6 +86,14 @@ function createTestDetector(overrides?: Partial<SceneDetectorConfig>): SceneDete
     ...overrides,
   };
   return new SceneDetector(config);
+}
+
+/**
+ * 前进两个轮询周期（pollInterval=50ms），确保至少一次轮询已执行。
+ * start() 内部还有一次同步初始检测，这里只做确定性兜底。
+ */
+async function tickPolls(ms = 110): Promise<void> {
+  await vi.advanceTimersByTimeAsync(ms);
 }
 
 // ============================================================================
@@ -112,77 +129,56 @@ describe('SceneDetector', () => {
   // -------------------------------------------------------------------------
 
   describe('场景检测', () => {
-    it('应检测到 dashboard 场景', () => {
+    it('应检测到 dashboard 场景', async () => {
       const detector = createTestDetector();
       mockDocument.setElement('.dashboard', true);
       detector.start();
 
-      // 等待轮询检测
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          expect(detector.getCurrentScene()).toBe('dashboard');
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      await tickPolls();
+      expect(detector.getCurrentScene()).toBe('dashboard');
+      detector.stop();
     });
 
-    it('应检测到 chat 场景', () => {
+    it('应检测到 chat 场景', async () => {
       const detector = createTestDetector();
       mockDocument.setElement('.chat', true);
       detector.start();
 
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          expect(detector.getCurrentScene()).toBe('chat');
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      await tickPolls();
+      expect(detector.getCurrentScene()).toBe('chat');
+      detector.stop();
     });
 
-    it('应检测到 settings 场景', () => {
+    it('应检测到 settings 场景', async () => {
       const detector = createTestDetector();
       mockDocument.setElement('.settings', true);
       detector.start();
 
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          expect(detector.getCurrentScene()).toBe('settings');
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      await tickPolls();
+      expect(detector.getCurrentScene()).toBe('settings');
+      detector.stop();
     });
 
-    it('无匹配选择器时应返回 unknown', () => {
+    it('无匹配选择器时应返回 unknown', async () => {
       const detector = createTestDetector();
       detector.start();
 
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          expect(detector.getCurrentScene()).toBe('unknown');
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      await tickPolls();
+      expect(detector.getCurrentScene()).toBe('unknown');
+      detector.stop();
     });
 
-    it('应按优先级选择场景（dashboard > chat > settings）', () => {
+    it('应按优先级选择场景（dashboard > chat > settings）', async () => {
       const detector = createTestDetector();
       mockDocument.setElement('.dashboard', true);
       mockDocument.setElement('.chat', true);
       mockDocument.setElement('.settings', true);
       detector.start();
 
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          // dashboard 优先级最高
-          expect(detector.getCurrentScene()).toBe('dashboard');
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      await tickPolls();
+      // dashboard 优先级最高
+      expect(detector.getCurrentScene()).toBe('dashboard');
+      detector.stop();
     });
   });
 
@@ -191,7 +187,7 @@ describe('SceneDetector', () => {
   // -------------------------------------------------------------------------
 
   describe('场景变化回调', () => {
-    it('应触发场景变化回调', () => {
+    it('应触发场景变化回调', async () => {
       const detector = createTestDetector();
       const callback = vi.fn();
       detector.onSceneChange(callback);
@@ -199,16 +195,12 @@ describe('SceneDetector', () => {
       mockDocument.setElement('.dashboard', true);
       detector.start();
 
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          expect(callback).toHaveBeenCalledWith('dashboard', 'unknown');
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      await tickPolls();
+      expect(callback).toHaveBeenCalledWith('dashboard', 'unknown');
+      detector.stop();
     });
 
-    it('应支持多个回调', () => {
+    it('应支持多个回调', async () => {
       const detector = createTestDetector();
       const callback1 = vi.fn();
       const callback2 = vi.fn();
@@ -218,17 +210,13 @@ describe('SceneDetector', () => {
       mockDocument.setElement('.chat', true);
       detector.start();
 
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          expect(callback1).toHaveBeenCalled();
-          expect(callback2).toHaveBeenCalled();
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      await tickPolls();
+      expect(callback1).toHaveBeenCalled();
+      expect(callback2).toHaveBeenCalled();
+      detector.stop();
     });
 
-    it('应支持移除回调', () => {
+    it('应支持移除回调', async () => {
       const detector = createTestDetector();
       const callback = vi.fn();
       detector.onSceneChange(callback);
@@ -237,16 +225,13 @@ describe('SceneDetector', () => {
       mockDocument.setElement('.settings', true);
       detector.start();
 
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          expect(callback).not.toHaveBeenCalled();
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      // 负断言：推进多个轮询周期确认回调从未触发
+      await tickPolls(200);
+      expect(callback).not.toHaveBeenCalled();
+      detector.stop();
     });
 
-    it('回调异常不应影响其他回调', () => {
+    it('回调异常不应影响其他回调', async () => {
       const detector = createTestDetector();
       const errorCallback = vi.fn(() => {
         throw new Error('Test error');
@@ -259,14 +244,10 @@ describe('SceneDetector', () => {
       mockDocument.setElement('.dashboard', true);
       detector.start();
 
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          expect(errorCallback).toHaveBeenCalled();
-          expect(normalCallback).toHaveBeenCalled();
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      await tickPolls();
+      expect(errorCallback).toHaveBeenCalled();
+      expect(normalCallback).toHaveBeenCalled();
+      detector.stop();
     });
   });
 
@@ -275,18 +256,14 @@ describe('SceneDetector', () => {
   // -------------------------------------------------------------------------
 
   describe('CSS 类名生成', () => {
-    it('应生成正确的场景类名', () => {
+    it('应生成正确的场景类名', async () => {
       const detector = createTestDetector();
       mockDocument.setElement('.dashboard', true);
       detector.start();
 
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          expect(detector.getSceneClass()).toBe('agent-skin-scene-dashboard');
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      await tickPolls();
+      expect(detector.getSceneClass()).toBe('agent-skin-scene-dashboard');
+      detector.stop();
     });
 
     it('应生成所有场景类名', () => {
@@ -347,7 +324,7 @@ describe('SceneDetector', () => {
   // -------------------------------------------------------------------------
 
   describe('错误处理', () => {
-    it('无效选择器应返回 false 不抛异常', () => {
+    it('无效选择器应返回 false 不抛异常', async () => {
       const detector = createTestDetector({
         selectors: {
           dashboard: ['[invalid selector'],
@@ -358,29 +335,21 @@ describe('SceneDetector', () => {
       });
       detector.start();
 
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          expect(detector.getCurrentScene()).toBe('unknown');
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      await tickPolls();
+      expect(detector.getCurrentScene()).toBe('unknown');
+      detector.stop();
     });
 
-    it('document 未定义时应返回 unknown', () => {
+    it('document 未定义时应返回 unknown', async () => {
       // @ts-expect-error - 模拟无 document 环境
       delete globalThis.document;
 
       const detector = createTestDetector();
       detector.start();
 
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          expect(detector.getCurrentScene()).toBe('unknown');
-          detector.stop();
-          resolve();
-        }, 100);
-      });
+      await tickPolls();
+      expect(detector.getCurrentScene()).toBe('unknown');
+      detector.stop();
     });
   });
 });

@@ -1,4 +1,6 @@
 allowBuilds:
-  electron: set this to true or false
-  electron-winstaller: set this to true or false
-  esbuild: set this to true or false
+  electron: true
+  electron-winstaller: false
+  # esbuild 的 postinstall 仅做二进制启动优化；运行时经 @esbuild/win32-x64
+  # 平台包解析二进制，跳过不影响功能（平台二进制以 optionalDependency 安装）。
+  esbuild: false

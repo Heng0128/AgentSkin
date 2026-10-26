@@ -219,6 +219,23 @@ export function normalizeRenderOptions(
     out.audioLevel = audioLevel;
     any = true;
   }
+  // 遮挡暂停三档开关（hidden/focus 默认开、battery 默认关，由消费方兜底；
+  // 这里只透传显式值）。
+  const pauseOnHidden = clampBool(raw.pauseOnHidden);
+  if (pauseOnHidden !== undefined) {
+    out.pauseOnHidden = pauseOnHidden;
+    any = true;
+  }
+  const pauseOnBlur = clampBool(raw.pauseOnBlur);
+  if (pauseOnBlur !== undefined) {
+    out.pauseOnBlur = pauseOnBlur;
+    any = true;
+  }
+  const pauseOnBattery = clampBool(raw.pauseOnBattery);
+  if (pauseOnBattery !== undefined) {
+    out.pauseOnBattery = pauseOnBattery;
+    any = true;
+  }
 
   return any ? out : undefined;
 }
@@ -319,6 +336,32 @@ export class SettingsService implements SettingsServiceApi {
     await writeJsonAtomic(this.file, this.data);
   }
 
+  /**
+   * Serialized read-modify-write queue for settings persistence.
+   *
+   * Every mutator below mutates `this.data` synchronously and then awaits
+   * `persist()`. Without serialization, two concurrent IPC calls (e.g. a
+   * `setWallpaper` racing a `setCustomThemeCss`) can have their `writeJsonAtomic`
+   * calls interleave: the slower write completes LAST but carries the OLDER
+   * snapshot, silently reverting the faster mutator's change on disk while
+   * memory still holds the newer value — a divergence that only surfaces after
+   * restart (ported from dsh-wallpaper-engine's `enqueueConfigWrite`).
+   *
+   * The chain never rejects: a failed write only affects its own caller, so a
+   * transient ENOSPC on one setting cannot wedge every later mutation.
+   */
+  private persistQueue: Promise<void> = Promise.resolve();
+
+  /** Enqueue one read-modify-write cycle; resolves with the cycle's own result. */
+  private enqueuePersist(): Promise<void> {
+    const cycle = this.persistQueue.then(() => this.persist());
+    this.persistQueue = cycle.then(
+      () => undefined,
+      () => undefined,
+    );
+    return cycle;
+  }
+
   overridesFor(appId: AgentId): AppOverride {
     const entry = this.data.apps[appId];
     return {
@@ -356,7 +399,7 @@ export class SettingsService implements SettingsServiceApi {
   async setCustomThemeCss(css: string): Promise<void> {
     const normalized = normalizeCustomThemeCss(css);
     this.data.customThemeCss = normalized;
-    await this.persist();
+    await this.enqueuePersist();
   }
 
   /** Read the live DOM auto-refresh interval (ms). 0 = disabled. */
@@ -368,7 +411,7 @@ export class SettingsService implements SettingsServiceApi {
   async setLiveDomRefreshInterval(interval: number): Promise<void> {
     const normalized = normalizeLiveDomRefreshInterval(interval);
     this.data.liveDomRefreshInterval = normalized;
-    await this.persist();
+    await this.enqueuePersist();
   }
 
   /** Read the runtime Markdown style configuration (undefined when unset). */
@@ -379,7 +422,7 @@ export class SettingsService implements SettingsServiceApi {
   /** Persist the runtime Markdown style configuration. Empty object clears it. */
   async setMarkdownStyles(styles: MarkdownStyles): Promise<void> {
     this.data.markdownStyles = Object.keys(styles).length > 0 ? styles : undefined;
-    await this.persist();
+    await this.enqueuePersist();
   }
 
   toDto(defaultPorts: Record<AgentId, number>): DesktopSettings {
@@ -405,13 +448,13 @@ export class SettingsService implements SettingsServiceApi {
       }
     }
     this.data.apps[appId] = { ...EMPTY_OVERRIDE, ...this.data.apps[appId], appPath };
-    await this.persist();
+    await this.enqueuePersist();
   }
 
   async setAppPort(appId: AgentId, port: number | null): Promise<void> {
     if (port !== null && !isPortInRange(port)) throw new Error(getMainMessages().invalidPort);
     this.data.apps[appId] = { ...EMPTY_OVERRIDE, ...this.data.apps[appId], port };
-    await this.persist();
+    await this.enqueuePersist();
   }
 
   async setWallpaper(
@@ -424,7 +467,7 @@ export class SettingsService implements SettingsServiceApi {
       agents: this.data.wallpaper?.agents ?? {},
       ...(render ? { render } : {}),
     };
-    await this.persist();
+    await this.enqueuePersist();
   }
 
   /** Persist a per-agent wallpaper setting. */
@@ -437,6 +480,6 @@ export class SettingsService implements SettingsServiceApi {
       id: typeof setting.id === 'string' && setting.id ? setting.id : null,
       ...(render ? { render } : {}),
     };
-    await this.persist();
+    await this.enqueuePersist();
   }
 }

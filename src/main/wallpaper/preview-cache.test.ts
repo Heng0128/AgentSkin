@@ -174,18 +174,29 @@ describe('PreviewCache invalidate', () => {
     // The filePath is <cacheDir>/<hash>.png, so cacheDir is a valid substring
     cache.invalidate(cacheDir);
 
-    // After invalidation, the memory entry is removed AND disk file is deleted.
-    // Re-calling getL1Preview should regenerate (not hit memory cache).
-    // We verify by checking that createFromPath is called again (generation path)
+    // The disk unlink inside invalidate() is fire-and-forget. While it is
+    // still pending, a getL1Preview call hits the stale disk cache and
+    // re-adds the entry to the memory index — from that point every further
+    // call is a memory hit and the regeneration path (createFromPath) is
+    // masked forever. So wait for the disk file to actually disappear
+    // (readdir poll, bounded) BEFORE triggering regeneration: after that
+    // the call is a memory miss + disk miss and must regenerate.
+    await vi.waitFor(
+      async () => {
+        const files = await fs.readdir(cacheDir).catch(() => [] as string[]);
+        expect(files.filter((f) => f.endsWith('.png') && !f.endsWith('.tmp'))).toEqual([]);
+      },
+      { timeout: 5000, interval: 50 },
+    );
+
     const { nativeImage } = await import('electron');
     const mockedCreateFromPath = vi.mocked(nativeImage.createFromPath);
     mockedCreateFromPath.mockClear();
 
     const url2 = await cache.getL1Preview(sourcePath, 1000);
     expect(url2).not.toBeNull();
-    // createFromPath IS called because memory was invalidated and disk file was deleted
     expect(mockedCreateFromPath).toHaveBeenCalled();
-  });
+  }, 10000);
 });
 
 // ---------------------------------------------------------------------------

@@ -20,75 +20,221 @@
         // 标准化为 zh-CN / en-US 等 BCP 47 格式（Electron 的 navigator.language 已符合）
         document.documentElement.lang = sysLang.startsWith('zh') ? 'zh-CN' : (sysLang.startsWith('en') ? 'en-US' : sysLang);
       } catch (_e) { /* ignore — lang attribute fallback to zh-CN */ }
+      // 2026-09-07 主题同步：main.ts 创建 splash 时经 loadFile query 传入持久化的
+      // 主题模式（dark 默认），让开场画面与主窗口首屏色调一致，交叉淡入不再跳色。
+      try {
+        const mode = new URLSearchParams(location.search).get('mode');
+        document.documentElement.classList.toggle('light', mode === 'light');
+        document.documentElement.style.colorScheme = mode === 'light' ? 'light' : 'dark';
+      } catch (_e) { /* ignore — dark is the default */ }
     </script>
     <style>
+      /* ================================================================
+         AgentSkin splash — 与主窗口同一套视觉语言：
+           dark  : --background #0a0a0d / card #16161c / brand #e11d48
+           light : --background #f7f7f8 / card #ffffff / brand #e11d48
+         窗口本身透明 + 无边框，内容是一张圆角卡片（与主窗口的浮层卡片
+         质感一致）；淡出时序由 main.ts fadeOutSplash 驱动（150ms + 50ms）。
+         ================================================================ */
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body {
         width: 100%; height: 100%; overflow: hidden;
         background: transparent; user-select: none;
-        font-family: 'Microsoft YaHei UI', 'Segoe UI', sans-serif;
-        transition: opacity 0.15s ease-out;
+        font-family: "Inter Variable", "Inter", "Microsoft YaHei UI", "PingFang SC",
+          -apple-system, "Segoe UI", system-ui, sans-serif;
       }
-      body.fade-out {
-        opacity: 0;
+
+      :root {
+        --sp-card: linear-gradient(180deg, #121218 0%, #0a0a0d 100%);
+        --sp-border: rgba(255, 255, 255, 0.08);
+        --sp-title: #f5f5f7;
+        --sp-muted: rgba(245, 245, 247, 0.52);
+        --sp-track: rgba(255, 255, 255, 0.07);
+        --sp-fill-a: #e11d48;
+        --sp-fill-b: #fb3658;
+        --sp-glow: rgba(225, 29, 72, 0.14);
+        --sp-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+        --sp-tile-shadow: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.5));
       }
+      html.light {
+        --sp-card: linear-gradient(180deg, #ffffff 0%, #f7f7f8 100%);
+        --sp-border: rgba(15, 23, 42, 0.08);
+        --sp-title: #18181b;
+        --sp-muted: rgba(24, 24, 27, 0.55);
+        --sp-track: rgba(0, 0, 0, 0.08);
+        --sp-glow: rgba(225, 29, 72, 0.10);
+        --sp-shadow: 0 24px 64px rgba(15, 23, 42, 0.16);
+        --sp-tile-shadow: drop-shadow(0 8px 22px rgba(15, 23, 42, 0.14));
+      }
+
+      body {
+        transition: opacity 0.18s ease-out;
+      }
+      body.fade-out { opacity: 0; }
+
       .splash {
+        position: relative;
         display: flex; flex-direction: column; align-items: center;
         justify-content: center; width: 100%; height: 100%;
-        /* Warm cream radial — matches the light-theme `--background`
-           (hsl(40 12% 96%)) so the white-square brand mark sits naturally
-           instead of floating like a foreign tile on a black field.
-           A subtle red-tinted glow keeps the brand accent present without
-           making the splash feel saturated. The cross-fade into the dark
-           main window is handled in main.ts (150ms). */
-        background:
-          radial-gradient(ellipse at 50% 28%, rgba(227, 6, 19, 0.05) 0%, rgba(227, 6, 19, 0) 55%),
-          radial-gradient(ellipse at 50% 30%, #FCF9F4 0%, #F4EFE6 48%, #ECE5D9 100%);
+        background: var(--sp-card);
+        border: 1px solid var(--sp-border);
+        border-radius: 20px;
+        box-shadow: var(--sp-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        overflow: hidden;
+        animation: card-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      html.light .splash {
+        box-shadow: var(--sp-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+
+      /* 顶部玫瑰色环境光 — 对应应用 --accent 的品牌氛围 */
+      .splash::before {
+        content: "";
+        position: absolute; top: -120px; left: 50%;
+        width: 360px; height: 240px; transform: translateX(-50%);
+        background: radial-gradient(ellipse at center, var(--sp-glow) 0%, transparent 68%);
+        pointer-events: none;
+      }
+
+      /* ── 品牌区 ─────────────────────────────────────────────── */
+      .logo-wrap {
+        position: relative; width: 84px; height: 84px;
+        margin-bottom: 22px;
+        animation: rise-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      /* 品牌红环境晕 — 呼吸 */
+      .logo-wrap::before {
+        content: "";
+        position: absolute; inset: -26px;
+        background: radial-gradient(circle, var(--sp-glow) 0%, transparent 70%);
+        animation: breathe 2.8s ease-in-out infinite;
       }
       .logo {
-        width: 88px; height: 88px; margin-bottom: 28px;
-        filter: drop-shadow(0 8px 20px rgba(20, 16, 10, 0.10))
-                drop-shadow(0 2px 4px rgba(20, 16, 10, 0.08));
+        position: relative;
+        width: 84px; height: 84px;
+        filter: var(--sp-tile-shadow);
+        animation: tile-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
       }
+      /* 白色圆角方块外的一次性扩散环（入场仪式感） */
+      .logo::after {
+        content: "";
+        position: absolute; inset: -1px;
+        border-radius: 12px;
+        border: 1.5px solid rgba(225, 29, 72, 0.55);
+        animation: ring 900ms cubic-bezier(0.22, 1, 0.36, 1) 320ms both;
+        pointer-events: none;
+      }
+
       .title {
-        font-size: 20px; font-weight: 600; color: #1f2024;
-        letter-spacing: 2px; margin-bottom: 8px;
+        position: relative;
+        font-size: 19px; font-weight: 600; color: var(--sp-title);
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+        animation: rise-in 560ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both;
       }
       .status {
-        font-size: 12px; color: #6b6e78; min-height: 18px;
+        position: relative;
+        font-size: 12px; color: var(--sp-muted); min-height: 18px;
+        animation: fade-in 480ms ease-out 200ms both;
+      }
+
+      /* ── 进度区 ─────────────────────────────────────────────── */
+      .progress-row {
+        position: relative;
+        display: flex; align-items: center; gap: 10px;
+        width: 220px; margin-top: 18px;
+        animation: rise-in 560ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
       }
       .progress-bar {
-        width: 200px; height: 3px; margin-top: 16px;
-        background: rgba(31, 32, 36, 0.08); border-radius: 2px; overflow: hidden;
+        flex: 1; height: 3px;
+        background: var(--sp-track); border-radius: 2px; overflow: hidden;
       }
       .progress-fill {
+        position: relative;
         height: 100%; width: 0%;
-        background: linear-gradient(90deg, #e30613, #ff6b61);
+        background: linear-gradient(90deg, var(--sp-fill-a), var(--sp-fill-b));
         border-radius: 2px;
+        box-shadow: 0 0 10px rgba(225, 29, 72, 0.35);
+      }
+      /* 高光扫过 — 呼应应用 as-brand-line 的渐变强调 */
+      .progress-fill::after {
+        content: "";
+        position: absolute; inset: 0;
+        background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%);
+        animation: shimmer 1.7s linear infinite;
+      }
+      .pct {
+        font-size: 11px; color: var(--sp-muted);
+        font-variant-numeric: tabular-nums;
+        min-width: 34px; text-align: right;
+      }
+
+      /* ── 动画 ───────────────────────────────────────────────── */
+      @keyframes card-in {
+        from { opacity: 0; transform: scale(0.985); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+      @keyframes rise-in {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes fade-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+      @keyframes tile-in {
+        from { opacity: 0; transform: scale(0.92); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+      @keyframes ring {
+        from { opacity: 0.9; transform: scale(1); }
+        to   { opacity: 0;   transform: scale(1.35); }
+      }
+      @keyframes breathe {
+        0%, 100% { opacity: 0.55; transform: scale(0.96); }
+        50%      { opacity: 1;    transform: scale(1.04); }
+      }
+      @keyframes shimmer {
+        from { transform: translateX(-100%); }
+        to   { transform: translateX(100%); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .splash, .logo-wrap, .logo, .logo::after, .title, .status, .progress-row {
+          animation: none !important;
+        }
+        .progress-fill::after { animation: none !important; opacity: 0; }
+        .logo-wrap::before { animation: none !important; opacity: 0.7; }
       }
     </style>
   </head>
   <body>
     <div class="splash">
-      <div class="logo">
-        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="none">
-          <title>AgentSkin</title>
-          <!-- AgentSkin 品牌 mark — 白色圆角方块 + 红色 "A" 单字（与
-               src/ui/components/logo.tsx 完全一致）。 -->
-          <rect x="1" y="1" width="46" height="46" rx="11.5" fill="#FFFFFF" />
-          <path d="M24 8.5L39.5 39.5h-7.6L24 22.4l-7.9 17.1H8.5Z" fill="#E30613" />
-          <path d="M20 30.1h8l1.5 3.5H18.5Z" fill="#E30613" />
-          <path d="M24 8.5L27 14.6 24 13.2 21 14.6Z" fill="#FF6B61" />
-        </svg>
+      <div class="logo-wrap">
+        <div class="logo">
+          <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="none" width="100%" height="100%">
+            <title>AgentSkin</title>
+            <!-- AgentSkin 品牌 mark — 白色圆角方块 + 红色 "A" 单字（与
+                 src/ui/components/logo.tsx 完全一致，rx=11.5）。 -->
+            <rect x="1" y="1" width="46" height="46" rx="11.5" fill="#FFFFFF" />
+            <path d="M24 8.5L39.5 39.5h-7.6L24 22.4l-7.9 17.1H8.5Z" fill="#E30613" />
+            <path d="M20 30.1h8l1.5 3.5H18.5Z" fill="#E30613" />
+            <path d="M24 8.5L27 14.6 24 13.2 21 14.6Z" fill="#FF6B61" />
+          </svg>
+        </div>
       </div>
       <div class="title">AgentSkin</div>
       <!-- R6-19: "Loading..." 硬编码英文，与默认中文 locale 不匹配，改为中文文案。 -->
       <div class="status" id="status">加载中...</div>
-      <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+      <div class="progress-row">
+        <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+        <div class="pct" id="pct">0%</div>
+      </div>
     </div>
     <script>
       const statusEl = document.getElementById('status');
       const progressEl = document.getElementById('progress');
+      const pctEl = document.getElementById('pct');
       let currentDisplayedPct = 0;
       let targetPct = 0;
 
@@ -111,7 +257,9 @@
           ) {
             currentDisplayedPct = targetPct;
           }
+          const shown = Math.round(currentDisplayedPct);
           progressEl.style.width = `${currentDisplayedPct}%`;
+          pctEl.textContent = `${shown}%`;
         }
         requestAnimationFrame(animateProgress);
       }

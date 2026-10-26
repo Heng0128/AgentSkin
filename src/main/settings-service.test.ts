@@ -3,10 +3,44 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getMainMessages } from '../shared/i18n';
 import { AGENT_IDS, type AgentId } from '../shared/types';
 import { normalizeRenderOptions, SettingsService } from './settings-service';
+
+// ---------------------------------------------------------------------------
+// writeJsonAtomic passthrough mock
+//
+// Default behavior is a transparent passthrough to the real fs-utils write, so
+// every pre-existing disk assertion keeps working. Concurrency tests register a
+// gate for the Nth write call to hold it in-flight, making write-completion
+// ordering deterministic instead of timing-dependent.
+// ---------------------------------------------------------------------------
+const fsUtilsMock = vi.hoisted(() => ({
+  log: [] as string[],
+  gateFor: new Map<number, Promise<void>>(),
+  callIndex: 0,
+  reset(): void {
+    fsUtilsMock.log.length = 0;
+    fsUtilsMock.gateFor.clear();
+    fsUtilsMock.callIndex = 0;
+  },
+}));
+
+vi.mock('./fs-utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./fs-utils')>();
+  return {
+    ...actual,
+    writeJsonAtomic: async (file: string, data: unknown): Promise<void> => {
+      const idx = fsUtilsMock.callIndex++;
+      fsUtilsMock.log.push(`start:${idx}`);
+      const gate = fsUtilsMock.gateFor.get(idx);
+      if (gate) await gate;
+      await actual.writeJsonAtomic(file, data);
+      fsUtilsMock.log.push(`end:${idx}`);
+    },
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Helpers — each test gets a fresh temp file so there is zero cross-test
@@ -523,6 +557,22 @@ describe('normalizeRenderOptions', () => {
     expect(normalizeRenderOptions({ loop: 1 as never })?.loop).toBeUndefined();
   });
 
+  it('keeps the occlusion-pause tier switches and drops malformed values', () => {
+    // Explicit values round-trip (undefined = "use the consumer default", so
+    // it is never materialized into the output).
+    expect(
+      normalizeRenderOptions({ pauseOnHidden: false, pauseOnBlur: true, pauseOnBattery: true }),
+    ).toEqual({ pauseOnHidden: false, pauseOnBlur: true, pauseOnBattery: true });
+    // Malformed values are dropped (booleans only).
+    expect(
+      normalizeRenderOptions({
+        pauseOnHidden: 'yes' as never,
+        pauseOnBlur: 0 as never,
+        pauseOnBattery: null as never,
+      }),
+    ).toBeUndefined();
+  });
+
   it('round-trips a fully-specified render options object', () => {
     const input = {
       speed: 1.5,
@@ -545,5 +595,71 @@ describe('normalizeRenderOptions', () => {
       audioLevel: 60,
     };
     expect(normalizeRenderOptions(input)).toEqual(input);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Serialized read-modify-write persistence (concurrency regression)
+//
+// Every mutator snapshots `this.data` synchronously, then awaits its write.
+// Without the persist queue, a slow FIRST write can complete LAST and clobber
+// the second mutator's already-landed write with its older snapshot — losing
+// that change on disk while memory keeps it (surfaces only after restart).
+// ---------------------------------------------------------------------------
+
+describe('SettingsService concurrent persistence ordering', () => {
+  it('serializes writes: a held first write still lands before the second starts', async () => {
+    fsUtilsMock.reset();
+    const svc = await makeService();
+
+    // Hold the FIRST write in-flight; enqueue the second mutator while the
+    // first write is parked. With serialization the second write cannot start
+    // until the first ends — without it, both would overlap.
+    let releaseFirst!: () => void;
+    fsUtilsMock.gateFor.set(
+      0,
+      new Promise<void>((resolve) => {
+        releaseFirst = resolve;
+      }),
+    );
+
+    const p1 = svc.setWallpaper({ enabled: true, id: 'wp-first' });
+    const p2 = svc.setCustomThemeCss('/* custom */');
+
+    // Let the first write reach its gate, then release it.
+    await new Promise((r) => setImmediate(r));
+    releaseFirst();
+    await Promise.all([p1, p2]);
+
+    // Serialized: first write ended before second write started.
+    const firstEnd = fsUtilsMock.log.indexOf('end:0');
+    const secondStart = fsUtilsMock.log.indexOf('start:1');
+    expect(firstEnd).toBeGreaterThanOrEqual(0);
+    expect(secondStart).toBeGreaterThan(firstEnd);
+
+    // And BOTH changes are on disk (no lost update).
+    const raw = JSON.parse(await fs.readFile(settingsFile, 'utf8'));
+    expect(raw.wallpaper?.id).toBe('wp-first');
+    expect(raw.customThemeCss).toBe('/* custom */');
+  });
+
+  it('keeps the queue usable after a failed write (rejection isolation)', async () => {
+    fsUtilsMock.reset();
+    // A blocker FILE where the settings' parent directory should be makes
+    // atomicWriteFile's mkdir fail deterministically on every platform.
+    const blockerDir = path.join(tmpDir, 'blocker');
+    await fs.writeFile(blockerDir, 'not a directory', 'utf8');
+    const doomed = new SettingsService(path.join(blockerDir, 'settings.json'));
+    await expect(doomed.initialize()).resolves.toBeUndefined();
+
+    await expect(doomed.setCustomThemeCss('/* doomed */')).rejects.toThrow();
+
+    // Remove the blocker: the NEXT mutation must succeed — the failed cycle
+    // only affected its own caller, the chain is not wedged.
+    await fs.rm(blockerDir, { force: true });
+    await fs.mkdir(path.join(tmpDir, 'recovered'), { recursive: true });
+    const recovered = new SettingsService(path.join(tmpDir, 'recovered', 'settings.json'));
+    await recovered.initialize();
+    await expect(recovered.setCustomThemeCss('/* recovered */')).resolves.toBeUndefined();
   });
 });

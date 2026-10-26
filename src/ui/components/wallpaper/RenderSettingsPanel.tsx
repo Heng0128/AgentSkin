@@ -40,7 +40,10 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       next.grayscale === undefined &&
       next.blur === undefined &&
       next.tint === undefined &&
-      next.audioLevel === undefined;
+      next.audioLevel === undefined &&
+      next.pauseOnHidden === undefined &&
+      next.pauseOnBlur === undefined &&
+      next.pauseOnBattery === undefined;
     onChange(isEmpty ? undefined : next);
   };
   const isVideo = playback === 'video';
@@ -53,7 +56,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
     step = 1,
     display?: string,
   ) => (
-    <div className="we-prow flex items-center gap-2">
+    <div className="flex items-center gap-2">
       <span className="w-[76px] shrink-0 text-[11px]  text-muted-foreground">{label}</span>
       <input
         type="range"
@@ -62,7 +65,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
         step={step}
         value={typeof r[key] === 'number' ? (r[key] as number) : min}
         onChange={(e) => set({ [key]: Number(e.target.value) } as Partial<WallpaperRenderOptions>)}
-        className="we-range h-[4px] flex-1 cursor-pointer appearance-none rounded-md bg-border-strong [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-md [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:ring-2 [&::-webkit-slider-thumb]:ring-card"
+        className="h-[4px] flex-1 cursor-pointer appearance-none rounded-md bg-border-strong [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-md [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:ring-2 [&::-webkit-slider-thumb]:ring-card"
       />
       <span className="w-[42px] text-right text-[11px] font-normal tabular-nums text-foreground">
         {display ?? (typeof r[key] === 'number' ? String(r[key]) : '默认')}
@@ -85,7 +88,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       </div>
 
       {/* Theme tint */}
-      <div className="we-prow flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <span className="w-[76px] shrink-0 text-[11px]  text-muted-foreground">THEME_TINT</span>
         <input
           type="color"
@@ -99,7 +102,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       </div>
 
       {/* Alignment */}
-      <div className="we-prow flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <span className="w-[76px] shrink-0 text-[11px]  text-muted-foreground">ALIGNMENT</span>
         <select
           value={r.alignment ?? 'fill'}
@@ -121,9 +124,41 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
         slider('播放速度', 'speed', 25, 200, 5, r.speed !== undefined ? `${r.speed}x` : undefined)}
       {/* Loop (video only) */}
       {isVideo && (
-        <div className="we-prow flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <span className="w-[76px] shrink-0 text-[11px]  text-muted-foreground">LOOP</span>
           <Switch checked={r.loop ?? true} onCheckedChange={(v) => set({ loop: v })} />
+        </div>
+      )}
+      {/* Occlusion pause tiers (video only — only video spends decode).
+          Defaults live in DynamicBackground: hidden/focus ON, battery OFF;
+          an undefined switch means "use that default", so the toggle shows
+          the effective value rather than raw state. */}
+      {isVideo && (
+        <div className="col-span-2 flex items-center gap-2">
+          <span className="w-[76px] shrink-0 text-[11px]  text-muted-foreground">遮挡暂停</span>
+          <span className="flex flex-1 items-center gap-3">
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Switch
+                checked={r.pauseOnHidden ?? true}
+                onCheckedChange={(v) => set({ pauseOnHidden: v })}
+              />
+              隐藏时
+            </span>
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Switch
+                checked={r.pauseOnBlur ?? true}
+                onCheckedChange={(v) => set({ pauseOnBlur: v })}
+              />
+              失焦时
+            </span>
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Switch
+                checked={r.pauseOnBattery ?? false}
+                onCheckedChange={(v) => set({ pauseOnBattery: v })}
+              />
+              电池供电
+            </span>
+          </span>
         </div>
       )}
 
@@ -161,7 +196,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       )}
 
       {/* Flip */}
-      <div className="we-prow flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <span className="w-[76px] shrink-0 text-[11px]  text-muted-foreground">FLIP</span>
         <span className="flex flex-1 items-center gap-1">
           <button

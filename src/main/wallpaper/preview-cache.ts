@@ -37,6 +37,7 @@
  */
 
 import { createHash } from 'node:crypto';
+import { statSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -44,6 +45,7 @@ import { nativeImage } from 'electron';
 import { GifReader } from 'omggif';
 import { PNG } from 'pngjs';
 import { mainWarnFromCatch } from '../logger';
+import { renderSceneFrame } from '../scene/we/full-frame-renderer';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -90,6 +92,17 @@ const WARMUP_BATCH_LIMIT = 30;
 /** PNG output quality is lossless — no quality parameter needed. */
 const SCOPE = 'PreviewCache';
 
+/**
+ * Pipeline version baked into every cache key.
+ *
+ * Bump this whenever L1 generation semantics change (decode path, resize
+ * algorithm, L1_MAX_EDGE, output format) so stale previews from the old
+ * pipeline are never served — old entries simply become unreachable and age
+ * out via LRU. Ported from dsh-wallpaper-engine's `sf*` cache-key convention
+ * (version prefix + content hash; bump the version on pipeline change).
+ */
+const PREVIEW_PIPELINE_VERSION = 'v1';
+
 // ---------------------------------------------------------------------------
 // PreviewCache class
 // ---------------------------------------------------------------------------
@@ -120,6 +133,93 @@ export class PreviewCache {
    */
   async getL1Preview(sourcePath: string, mtimeMs: number): Promise<string | null> {
     return this.getOrGenerateL1(sourcePath, mtimeMs);
+  }
+
+  /**
+   * Look up a cached full-scene-render preview WITHOUT rendering.
+   *
+   * Returns the cached `file://` URL on memory/disk hit, or null. Never
+   * blocks on rendering — the caller pairs this with
+   * {@link scheduleSceneRenderPreview} for progressive upgrade: serve the
+   * plain preview.jpg immediately, upgrade once a background render lands.
+   */
+  getCachedSceneRenderPreview(pkgPath: string, mtimeMs: number): string | null {
+    const key = this.computeKey(pkgPath, mtimeMs, 'SR');
+
+    const memEntry = this.memoryIndex.get(key);
+    if (memEntry) {
+      memEntry.lastAccess = Date.now();
+      return pathToFileURL(memEntry.filePath).href;
+    }
+
+    // Disk hit is checked SYNCHRONOUSLY on purpose: this runs on the IPC hot
+    // path, and a single stat of a small PNG is microseconds vs the 15s
+    // withMonitoredTimeout budget it must respect.
+    const diskPath = this.cachePathForKey(key);
+    try {
+      const stat = statSync(diskPath);
+      if (stat.isFile()) {
+        this.memoryIndex.set(key, {
+          key,
+          filePath: diskPath,
+          sizeBytes: stat.size,
+          lastAccess: Date.now(),
+        });
+        this.diskUsageBytes += stat.size;
+        this.enforceMemoryCap();
+        return pathToFileURL(diskPath).href;
+      }
+    } catch {
+      // Not cached — caller may schedule a background render.
+    }
+    return null;
+  }
+
+  /** In-flight scene renders, keyed by pkgPath|mtime — dedups concurrent
+   *  scheduling so N grid cards scrolling past trigger ONE worker render. */
+  private sceneRenderInFlight = new Map<string, Promise<void>>();
+
+  /**
+   * Kick off a background full-scene render (fire-and-forget). No IPC should
+   * ever await this — the renderer worker can take tens of seconds on heavy
+   * scenes, and blocking preview-url on it caused hard 15s IPC timeouts.
+   * Consecutive calls for the same pkg+mtime share one in-flight promise.
+   */
+  scheduleSceneRenderPreview(pkgPath: string, mtimeMs: number): void {
+    const dedupeKey = `${pkgPath}|${mtimeMs}`;
+    if (this.sceneRenderInFlight.has(dedupeKey)) return;
+    const task = (async () => {
+      const key = this.computeKey(pkgPath, mtimeMs, 'SR');
+      const diskPath = this.cachePathForKey(key);
+      try {
+        // Render at 1280×720: quarter the 1080p pixel count keeps heavy
+        // scenes in the seconds range while remaining crisp at grid size.
+        const result = await renderSceneFrame({ pkgPath, width: 1280, height: 720 });
+        if (!result) return;
+        // Empty-frame gate — a clear-color-only frame is worse than preview.jpg.
+        if (result.checked === 0 || result.diff / result.checked < 0.001) return;
+
+        await fs.mkdir(this.cacheDir, { recursive: true });
+        const tmpPath = `${diskPath}.tmp`;
+        await fs.writeFile(tmpPath, result.png);
+        await fs.rename(tmpPath, diskPath);
+
+        this.memoryIndex.set(key, {
+          key,
+          filePath: diskPath,
+          sizeBytes: result.png.length,
+          lastAccess: Date.now(),
+        });
+        this.diskUsageBytes += result.png.length;
+        this.enforceMemoryCap();
+        await this.evictIfNeeded();
+      } catch (error) {
+        mainWarnFromCatch(SCOPE, error, 'scene render preview failed');
+      } finally {
+        this.sceneRenderInFlight.delete(dedupeKey);
+      }
+    })();
+    this.sceneRenderInFlight.set(dedupeKey, task);
   }
 
   /**
@@ -381,13 +481,18 @@ export class PreviewCache {
   // -------------------------------------------------------------------------
 
   /**
-   * Compute a deterministic cache key from source path, mtime, and tier.
+   * Compute a deterministic cache key from pipeline version, source path,
+   * mtime, and tier.
    *
    * Embedding `mtimeMs` ensures that any file modification produces a new
    * key, so stale previews are never served after the source changes.
+   * Embedding {@link PREVIEW_PIPELINE_VERSION} invalidates all entries at
+   * once when generation semantics change (see the constant's doc).
    */
   private computeKey(sourcePath: string, mtimeMs: number, tier: string): string {
-    return createHash('sha1').update(`${sourcePath}:${mtimeMs}:${tier}`).digest('hex');
+    return createHash('sha1')
+      .update(`${PREVIEW_PIPELINE_VERSION}:${sourcePath}:${mtimeMs}:${tier}`)
+      .digest('hex');
   }
 
   /** Map a cache key to its on-disk PNG path. */

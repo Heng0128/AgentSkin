@@ -32,10 +32,20 @@ export default defineConfig({
       sourcemap: isDev,
       rollupOptions: {
         external: ['electron', '@electron/asar', 'original-fs'],
-        input: path.resolve(__dirname, 'src/main.ts'),
+        // Two entries: the app itself + the WE scene renderer worker.
+        // The worker is bundled to its own file so worker_threads can load
+        // it directly (SceneRenderer CPU renders for seconds — it must never
+        // run on the main-process event loop; cf. src/main/scene/we/).
+        input: {
+          index: path.resolve(__dirname, 'src/main.ts'),
+          'scene-render-worker': path.resolve(
+            __dirname,
+            'src/main/scene/we/scene-render-worker.mjs',
+          ),
+        },
         output: {
           format: 'cjs',
-          entryFileNames: 'index.js',
+          entryFileNames: '[name].js',
         },
       },
     },

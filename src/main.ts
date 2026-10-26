@@ -21,7 +21,7 @@ import { app, BrowserWindow, dialog, net, protocol } from 'electron';
 import { runBootSequence } from './main/boot-sequence';
 import { deepLinkManager } from './main/deep-link-manager';
 import { extractThemeFilesFromArgv } from './main/file-open';
-import { flushLocalePreference } from './main/locale-preferences';
+import { flushLocalePreference, readThemeModePreferenceSync } from './main/locale-preferences';
 import { ctx, drainDisposables } from './main/main-context';
 import { THEME_SCHEME } from './main/theme/scheme';
 import { themeCoverPathForScheme, themeHeroPathForScheme } from './main/theme/utils';
@@ -117,8 +117,19 @@ app.on('open-url', (event, url) => {
  * Create and show a lightweight splash window (no React, no preload).
  * Used to give the user immediate visual feedback while the boot
  * sequence runs in the background.
+ *
+ * 2026-09-07: the persisted theme mode is forwarded to the splash page via a
+ * `?mode=light|dark` query param, so the splash paints the SAME surface color
+ * as the main window's first frame (dark #0a0a0d default). Previously the
+ * splash was a warm-cream light surface while the app booted dark — a jarring
+ * color jump at the cross-fade.
  */
 function createSplashWindow(): BrowserWindow {
+  // NB: ctx.userDataRoot is only assigned inside runBootSequence — AFTER this
+  // window is created — so read Electron's userData path directly.
+  const themeMode = readThemeModePreferenceSync(app.getPath('userData'));
+  const modeQuery = themeMode === 'light' ? '?mode=light' : '?mode=dark';
+
   const splash = new BrowserWindow({
     width: 400,
     height: 320,
@@ -144,9 +155,9 @@ function createSplashWindow(): BrowserWindow {
 
   // Load splash.html from project root (dev) or resources (packaged).
   if (app.isPackaged) {
-    void splash.loadFile(path.join(process.resourcesPath, 'splash.html'));
+    void splash.loadFile(path.join(process.resourcesPath, 'splash.html'), { search: modeQuery });
   } else {
-    void splash.loadFile(path.join(__dirname, '../..', 'splash.html'));
+    void splash.loadFile(path.join(__dirname, '../..', 'splash.html'), { search: modeQuery });
   }
 
   return splash;

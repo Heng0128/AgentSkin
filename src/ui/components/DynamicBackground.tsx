@@ -19,6 +19,17 @@ import { useShellStore } from '@/stores/shellStore';
 import { uiMessages } from '@shared/i18n';
 import type { WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
 import { VolumeX } from 'lucide-react';
+
+/** Minimal shape of the Battery Status API manager we rely on (deprecated in
+ *  the spec but available in Electron's Chromium). Structurally typed so the
+ *  component never imports an electron-renderer-only definition. */
+
+interface BatteryManagerLike {
+  charging: boolean;
+  addEventListener(type: 'chargingchange', listener: () => void): void;
+  removeEventListener(type: 'chargingchange', listener: () => void): void;
+}
+
 import { ParticleOverlay } from './wallpaper/ParticleOverlay';
 
 /**
@@ -102,32 +113,73 @@ export function DynamicBackground({
     [render?.speed],
   );
 
-  // Pause/resume on visibility change and window blur/focus.
+  // Occlusion pause (WE-style, three tiers). Pausing the <video> stops the
+  // requestVideoFrameCallback loop → the decode engine drops to zero; resume
+  // replays automatically unless the user manually paused. Each tier can be
+  // switched off via render options (defaults: hidden/focus ON, battery OFF —
+  // matching the pre-tier behavior so laptop users don't unexpectedly get a
+  // still background). Web/iframe wallpapers cannot be paused from outside —
+  // they rely on browser throttling while the page is hidden.
   useEffect(() => {
     if (!wallpaper) return;
 
+    const hiddenEnabled = render?.pauseOnHidden ?? true;
+    const blurEnabled = render?.pauseOnBlur ?? true;
+    const batteryEnabled = render?.pauseOnBattery ?? false;
+
+    // navigator.getBattery is deprecated but still available in Electron's
+    // Chromium; when absent (or the promise rejects) the battery tier is
+    // simply inert.
+    let battery: BatteryManagerLike | null = null;
+
+    const occlusionActive = (): boolean => {
+      if (hiddenEnabled && document.hidden) return true;
+      if (blurEnabled && typeof document.hasFocus === 'function' && !document.hasFocus()) {
+        return true;
+      }
+      if (batteryEnabled && battery && !battery.charging) return true;
+      return false;
+    };
+
     const pause = () => videoRef.current?.pause();
-    const resume = () => {
-      // Only resume if the document is visible AND the window is focused.
-      if (!document.hidden && document.hasFocus()) {
+    const syncPlayback = () => {
+      if (occlusionActive()) {
+        pause();
+      } else {
         void videoRef.current?.play().catch(() => {});
       }
     };
 
-    const onVisibility = () => (document.hidden ? pause() : resume());
-    const onBlur = () => pause();
-    const onFocus = () => resume();
+    const onVisibility = () => syncPlayback();
+    const onBlur = () => syncPlayback();
+    const onFocus = () => syncPlayback();
+    const onBatteryChange = () => syncPlayback();
 
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('blur', onBlur);
     window.addEventListener('focus', onFocus);
 
+    if (batteryEnabled) {
+      void (navigator as Navigator & { getBattery?: () => Promise<BatteryManagerLike> })
+        .getBattery?.()
+        ?.then((bm) => {
+          battery = bm;
+          bm.addEventListener('chargingchange', onBatteryChange);
+          // Apply the battery tier immediately in case the machine is already
+          // discharging when the wallpaper mounts.
+          syncPlayback();
+        });
+    }
+
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur', onBlur);
       window.removeEventListener('focus', onFocus);
+      if (battery) {
+        battery.removeEventListener('chargingchange', onBatteryChange);
+      }
     };
-  }, [wallpaper]);
+  }, [wallpaper, render?.pauseOnHidden, render?.pauseOnBlur, render?.pauseOnBattery]);
 
   // Mouse parallax — image/video: translate the wallpaper layer opposite the
   // cursor (same math as buildParallaxJs in the CDP injectors: scale(1.1) +
