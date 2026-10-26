@@ -1,0 +1,121 @@
+{
+  "note": "Accepted findings — a snapshot of current debt, not a permanent pardon. Regenerate: node scripts/check-css-classes.mjs --update",
+  "generatedFrom": "out/renderer/assets/globals-Bgglo4pM.css, out/renderer/assets/studio-Chkv3lSW.css",
+  "dead": {
+    "active": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "available": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "cancelled": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "destructive": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "detecting": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "dynamic": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "error": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "failed": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "ghost": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "high": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "hit": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "horizontal": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "img": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "miss": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "none": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "popper": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "running-no-port": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "settings": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "sm": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "success": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "system": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    },
+    "toaster": {
+      "files": 1,
+      "note": "external-owner (样式由第三方运行时注入，不在本包 — sonner)"
+    },
+    "vertical": {
+      "files": 1,
+      "note": "extraction-noise (静态提取把非类名字符串当类名：cva variant 名 / 状态枚举 / 属性值，非缺陷)"
+    }
+  },
+  "dupSelectors": {
+    ".agentskin-menu-restore@@-": {
+      "lines": [
+        287,
+        316
+      ],
+      "note": "accepted"
+    },
+    ":root@@-": {
+      "lines": [
+        37,
+        40
+      ],
+      "note": "accepted"
+    },
+    "html@@@layer base > @media (prefers-reduced-motion: reduce)": {
+      "lines": [
+        429,
+        446
+      ],
+      "note": "accepted"
+    }
+  }
+}

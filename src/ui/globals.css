@@ -3,36 +3,54 @@
 @import "react-day-picker/style.css";
 @import "./shadcn-tailwind.css";
 
-/* Limit Tailwind v4 auto-scan to source tree only — prevents HMR loop
-   caused by scanner picking up Vite's own cache/output directories. */
-@source "../../src/**/*.{ts,tsx}";
-@source "!../../node_modules";
-@source "!../../out";
+/* Tailwind v4 `@source` is ADDITIVE — it widens the scan, it never narrows
+   it. The previous two lines here (`@source "!../../node_modules"`,
+   `@source "!../../out"`) used a bang prefix that is not a Tailwind v4
+   exclusion syntax, so they were no-ops and the comment above them was
+   false: auto-detection still walked docs/ and scripts/, injecting ~200
+   phantom utility rules (measured 203–217 by two independent extractors;
+   docs/design-tokens.md §13.2 #20). `@source not` is the real directive.
+   themes/ and engines/ are proven no-ops: 0 Tailwind-shaped class tokens in
+   the theme CSS, 0 `class=` in the adapter mjs. src/ stays fully scanned. */
+@source not "../../docs";
+@source not "../../scripts";
+@source not "../../themes";
+@source not "../../engines";
+@source not "../../tests";
+@source not "../../agent-rules";
 
 @custom-variant dark (&:is(.dark *));
 
 /* =================================================================== */
-/* AgentSkin Design Tokens — Refined Workbench Theme                    */
+/* AgentSkin Design Tokens                                              */
 /*                                                                      */
 /* Product Identity: AI Agent Visual Customization Engine               */
-/* Design Language: Refined · Layered · Expressive · Clear             */
+/* Source of truth: this file; docs/design-tokens.md is derived from it */
 /*                                                                      */
 /* Principles:                                                          */
 /*   1. Layered depth — 5 background levels, soft shadows, subtle glow */
-/*   2. Refined — purposeful restraint, not minimalism                 */
-/*   3. Expressive brand — rose accent ~12% area, used for focus/CTA  */
-/*   4. Clear hierarchy — type weight + spacing + color, not noise     */
+/*   2. Token-driven — every visual value has exactly one owner        */
+/*   3. Brand color — rose primary marks focus / active / CTA          */
+/*   4. Hierarchy — built from type weight, spacing, surface level     */
 /* =================================================================== */
 
 :root {
-  /* Dynamic radius — drives the `rounded-[var(--dl-radius,2px)]` utility. */
+  /* Dynamic radius root — single owner as of v2.6 (the duplicate 6px
+     declaration in the .light block was merged into this one). The derived
+     --radius-* scale below and App.tsx's radiusScale override both read
+     THIS declaration; it also backs the `rounded-[var(--dl-radius,2px)]`
+     fallback pattern. */
   --dl-radius: 6px;
 
-  /* Typography — Inter for all UI (no Space Grotesk) */
+  /* Typography — Inter for all UI (no Space Grotesk).
+     NB: the mono stack is named --font-stack-mono so that the @theme inline
+     mapping (--font-mono: var(--font-stack-mono)) is not a self-referential
+     declaration (v2.6, was §13.2 #16). Consume via var(--font-mono) or the
+     font-mono utility — never var(--font-stack-mono) directly. */
   --font-ui:
     "Inter Variable", "Inter", "Microsoft YaHei UI", "PingFang SC", -apple-system, "Segoe UI",
     system-ui, sans-serif;
-  --font-mono:
+  --font-stack-mono:
     "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, ui-monospace, monospace;
 }
 
@@ -67,7 +85,7 @@
   --destructive: #be123c;
   --destructive-foreground: #ffffff;
 
-  /* ---- Borders (minimal: softer, less visible) ---- */
+  /* ---- Borders (hairline: softer than the surface edge) ---- */
   --border: rgba(255, 255, 255, 0.06);
   --border-strong: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.07);
@@ -83,7 +101,7 @@
   --glow-brand: rgba(225, 29, 72, 0.08);
   --glow-brand-strong: rgba(225, 29, 72, 0.12);
 
-  /* ---- Shadows (minimal: restrained depth, no glow noise) ---- */
+  /* ---- Shadows (elevation levels) ---- */
   --shadow-elev1: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-elev2: 0 2px 6px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.05);
   --shadow-elev3: 0 4px 12px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.06);
@@ -154,7 +172,9 @@
 /* =================================================================== */
 :root:not(.dark),
 .light {
-  --dl-radius: 6px;
+  /* --dl-radius intentionally NOT redeclared here (v2.6 merged the duplicate;
+     the :root definition is the single owner). --dl-density-scale stays:
+     this is its only non-@theme declaration. */
   --dl-density-scale: 1;
 
   /* ---- Background layers ---- */
@@ -198,7 +218,7 @@
   --glow-brand: rgba(225, 29, 72, 0.08);
   --glow-brand-strong: rgba(225, 29, 72, 0.14);
 
-  /* ---- Shadows (minimal: lighter for bright bg, no brand glow) ---- */
+  /* ---- Shadows (lighter values for bright backgrounds) ---- */
   --shadow-elev1: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-elev2: 0 2px 6px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.05);
   --shadow-elev3: 0 4px 12px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.06);
@@ -272,7 +292,7 @@
   --font-sans: var(--font-ui);
   --font-heading: var(--font-ui);
   --font-display: var(--font-ui);
-  --font-mono: var(--font-mono);
+  --font-mono: var(--font-stack-mono);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -320,14 +340,37 @@
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
 
-  /* Typography scale */
+  /* Typography scale — the numeric source of truth, consumed by the
+     hand-written rules below via `font-size: var(--font-size-*)`.
+     NB: Tailwind's text-* utilities read the --text-* namespace, NOT
+     --font-size-*; a key declared only here yields a variable, no class.
+     caption and body deliberately share 12px — same size, different intent
+     (supporting text vs page body). */
   --font-size-micro: 10px;
   --font-size-label: 11px;
   --font-size-caption: 12px;
   --font-size-body: 12px;
+  /* Primary interactive text — nav labels, sidebar items, toasts, list rows.
+     Was hardcoded as an arbitrary 13px in 16 places; tokenized so the C6
+     arbitrary-px whitelist can eventually drop its 13 entry. */
+  --font-size-ui: 13px;
   --font-size-body-lg: 14px;
   --font-size-title: 17px;
   --font-size-display: 22px;
+
+  /* Tailwind-facing mapping. `ui` (13px), `micro` (10px), `caption` (12px),
+     `title` (17px) and `display` (22px) are wired to the --text-* namespace
+     so they compile to real utilities. text-ui / text-micro landed in v2.5
+     (text-micro had 57 inert usages). v2.7 wires caption / title / display:
+     PageHeader's h1 moves off-ladder (text-base 16px) onto --font-size-title,
+     its description off text-[12px] onto text-caption; display is wired for
+     future hero surfaces. Remaining keys stay unwired (zero usages):
+     label / body / body-lg. */
+  --text-ui: var(--font-size-ui);
+  --text-micro: var(--font-size-micro);
+  --text-caption: var(--font-size-caption);
+  --text-title: var(--font-size-title);
+  --text-display: var(--font-size-display);
   --leading-title: 1.25;
   --leading-body: 1.5;
   --tracking-tight: -0.02em;
@@ -344,6 +387,20 @@
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Animation utilities — the `page-enter` keyframes are declared further
+     down this file. Referencing --duration-base / --ease-spring keeps the
+     Settings motion multiplier (--duration-multiplier) in control, and
+     prefers-reduced-motion already zeroes every animation. */
+  --animate-page-enter: page-enter var(--duration-base) var(--ease-spring);
+
+  /* Indeterminate progress marquee — fills the single `animate-indeterminate`
+     consumer (ui/progress.tsx). The bar is w-1/3 inside an overflow-hidden
+     track, so translateX(-100% → 300%) sweeps it fully off both edges.
+     Fixed duration on purpose: a marquee is ambient feedback, not a
+     transition, so it must NOT follow --duration-multiplier; the global
+     prefers-reduced-motion override already freezes it. */
+  --animate-indeterminate: agentskin-indeterminate 1.6s ease-in-out infinite;
 
   /* Radius derived scale — all utilities derive from the dynamic --dl-radius
      so rounded-sm/md/lg/xl FOLLOW the user's radius preference (set in App.tsx
@@ -405,7 +462,7 @@
     @apply overflow-hidden bg-background text-foreground;
   }
   ::selection {
-    background: rgba(var(--brand-rgb), 0.25);
+    background: rgb(var(--brand-rgb) / 0.25);
   }
 
   /* Particle system keyframes — GPU-friendly (transform + opacity only) */
@@ -537,45 +594,103 @@
   transition: background-color var(--duration-fast);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(var(--brand-rgb), 0.4);
+  background: rgb(var(--brand-rgb) / 0.4);
 }
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-/* =================================================================== */
-/* Page Transition                                                      */
-/* =================================================================== */
-@keyframes page-fade-in {
+/* ---- Sidebar nav scrollbar ----
+   The global `*:hover` rule above reveals a --border-strong thumb on ANY
+   hovered scroll container. On the sidebar that read as a heavy gray bar
+   punching through the nav. Scoped override: invisible while resting, a
+   hairline thumb only while the pointer is inside the nav, brand-tinted
+   while grabbing. The var fallbacks match `bindSidebarSubTokens()`
+   (sidebar/sidebarSurface.ts) so unbound renders degrade gracefully. */
+.sidebar-nav-scroll {
+  scrollbar-color: transparent transparent;
+}
+.sidebar-nav-scroll:hover {
+  scrollbar-color: var(
+      --ag-sidebar-scroll-hover,
+      color-mix(in srgb, var(--sidebar-foreground) 10%, transparent)
+    )
+    transparent;
+}
+.sidebar-nav-scroll:active {
+  scrollbar-color: rgb(var(--brand-rgb) / 0.3) transparent;
+}
+
+/* ---- Per-component transition curve (sidebar) ----
+   v2.8 sidebar pass: expanded rows ease their hover shift over
+   --duration-base with the shared Spring curve. Runtime values are bound
+   per-instance by `bindSidebarSubTokens()` (sidebar/sidebarSurface.ts);
+   this :root declaration is the theme-level default. */
+:root {
+  --ag-sidebar-hover-shift: 3px;
+}
+
+/* ---- Sidebar brand header (the sidebar's own header row) ----
+   Ownership note (v2.9): this row belongs to the SIDEBAR, not to the title
+   layer — the brand lockup + collapse affordance are sidebar content, sized
+   at sidebar proportions (h-12) and floating on the one-canvas surface. The
+   sidebar's full-height `border-r` boundary (on the shell) runs past the
+   window's top edge uninterrupted.
+   Drag region: the row IS a window-drag region ([-webkit-app-region:drag]);
+   interactive children opt back out — this is what keeps the window's top
+   edge one continuous grabbable strip alongside `TitleBar`. */
+.as-sidebar-header {
+  -webkit-app-region: drag;
+}
+.as-sidebar-header button {
+  -webkit-app-region: no-drag;
+}
+
+/* ---- Sidebar brand-line entrance ----
+   The active indicator should land with the same personality as the panel
+   itself. `as-fade-in`'s pure opacity is too passive for a 3px line; this
+   scales the line in vertically from its centre (scaleY) while fading —
+   same Spring curve as the rail⇄content remount, so switching pages reads
+   as ONE panel with consistent motion language. Zero to full is 2 frames
+   of transform-only work (GPU-friendly). Respect for motion preferences
+   comes free from @layer base. */
+@keyframes as-brand-line-in {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.996);
-    filter: blur(4px);
+    transform: translateY(-50%) scaleY(0.4);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
+    transform: translateY(-50%) scaleY(1);
   }
 }
-
-.page-enter {
-  animation: page-fade-in var(--duration-slow) var(--ease-spring);
-  will-change: opacity, transform, filter;
+.as-brand-line-in {
+  animation: as-brand-line-in var(--duration-base) var(--ease-spring);
 }
 
 /* =================================================================== */
 /* Animations                                                           */
 /* =================================================================== */
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes status-pulse {
   0%,
   100% {
     opacity: 1;
-    box-shadow: 0 0 0 0 rgba(var(--brand-rgb), 0);
+    box-shadow: 0 0 0 0 rgb(var(--brand-rgb) / 0);
   }
   50% {
     opacity: 0.85;
-    box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.08);
+    box-shadow: 0 0 0 3px rgb(var(--brand-rgb) / 0.08);
   }
 }
 
@@ -595,6 +710,28 @@
   }
   100% {
     background-position: 200% 0;
+  }
+}
+
+/* Indeterminate progress marquee — consumed via --animate-indeterminate.
+   The fill bar is w-1/3 inside an overflow-hidden track: -100% → 300% of
+   its own width is exactly one full sweep across the track. */
+@keyframes agentskin-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* Reduced motion: the global override (0.01ms, 1 iteration) would freeze the
+   marquee at its 100% keyframe — translateX(300%), fully outside the track —
+   leaving an empty bar. animation:none parks it at translateX(0): the same
+   static third-width fill users saw before the marquee existed. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-indeterminate {
+    animation: none;
   }
 }
 
@@ -818,17 +955,54 @@
   box-shadow: var(--shadow-float);
 }
 
+/* Elevation utilities — `--shadow-elev*` live in :root (per-theme dark /
+   light values), NOT in @theme, so `shadow-elev1/2/3` compiled to nothing
+   before v2.7 (§13.2 #18: five hover:shadow-elev2 usages never rendered a
+   shadow). Same pattern as shadow-float above: @utility emits the class only
+   when used, and var() resolves at runtime so dark/light values switch. */
+@utility shadow-elev1 {
+  box-shadow: var(--shadow-elev1);
+}
+@utility shadow-elev2 {
+  box-shadow: var(--shadow-elev2);
+}
+@utility shadow-elev3 {
+  box-shadow: var(--shadow-elev3);
+}
+
+/* Duration utilities — the --duration-* theme keys do NOT feed Tailwind's
+   duration-* namespace (bare-number utility only), so duration-base/fast/
+   slow/slower compiled to nothing until v2.5 (86 inert usages, see
+   docs/design-tokens.md §13.2 #12). These four @utility rules emit the real
+   classes. Setting --tw-duration (not just transition-duration) is what
+   makes a sibling transition-* utility pick the value up: Tailwind's
+   transition utilities resolve duration via var(--tw-duration, default). */
+@utility duration-fast {
+  --tw-duration: var(--duration-fast);
+  transition-duration: var(--duration-fast);
+}
+@utility duration-base {
+  --tw-duration: var(--duration-base);
+  transition-duration: var(--duration-base);
+}
+@utility duration-slow {
+  --tw-duration: var(--duration-slow);
+  transition-duration: var(--duration-slow);
+}
+@utility duration-slower {
+  --tw-duration: var(--duration-slower);
+  transition-duration: var(--duration-slower);
+}
+
 /* =================================================================== */
 /* Typography Utility Classes                                           */
 /* =================================================================== */
 @layer utilities {
-  .as-label {
-    font-weight: 500;
-    font-size: var(--font-size-label);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--muted-foreground);
-  }
+  /* The Swiss-era label primitives (.as-label uppercase + 0.04em tracking,
+     and the .as-kv rule-list rows) were removed: Quiet Workbench section
+     labels use `.as-section-title` (sentence case, tight tracking) and the
+     `SectionLabel` component, and key/value rows are laid out with flex
+     utilities instead of hairline-ruled tables. */
 
   .as-micro {
     font: 400 var(--font-size-micro) var(--font-ui);
@@ -841,25 +1015,6 @@
     font-weight: 400;
     font-size: var(--font-size-label);
     color: var(--muted-foreground);
-  }
-
-  /* Key-value row */
-  .as-kv {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 8px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-    font-size: var(--font-size-body);
-  }
-  .as-kv-key {
-    font-size: var(--font-size-label);
-    color: var(--muted-foreground);
-  }
-  .as-kv-val {
-    font-weight: 500;
-    color: var(--foreground);
   }
 
   /* Status dot */
@@ -877,6 +1032,9 @@
   .status-dot.bad {
     background: var(--destructive);
   }
+  .status-dot.brand {
+    background: var(--primary);
+  }
   .status-dot.idle {
     color: var(--muted-foreground);
   }
@@ -889,12 +1047,15 @@
     box-shadow: var(--shadow-xs);
   }
 
-  /* ---- Section title ---- */
+  /* ---- Section title ----
+     Quiet Workbench label: sentence case, tight tracking. The (historical)
+     Swiss form — `text-transform: uppercase` + positive letter-spacing — was
+     removed; section labels read as ordinary text, distinguished by size,
+     weight and colour only. */
   .as-section-title {
     font-size: var(--font-size-label);
     font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    letter-spacing: -0.025em;
     color: var(--muted-foreground);
   }
 
@@ -924,8 +1085,8 @@
 
   /* ---- Subtle brand tint for active/selected rows ---- */
   .as-active-tint {
-    background: rgba(var(--brand-rgb), 0.06);
-    border-color: rgba(var(--brand-rgb), 0.2);
+    background: rgb(var(--brand-rgb) / 0.06);
+    border-color: rgb(var(--brand-rgb) / 0.2);
   }
 
   /* ---- Glass surface for wallpaper mode ---- */
@@ -952,43 +1113,39 @@
       box-shadow var(--duration-base) ease;
   }
 
-  /* ---- Subtle hover lift for interactive cards (minimal: gentle, not bouncy) ---- */
-  .as-card-hover {
-    transition:
-      transform var(--duration-base) var(--ease-spring),
-      border-color var(--duration-base) ease,
-      box-shadow var(--duration-base) ease;
-  }
-  .as-card-hover:hover {
-    transform: translateY(-2px);
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-elev2);
-  }
-
   /* ---- Brand accent line: thin gradient bar for active states ---- */
   .as-brand-line {
     background: linear-gradient(
       to bottom,
-      rgba(var(--brand-rgb), 0.8),
-      rgba(var(--brand-rgb), 0.3)
+      rgb(var(--brand-rgb) / 0.8),
+      rgb(var(--brand-rgb) / 0.3)
     );
   }
 
   /* ---- Brand gradient text ---- */
   .as-brand-text {
-    background: linear-gradient(135deg, var(--foreground) 0%, rgba(var(--brand-rgb), 0.8) 100%);
+    background: linear-gradient(135deg, var(--foreground) 0%, rgb(var(--brand-rgb) / 0.8) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
 
-  /* ---- Brand glow box — restrained, functional ---- */
+  /* ---- Brand glow box — focus/active affordance (v2.7: activated) ----
+     Consumes the previously-dormant --glow-* token family: a 2px brand ring
+     (matching the old `ring-2 ring-primary/30` selected treatment) plus a
+     soft outer halo that deepens on hover. Zero consumers before v2.7;
+     now used by selected ThemeCard / CommunityThemeCard / WallpaperCard,
+     active EnvironmentCard, and InjectDock's active state. */
   .as-glow {
-    box-shadow: 0 0 0 1px rgba(var(--brand-rgb), 0.1);
+    box-shadow:
+      0 0 0 2px rgb(var(--brand-rgb) / 0.3),
+      0 0 20px var(--glow-brand-strong);
   }
   .as-glow:hover {
-    box-shadow: 0 0 0 1px rgba(var(--brand-rgb), 0.16);
+    box-shadow:
+      0 0 0 2px rgb(var(--brand-rgb) / 0.3),
+      0 0 28px var(--glow-brand-strong);
   }
 
   /* ---- Glass surface enhanced ---- */
@@ -1214,27 +1371,27 @@ body {
 }
 .page-enter {
   animation: page-enter var(--duration-base) var(--ease-spring);
+  /* Backwards fill: staggered entrants (VirtualThemeGrid row lanes,
+     WallpaperGrid cards) pass an inline animationDelay — without backwards
+     fill they would flash fully-visible during the delay window. For
+     zero-delay consumers (page container) backwards === the animation's own
+     first-frame state, so behaviour is unchanged. */
+  animation-fill-mode: backwards;
+  /* will-change carried over from the removed duplicate so layer promotion
+     behaviour is preserved. `filter` was dropped with it: it only served the
+     deleted page-fade-in keyframes, and will-change is a rendering hint, so
+     its removal cannot change appearance. */
+  will-change: opacity, transform;
 }
 
-/* Card hover micro-interaction — subtle lift (minimal).
-   Applied via .as-card-hover utility class on interactive cards. */
-.as-card-hover {
-  transition:
-    transform var(--duration-base) var(--ease-spring),
-    box-shadow var(--duration-base) ease-out,
-    border-color var(--duration-base) ease-out;
-}
-.as-card-hover:hover {
-  transform: translateY(-1px);
-}
-.as-card-hover:active {
-  transform: translateY(0);
-}
-
-/* Active scale — for buttons and interactive elements.
-   Complements the Button's active:scale-[0.97] with a CSS-level fallback. */
-.as-pressable:active {
-  transform: scale(0.97);
+/* Staggered entrance for grid items (row lanes / cards) — same keyframes
+   and fill-mode as .page-enter but WITHOUT the persistent will-change:
+   this class lands on many siblings at once, and will-change: opacity,
+   transform would pin one compositor layer per item forever after the
+   one-shot animation finishes. */
+.stagger-enter {
+  animation: page-enter var(--duration-base) var(--ease-spring);
+  animation-fill-mode: backwards;
 }
 
 /* Reduced motion — disable all non-essential animations. */
@@ -1247,9 +1404,7 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .page-enter,
-  .as-card-hover,
-  .as-pressable:active {
+  .page-enter {
     animation: none !important;
     transition: none !important;
     transform: none !important;
@@ -1366,5 +1521,5 @@ input[type="range"]::-moz-range-thumb {
   background: var(--accent);
   color: var(--accent-foreground);
   white-space: nowrap;
-  border: 1px solid rgba(var(--brand-rgb), 0.15);
+  border: 1px solid rgb(var(--brand-rgb) / 0.15);
 }

@@ -3,23 +3,44 @@
 /**
  * # TitleBar
  *
- * Custom frameless title bar rendered at the top of the window. Replaces the
- * native Windows title bar (macOS keeps its traffic-light buttons via
- * `hiddenInset` and this bar only draws the functional buttons on the right,
- * leaving the left margin free for the native buttons).
+ * Custom frameless title bar — and deliberately INVISIBLE chrome. The bar
+ * draws no surface of its own: it floats over the page canvas (solid mode:
+ * the section's `--background`; wallpaper mode: the raw wallpaper), so the
+ * title bar and the main page are literally the same face — you cannot point
+ * at a "title bar strip". Only the floating controls (theme toggle, window
+ * controls) mark it. This is the integrated-title-bar endgame: VS Code /
+ * Notion / Linear all dissolve the bar into the canvas.
  *
- * Design specs (Refined Workbench):
- *   - Height: 36px (h-9)
- *   - Background: var(--surface) default; glass effect when wallpaper active
- *   - Brand: "AgentSkin" in medium weight text-[12px]
+ * Replaces the native Windows title bar (macOS keeps its traffic-light
+ * buttons via `hiddenInset`).
+ *
+ * Design specs:
+ *   - Height: 36px (h-9), transparent — NO bg, NO border in either mode
+ *     (a bg-* utility would also race `.as-glass` panels in wallpaper mode)
  *   - Icon buttons: 28x28px (size-7), transparent by default, hover → card2
  *   - Theme toggle: Sun/Moon icon button — dark/light two-way switch
  *   - Close button: destructive background + white text on hover
- *   - Transition: background 0.4s; icon buttons 0.15s
+ *   - Icon buttons 0.15s transitions
  *
- * Layout (left → right):
- *   - drag region (the whole bar is draggable except interactive controls)
- *   - app brand + version
+ * Ownership (v2.9):
+ *   - the title layer owns NO visuals — not the brand, not a hairline, not a
+ *     surface. Its whole inventory is this 36px transparent drag strip and the
+ *     controls floating at its right edge.
+ *   - the brand lockup (logo + name) belongs to the SIDEBAR, which renders it
+ *     as its own h-12 brand header (`sidebarHeaderClass`) at sidebar
+ *     proportions; the sidebar's full-height `border-r` boundary runs straight
+ *     past the window's top edge, uninterrupted by any title strip.
+ *   - the window's top edge is still ONE continuous drag region: the sidebar
+ *     header is itself a drag region (`.as-sidebar-header`), so grabbing the
+ *     top-left moves the window exactly like grabbing here.
+ *
+ * Layout:
+ *   - full-width drag region (the whole bar is draggable except interactive
+ *     controls). NO brand/page label here — the sidebar header carries the
+ *     brand lockup and the active nav item marks the page; repeating
+ *     "AgentSkin <page>" was redundant double-branding (and for community
+ *     routes the old routeLabel fallback even rendered
+ *     "AgentSkin | AgentSkin").
  *   - spacer
  *   - theme mode toggle (Sun / Moon icon button)
  *   - divider (Windows only)
@@ -40,9 +61,8 @@ import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
 import { Maximize, Minimize2, Minus, Moon, Sun, X } from 'lucide-react';
 
-export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
+export function TitleBar() {
   const locale = useShellStore((s) => s.locale);
-  const route = useShellStore((s) => s.route);
   const status = useStatusStore((s) => s.status);
   const t: UiMessages = uiMessages[locale];
 
@@ -56,21 +76,6 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
     return off;
   }, []);
 
-  const routeLabel =
-    route === 'workspace'
-      ? t.navWorkspace
-      : route === 'themes'
-        ? t.navThemes
-        : route === 'studio'
-          ? t.navStudio
-          : route === 'wallpaper'
-            ? t.navWallpaperEngine
-            : route === 'apps'
-              ? t.navApps
-              : route === 'settings'
-                ? t.navSettings
-                : 'AgentSkin';
-
   function toggleThemeMode() {
     setMode(mode === 'dark' ? 'light' : 'dark');
   }
@@ -82,21 +87,17 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
   return (
     <header
       className={cn(
-        // Base: h-9 bar with surface background and drag region.
-        'relative flex h-9 items-center gap-2 px-3 transition-[background] duration-slower',
-        // Surface solid default; glass switch when wallpaper active.
-        hasWallpaper ? 'as-glass border-b border-border/50' : 'bg-surface',
+        // Base: h-9 transparent drag strip. NO background, NO border — the
+        // page canvas (or the wallpaper) shows straight through; the bar is
+        // pure chrome. (A bg-* utility here would also race `.as-glass`
+        // panels in wallpaper mode in the cascade.)
+        'relative flex h-9 items-center gap-2 px-3',
         // The whole bar is a drag region; interactive elements opt out below.
         '[-webkit-app-region:drag]',
         isMac ? 'pl-20' : 'pl-3',
       )}
     >
-      {/* Left: brand + page breadcrumb (minimal, no gradient text) */}
-      <div className="pointer-events-none flex items-center gap-2">
-        <span className="text-[13px] font-semibold tracking-tight text-foreground">AgentSkin</span>
-        <span className="h-3.5 w-px bg-border" aria-hidden />
-        <span className="text-[11px] font-medium text-muted-foreground">{routeLabel}</span>
-      </div>
+      {/* Left: pure drag space — the sidebar header owns the brand lockup. */}
 
       {/* Spacer — pushes everything after it to the far right. */}
       <div className="flex-1" />

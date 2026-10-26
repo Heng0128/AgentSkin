@@ -9,34 +9,36 @@ Electron 渲染进程的 React 应用层，包含全部 Zustand Store、页面�
 
 | 路径 | 用途 | 消费者 | 内部依赖 | 相关文档 |
 |------|------|--------|---------|---------|
-| `App.tsx` | 应用根组件：路由决策、全局 Provider 挂载、错误边界、Toast 堆叠、动态背景、侧边栏/标题栏/状态栏布局、密度/运动偏好映射 | 无（顶层入口） | `DialogsHost`, `DynamicBackground`, `ErrorBoundary`, `InjectDock`, `PageSkeleton`, `StatusBar`, `Sidebar`, `TitleBar`, `useAppController`, `useNotificationStore`, `useSettingsStore` | — |
+| `App.tsx` | 应用根组件：路由决策、全局 Provider 挂载、错误边界、Toast 堆叠、动态背景、侧边栏/标题栏布局、密度/运动偏好映射 | 无（顶层入口） | `DialogsHost`, `DynamicBackground`, `ErrorBoundary`, `InjectDock`, `PageSkeleton`, `sidebar/*`, `TitleBar`, `useAppController`, `useNotificationStore`, `useSettingsStore` | — |
 | `StudioApp.tsx` | Studio 模式入口（独立窗口）：无侧边栏/壁纸背景，自定义标题栏，订阅 STATUS_CHANGED 推送 | 无（独立窗口入口） | `ErrorBoundary`, `StudioPage`, `useShellStore`, `useStatusStore`, `useStudioStore`, `studio/sync-hooks` | — |
-| `colors.ts` | 颜色 token 设计契约——JS 内联样式互操作（canvas/chart），镜像 `globals.css` 中声明的 CSS 变量 | 所有需要 JS 内联颜色的组件 | 无（纯常量导出） | `docs/design-tokens.md` |
+| `colors.ts` | 颜色 token 设计契约——JS 内联样式互操作（canvas/chart），镜像 `globals.css` 中声明的 CSS 变量（导出 `var()` 引用而非 hex） | ⚠️ 当前零引用（契约文件，供新组件接入时优先使用） | 无（纯常量导出） | `docs/design-tokens.md` |
 | `globals.css` | 全局 CSS 变量（5 级背景深度、品牌色、阴影、z-index 比例、排版阶梯）、Tailwind v4 `@theme inline` 映射、基础 Reset、滚动条、页面过渡动画、粒子系统 keyframes | 所有组件（全局生效） | `tailwindcss`, `tw-animate-css`, `shadcn-tailwind.css` | `docs/design-tokens.md` |
 | `shadcn-tailwind.css` | shadcn/ui 兼容层样式（accordion 动画等） | 所有组件（全局生效） | 无（CSS 文件） | — |
 
 ### 子目录概览
 
-| 路径 | 用途 | 文件数 |
+| 路径 | 用途 | 文件数（非测试） |
 |------|------|--------|
-| `components/` | 根目录独立组件（AppMark, CommandPalette, DetailPanel, DialogsHost, DynamicBackground, ErrorBanner, ErrorBoundary, InjectDock, InstallProgress, Logo, PageSkeleton, RenameDialog, Sidebar, StatusBar, TitleBar） | 15 |
-| `components/ui/` | 基础 UI 组件库（shadcn 风格，43 个原子组件） | 43 |
-| `components/studio/` | Studio 创作模式专用组件（含 center/ 子目录） | 35 |
-| `components/themes/` | 主题展示组件（卡片、预览、虚拟网格、社区） | 7 |
+| `components/` 根 | 独立组件（AppMark, CommandPalette, DetailPanel, DialogsHost, DynamicBackground, ErrorBanner, ErrorBoundary, InjectDock, InstallProgress, Logo, PageSkeleton, PetViewer, RenameDialog, TitleBar） | 14 |
+| `components/sidebar/` | 侧边栏套件（Provider/Content/Rail/Menu/MenuItem/MenuSub/Tooltip/sidebarSurface/index） | 9 |
+| `components/quick-apply/` | 图片→主题快速应用面板（QuickApplyPanel + index） | 2 |
+| `components/ui/` | 基础 UI 组件库（shadcn 风格） | 42 |
+| `components/studio/` | Studio 创作模式专用组件（含 center/ 子目录） | 40 |
+| `components/themes/` | 主题展示组件（卡片、预览、虚拟网格、社区、作者面板、源详情） | 11 |
 | `components/wallpaper/` | 壁纸组件（卡片、网格、裁剪、渲染设置、注入结果） | 6 |
-| `components/workspace/` | 工作台组件（环境卡片、详情 sheet、状态组件、调整面板） | 10 |
+| `components/workspace/` | 工作台组件（环境卡片、详情 sheet、状态组件、调整面板） | 9 |
 | `components/apps/` | 应用管理组件（AppCard, AppDetailsDrawer） | 2 |
 | `components/diagnostics/` | 诊断面板组件（CDP 性能、漂移、选择器、可视化分析） | 6 |
 | `components/settings/` | 设置页组件（Dashboard, MarkdownStyleSettings） | 2 |
-| `hooks/` | 自定义 React Hook（16 个） | 16 |
+| `hooks/` | 自定义 React Hook | 17 |
 | `lib/` | 业务工具函数（调色板、壁纸渲染、DOM 导出、哈希等） | 10 |
-| `pages/` | 页面级路由组件（含 wallpaper/ 子目录） | 7 |
-| `stores/` | Zustand Store（21 个，含 test-helpers/） | 29 |
-| `studio/` | Studio 子 Store（project/bundle/capture/image-wallpaper/sync） | 7 |
-| `types/` | UI 局部类型定义（7 个文件） | 7 |
+| `pages/` | 页面级路由组件（含 wallpaper/ 子目录与 CommunityPage） | 8 |
+| `stores/` | Zustand Store（25 个模块，含 test-helpers/ 8 个） | 33 |
+| `studio/` | Studio 子 Store（project/bundle/capture/image-wallpaper/sync） | 8 |
+| `types/` | UI 局部类型定义 | 7 |
 | `utils/` | UI 工具（色彩理论、渲染日志、占位计数） | 4 |
-| `design/` | 设计令牌与主题模式定义（2 个文件） | 2 |
-| `api/` | 渲染进程 API 客户端（AgentSkinClient） | 1 |
+| `design/` | 主题模式定义（theme-mode；colors.ts 契约文件位于 src/ui/colors.ts） | 1 |
+| `api/` | 渲染进程 API 客户端 | 2 |
 | `storage/` | 持久化存储（环境预设 store） | 1 |
 | `styles/` | 页面级样式（workspace.css 及 workspace/ 子模块） | 3 |
 | `assets/` | 静态资源（应用图标 PNG） | 6 |
@@ -91,7 +93,7 @@ Electron 渲染进程的 React 应用层，包含全部 Zustand Store、页面�
 
 | 路径 | 用途 | 消费者 | 内部依赖 |
 |------|------|--------|---------|
-| `AppMark.tsx` | 应用图标标记（6 款 Agent 图标注册表 + 渲染组件） | `AppCard`, `DetailPanel`, `StatusBar`, `AgentStatusBar`, `InjectResultsPanel` | `assets/apps/*.png`, `AGENT_META` |
+| `AppMark.tsx` | 应用图标标记（6 款 Agent 图标注册表 + 渲染组件） | `AppCard`, `DetailPanel`, `AgentStatusBar`, `InjectResultsPanel` | `assets/apps/*.png`, `AGENT_META` |
 | `CommandPalette.tsx` | 全局 Cmd+K 命令面板（导航/主题/操作三组命令） | `TitleBar` | `command`, `useAppController`, `design/theme-mode` |
 | `DetailPanel.tsx` | 右侧详情侧栏（已安装主题操作：应用/分享/删除/重启提示） | `ThemesPage` | `AppMark`, `Button`, `Dialog`, `Spinner`, `useAppController` |
 | `DialogsHost.tsx` | 全局对话框宿主（渲染 dialogStore 队列 + Toast 通知） | `App.tsx` | `sonner`, `useDialogStore`, `useNotificationStore` |
@@ -102,10 +104,11 @@ Electron 渲染进程的 React 应用层，包含全部 Zustand Store、页面�
 | `InstallProgress.tsx` | 安装流程进度条（步骤列表 + 耗时 + 状态图标） | `App.tsx`（lazy InstallWizard） | `Progress`, `installFlowStore` |
 | `Logo.tsx` | AgentSkin 品牌标记（color/mono 双变体 SVG） | `TitleBar`, `Sidebar`, `StudioTitleBar` | `cn` |
 | `PageSkeleton.tsx` | 通用页面骨架屏（header + toolbar + card grid，用于 Suspense 默认 fallback） | `App` | `Skeleton` |
+| `PetViewer.tsx` | 桌面宠物查看器（精灵图动画 + 拖拽移动 + 右键菜单，运行在独立 `pet.html` 渲染窗口） | 暂无（`pet.html` 挂载点，主窗口零接线） | `petStore`, `@shared/types/pet` |
 | `RenameDialog.tsx` | 重命名对话框（输入 + 确认/取消） | `EnvironmentCard`, `StudioDrawer` | `cn` |
-| `sidebar.tsx` | 侧边栏导航（56px 图标栏 + Logo + 5 个路由 + 主题切换） | `App.tsx` | `Logo`, `useShellStore`, `useStatusStore` |
-| `StatusBar.tsx` | 底部状态栏（状态 LED + 标签 + 运行计数 + 版本 + 时钟） | `App.tsx` | `useShellStore`, `useStatusStore`, `intl` |
-| `TitleBar.tsx` | 自定义无边框标题栏（36px，品牌 + 主题切换 + 窗口控件） | `App.tsx` | `Logo`, `useShellStore`, `useStatusStore` |
+| `quick-apply/` | 图片→主题快速应用面板（idle→pending→progress→done/error 状态机：拖放/粘贴/选择图片 → IPC 流水线 → 结果+撤销） | 暂无（仅渲染测试引用，零页面接线） | `useNotificationStore`, `@shared/types/ipc` |
+| `sidebar/` | 侧边栏套件：`SidebarProvider`（Context + 折叠态；`collapsed` 描述**挂载分支**而非 store 目标——App 通过 `presentation` prop 注入暂存态）→ `SidebarRail`（56px 折叠栏：头部为单一**常驻**展开按钮（`SIDEBAR_HEADER_BUTTON_CLASS`，32px 热区，从挂载起始终可点——v2.11 恢复 logo 默认可见：按钮视觉层 logo ↔ `PanelLeftOpen` 在 hover/键盘聚焦时交叉淡变，热区恒定、目标永不消失，点 logo 同样可展开））/ `SidebarContent`（192px 展开体：品牌头（字标，不含版本号——版本信息归 Settings）+ 常驻收起按钮）+ `SidebarMenu`（scroll-fade-y 滚动渐隐 + 品牌色滚动条 + 底部 hairline）/`SidebarMenuItem`（hover 3px Spring 位移、motion-safe 降级、激活态图标品牌着色 + 渐变品牌线 + `as-brand-line-in` 入场动画）/`SidebarMenuSub`（子导航 guide rail 品牌指示线 + hover 位移对齐 + 挂载渐显）+ `SidebarTooltip`（Portal 化，根治横向溢出滚动条）。页头属侧栏本体（`sidebarHeaderClass()`：h-12 品牌头、透明浮于一画布表面；`.as-sidebar-header` 拖拽区，按钮 no-drag opt-out），不属于标题层——标题层无任何视觉，仅为主列 36px 透明拖拽条 + 右端悬浮控件。**两段式收起动画契约**（App 持有暂排）：分支各自钉住目标宽度（`SIDEBAR_EXPANDED_WIDTH`/`SIDEBAR_COLLAPSED_WIDTH`，`--sidebar-width` 同源），列宽过渡时 `overflow-hidden` 裁切固定宽内容（无回流）——收起先滑出旧体、过渡结束再换入 Rail（`useLayoutEffect` 保证展开换装先于绘制），分隔线（`border-r`）由 App 列容器持有、全程贴边；分支入场统一 `as-fade-in` 于根节点。`sidebarSurface.ts` 为共享表面 chrome（壳层 `select-none`；一画布模型：常态表面 = 页面 `--background`，壁纸模式透明让壁纸透出；v2.10 起 hover-reveal 机制（`.sidebar-reveal` 规则 + `group/sidebar` 标记）已删除——折叠/展开按钮常驻，`size-7` 升 `size-8`；v2.11 折叠态按钮内改为 logo ↔ 展开箭头视觉交叉淡变（按钮本体仍常驻））+ `bindSidebarSubTokens()`（`--ag-sidebar-*` 子 token 桥，全部由 `--sidebar-*` color-mix 派生，hover 分档 8%/常态 5%）；运行态条已移出侧边栏 | `App.tsx` | `Logo`, `useShellStore` |
+| `TitleBar.tsx` | 自定义无边框标题栏（36px 透明拖拽 chrome——无背景无边框，浮于整窗画布/壁纸上，与侧栏页头拼成横贯全窗的连续拖拽带；主题切换 + 窗口控件悬浮其上；品牌/页面文字已移除——侧边栏页头已承载品牌，社区路由下旧面包屑会渲染「AgentSkin \| AgentSkin」病态重复） | `App.tsx` | `Logo`, `useShellStore`, `useStatusStore` |
 
 ### 诊断面板组件（components/diagnostics/）
 
@@ -160,8 +163,8 @@ Electron 渲染进程的 React 应用层，包含全部 Zustand Store、页面�
 
 | 路径 | 用途 | 消费者 | 内部依赖 |
 |------|------|--------|---------|
-| `AppCard.tsx` | 应用单卡（图标/名称/状态点/CDP 端口/双击启动） | `AppsPage` | `AppMark` |
-| `AppDetailsDrawer.tsx` | 应用详情抽屉（元数据 + 启动/隐藏/关闭操作） | `AppsPage` | `AppMark`, `Button`, `useAppsStore` |
+| `AppCard.tsx` | 应用单卡（图标/名称/状态点/CDP 端口/双击启动；启动中脉动点 + 启动提示） | `AppsPage` | `AppMark`, `useShellStore`（i18n） |
+| `AppDetailsDrawer.tsx` | 应用详情抽屉（身份区 + 已适配 chip + 元数据网格 + 启动/隐藏操作） | `AppsPage` | `AppMark`, `Button`, `AGENT_META`, `useAppsStore` |
 
 ### 仪表盘组件（components/dashboard/）
 
@@ -172,7 +175,7 @@ Electron 渲染进程的 React 应用层，包含全部 Zustand Store、页面�
 
 | 路径 | 用途 | 消费者 | 内部依赖 |
 |------|------|--------|---------|
-| `MarkdownStyleSettings.tsx` | Markdown 运行时样式设置（颜色选择器 + 字体 + 实时预览） | `SettingsPage` | `api`, `useShellStore` |
+| `MarkdownStyleSettings.tsx` | Markdown 运行时样式设置（颜色选择器 + 字体 + 实时预览） | `SettingsPage` | `api`, `t`/`showToast`（由页面注入） |
 | `SettingsDashboard.tsx` | 设置页仪表盘（6 适配器注入状态概览 + 相对时间） | `SettingsPage` | `useStatusStore`, `useThemeStore` |
 
 ### Studio 创作组件（components/studio/）
@@ -261,7 +264,8 @@ Electron 渲染进程的 React 应用层，包含全部 Zustand Store、页面�
 | 路径 | 用途 | 消费者 | 内部依赖 |
 |------|------|--------|---------|
 | `AppsPage.tsx` | 应用快速启动页（扫描/启动/详情抽屉） | `App.tsx`（lazy） | `useAppsStore`, `useShellStore`, `AppCard`, `AppDetailsDrawer` |
-| `SettingsPage.tsx` | 设置页（通用/外观/系统/关于/高级分区 + 诊断面板） | `App.tsx`（lazy） | `useAppController`, `useDiagnosticsSync`, `useThemeMode`, `SettingsDashboard`, `MarkdownStyleSettings`, 诊断组件 |
+| `CommunityPage.tsx` | 社区主题浏览页（双栏：主题网格 + 右侧 SourceDetailPanel 条件渲染；源选择器由侧栏子菜单承担，解析 `community.<sourceId>` 子路由后切 activeSource） | `App.tsx`（lazy） | `useCommunityStore`, `CommunityTabPanel`, `SourceDetailPanel`, `AuthorPanel`, `PageHeader` |
+| `SettingsPage.tsx` | 设置页（通用/外观/系统/高级/关于分区 + 诊断面板） | `App.tsx`（lazy） | `useAppController`, `useDiagnosticsSync`, `useThemeMode`, `SettingsDashboard`, `MarkdownStyleSettings`, 诊断组件 |
 | `StudioPage.tsx` | 主题 Studio 创作页（标题栏/顶栏/抽屉/舞台/检查器/状态栏/Dock） | `StudioApp` | `StudioTitleBar`, `StudioTopBar`, `StudioDrawer`, `StudioStage`, `StudioInspector`, `StudioStatusBar`, `StudioDock` |
 | `ThemesPage.tsx` | 主题浏览与应用（已安装/社区双标签、拖放导入、字符串导入） | `App.tsx`（lazy） | `useAppController`, `useThemeCenter`, `useSkeletonStrategy`, `VirtualThemeGrid`, `CommunityTabPanel`, `DetailPanel` |
 | `WallpaperEnginePage.tsx` | 壁纸引擎页（toolbar + grid + detail sidebar） | `App.tsx`（lazy） | `useAppController`, `useWallpaperPageController`, `useSkeletonStrategy`, `WallpaperGrid`, `InjectResultsPanel` |
@@ -280,8 +284,10 @@ Electron 渲染进程的 React 应用层，包含全部 Zustand Store、页面�
 | `dialogStore.ts` | dialog | 模态框/对话框队列（重启提示、删除确认、文件导入确认等） | 无跨 Store 依赖（纯状态容器） | `useAppController`, `themeStore`, `environmentStore`, `appsStore` |
 | `environmentStore.ts` | environment | 环境预设 CRUD + 切换（主题+壁纸组合） | `themeStore`, `notificationStore`, `dialogStore`, `shellStore` | `useAppController`, `QuickEnvironmentCreate` |
 | `import-guard.ts` | importGuard | 跨 Store 导入去重锁（防止 themeStore 和 installFlowStore 重复导入） | 无跨 Store 依赖 | `installFlowStore`, `themeStore` |
+| `inject-status-store.ts` | injectStatus | 统一注入状态骨架（Phase 1）：per-agent 注入状态 + apply/restore 委托 action，渐进替换散落在 9+ Store 的注入态字段（当前零消费者接线，Phase 计划见文件头） | 无（独立骨架） | 暂无（Phase 2 迁移 InjectDock/AgentStatusBar/SettingsDashboard） |
 | `installFlowStore.ts` | installFlow | 安装流程状态机（idle→selecting→installing→completed/failed） | `notificationStore`, `shellStore`, `themeStore`, `import-guard` | `useAppController`, `App.tsx` |
 | `notificationStore.ts` | notification | Toast 通知队列 + `fail` 错误处理管道 | `shellStore`（读取 locale 用于错误消息翻译） | 几乎所有 Store（theme/wallpaper/settings/installFlow/apps/environment/community） |
+| `petStore.ts` | pet | 桌面宠物系统：已安装宠物列表、激活项、可见性、位置（localStorage 持久化）、当前动画 | `api`（IPC） | `PetViewer`（该组件自身暂未接线） |
 | `secondaryInjectStore.ts` | secondaryInject | 二次注入（webview/iframe）进度追踪 | 无跨 Store 依赖 | `SecondaryInjectTrace` |
 | `selectorStore.ts` | selector | CSS 选择器探测与验证 | 无跨 Store 依赖 | `SelectorProbePanel` |
 | `settingsStore.ts` | settings | 用户偏好设置、MCP 服务器管理、app 路径/端口配置 | `notificationStore`, `statusStore`, `shellStore` | `useAppController`, `SettingsPage`, `appsStore` |
@@ -289,8 +295,10 @@ Electron 渲染进程的 React 应用层，包含全部 Zustand Store、页面�
 | `statusStore.ts` | status | 系统状态 + 刷新生命周期，订阅 `onCoordinatorStatus` 实时更新 running/pid/port | 无跨 Store 依赖（独立） | `useAppController`, `agentStore`, `themeStore`, `settingsStore`, `wallpaperStore`, `WorkspacePage`, `StudioApp` |
 | `studioStore.ts` | studio | Studio 创作模式（facade），委托给 4 个子 Store | 委托 `project-store`, `bundle-store`, `capture-store`, `image-wallpaper-store` | `StudioApp`, `StudioPage` 及所有 studio 组件 |
 | `themeStore.ts` | theme | 主题生命周期：目录获取、搜索、选择、apply/restore、导入/删除/导出，IPC 事件订阅 | `notificationStore`, `statusStore`, `dialogStore`, `wallpaperStore`（通过 callback 注入打破循环） | `useAppController`, `ThemesPage`, `environmentStore`, `installFlowStore`, `appsStore` |
+| `theme-usage-store.ts` | themeUsage | 主题使用频率查询层（LRU 排序，主进程持有真实跟踪与持久化），供快速切换菜单消费 | `api`（THEME_USAGE_GET） | 快速切换菜单 |
 | `visualAnalysisStore.ts` | visualAnalysis | 可视化分析工作流（目标列表、摘要、导出） | 无跨 Store 依赖 | `useVisualAnalysisSync`, `VisualAnalysisPanel` |
 | `wallpaperStore.ts` | wallpaper | 动态壁纸状态：列表、启用/选中、per-agent 偏好、渲染选项，壁纸→主题联动 | `notificationStore`, `statusStore`, `themeStore`（通过 `registerWallpaperHandler` 回调打破循环） | `useAppController`, `WallpaperEnginePage`, `ResourcesSection` |
+| `wallpaper-handler-registry.ts` | — | 独立注册表，切断 themeStore ↔ wallpaperStore 的 ES 模块循环依赖（`registerWallpaperHandler` 自 themeStore 迁出至此） | 无（两侧共同 import 的中立模块） | `themeStore`, `wallpaperStore` |
 | `workspace-presets.ts` | workspacePresets | 工作区预设定义（5 种布局） | 无（纯常量） | `workspaceStore` |
 | `workspaceStore.ts` | workspace | 工作区布局与实时调整：单窗口、dock/inspector/drawer、覆盖层、撤销/重做、原始 CSS 编辑 | 无跨 Store 依赖（独立） | `WorkspacePage`, `StudioStage`, `StudioDock`, `StudioInspector`, `StudioTopBar`, `PreviewWindow` |
 
@@ -344,7 +352,6 @@ Electron 渲染进程的 React 应用层，包含全部 Zustand Store、页面�
 
 | 路径 | 用途 | 消费者 |
 |------|------|--------|
-| `colors.ts` | 颜色 token 设计契约（JS 内联样式互操作，镜像 globals.css） | `StudioImageToThemePanel`, `CenterTabThemeEditor` |
 | `theme-mode.ts` | 主题模式运行时（dark/light/system，localStorage 持久化） | `useThemeMode`, `CommandPalette`, `TitleBar` |
 
 ### API 客户端（api/）
@@ -397,9 +404,8 @@ useAppController（聚合层）
         │
         ▼
   App.tsx（路由决策 + 布局）
-    ├── Sidebar → shellStore.route
+    ├── sidebar/*（Provider + Rail 56px / Content 192px）→ shellStore + statusStore
     ├── TitleBar → shellStore + statusStore
-    ├── StatusBar → shellStore + statusStore
     ├── DynamicBackground → wallpaperStore + wallpaperVideo
     ├── InjectDock → useAppController
     └── lazy Pages
@@ -511,7 +517,7 @@ environmentStore.switchEnvironment()
 
 ```
 无依赖（叶子层）
-  ├── colors.ts / design/colors.ts
+  ├── colors.ts
   ├── globals.css / shadcn-tailwind.css
   ├── workspace-presets.ts
   ├── use-element-picker.ts
@@ -588,7 +594,7 @@ environmentStore.switchEnvironment()
 | `cn` (utils.ts) | 50+ | 几乎所有 UI 组件 |
 | `useAppController` | 5 | `App.tsx`, `ThemesPage`, `WallpaperEnginePage`, `SettingsPage`, `InjectDock` |
 | `useShellStore` | 12+ | `App.tsx`, `StudioApp`, `StudioPage`, `WorkspacePage`, `ThemesPage`, `SettingsPage`, `AppsPage`, `notificationStore`, `environmentStore`, `installFlowStore`, `sidebar`, `TitleBar` |
-| `useStatusStore` | 10+ | `useAppController`, `agentStore`, `themeStore`, `settingsStore`, `wallpaperStore`, `WorkspacePage`, `StatusBar`, `StudioApp` |
+| `useStatusStore` | 10+ | `useAppController`, `agentStore`, `themeStore`, `settingsStore`, `wallpaperStore`, `WorkspacePage`, `StudioApp` |
 | `useThemeStore` | 8+ | `useAppController`, `ThemesPage`, `environmentStore`, `installFlowStore`, `appsStore`, `QuickActionsCard` |
 | `useWorkspaceStore` | 10+ | `WorkspacePage`, `StudioStage`, `StudioDock`, `StudioInspector`, `StudioTopBar`, `PreviewWindow`, `FloatingToolbar`, `StudioStatusBar`, `CenterTabRaw`, `TweakPanel` |
 | `useSettingsStore` | 4 | `App.tsx`, `useAppController`, `SettingsPage`, `appsStore` |
@@ -603,7 +609,7 @@ environmentStore.switchEnvironment()
 | `useSelectorStore` | 1 | `SelectorProbePanel` |
 | `useVisualAnalysisStore` | 1 | `VisualAnalysisPanel` |
 | `api` (agentSkinClient) | 40+ | 全局组件/hook/store |
-| `AppMark` | 10+ | `AppCard`, `DetailPanel`, `StatusBar`, `AgentStatusBar`, `InjectResultsPanel`, `DriftStatusTrace`, `SecondaryInjectTrace` |
+| `AppMark` | 10+ | `AppCard`, `DetailPanel`, `AgentStatusBar`, `InjectResultsPanel`, `DriftStatusTrace`, `SecondaryInjectTrace` |
 
 ---
 

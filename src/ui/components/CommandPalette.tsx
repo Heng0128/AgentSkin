@@ -3,7 +3,7 @@
 /**
  * # CommandPalette
  *
- * Global Cmd+K / Ctrl+K command palette. International style:
+ * Global Cmd+K / Ctrl+K command palette. Surfaces:
  * bg-popover surface, border-border, rounded-md, hover uses bg-accent.
  *
  * Three command groups:
@@ -34,6 +34,7 @@ import {
   LayoutDashboardIcon,
   MoonIcon,
   PaletteIcon,
+  PanelLeftIcon,
   RotateCcwIcon,
   SettingsIcon,
   SunIcon,
@@ -47,6 +48,13 @@ export interface CommandPaletteProps {
 
 export default function CommandPalette({ open, onOpenChange, controller }: CommandPaletteProps) {
   const { route, setRoute, installed: themes, activeAgentId, t } = controller;
+
+  /** Collapse/expand the sidebar — the fourth toggle entry point (rail header
+   *  button, content header button, nav arrow keys, this command). */
+  const toggleSidebar = useCallback(() => {
+    controller.toggleSidebar();
+    onOpenChange(false);
+  }, [controller, onOpenChange]);
 
   /** Toggle dark ↔ light using the persisted mode as the source of truth. */
   const toggleThemeMode = useCallback(() => {
@@ -178,6 +186,14 @@ export default function CommandPalette({ open, onOpenChange, controller }: Comma
             <SunIcon className="dark:hidden" />
             <MoonIcon className="hidden dark:block" />
             <span>{t.cmdToggleThemeMode}</span>
+          </CommandItem>
+          {/* Sidebar toggle — the command counterpart of the two header
+              buttons and the global Ctrl/Cmd+\ shortcut. Always enabled: the
+              action is stateless (shellStore.toggleSidebar) and persists. */}
+          <CommandItem onSelect={toggleSidebar}>
+            <PanelLeftIcon />
+            <span>{t.cmdToggleSidebar}</span>
+            <CommandShortcut>⌘ \</CommandShortcut>
           </CommandItem>
           <CommandItem disabled>
             <RotateCcwIcon />

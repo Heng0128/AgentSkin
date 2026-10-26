@@ -43,6 +43,7 @@
     "check": "node scripts/check-suite.mjs",
     "check:orphan-tests": "node scripts/check-orphan-tests.mjs",
     "check:fast": "biome check src/ && tsc --noEmit && node scripts/check-design-tokens.mjs && node scripts/check-i18n.mjs",
+    "check:css-classes": "npm run build && node scripts/check-css-classes.mjs --require-artifact",
     "check:defect-doc": "node scripts/generate-defect-fixes-doc.mjs --verify",
     "package": "electron-builder --win --x64 --publish never",
     "package:dir": "electron-builder --win --x64 --dir"
