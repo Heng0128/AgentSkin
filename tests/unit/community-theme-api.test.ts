@@ -424,7 +424,7 @@ describe('downloadTheme', () => {
     await expect(downloadTheme('theme-001')).rejects.toThrow('exceeds 50MB');
   });
 
-  it('does not call onProgress when Content-Length is 0', async () => {
+  it('still calls onProgress when Content-Length is 0 (chunked transfer)', async () => {
     const chunk = Buffer.from('data');
     const stream = createMockReadableStream([chunk]);
 
@@ -438,6 +438,9 @@ describe('downloadTheme', () => {
     const onProgress = vi.fn();
     await downloadTheme('theme-001', onProgress);
 
-    expect(onProgress).not.toHaveBeenCalled();
+    // Progress is reported unconditionally, even when Content-Length is 0
+    // (chunked transfer / missing header): without this the UI progress line
+    // freezes at 0 bytes while the download is actually moving.
+    expect(onProgress).toHaveBeenCalledWith(4, 0);
   });
 });

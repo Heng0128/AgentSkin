@@ -174,6 +174,18 @@ export interface BootstrapData {
   status: SystemStatus;
   locale: AppLocale;
   appVersion: string;
+  /** Real runtime versions from the main process (`process.versions`) —
+   *  Chromium/Electron/Node. The renderer UA cannot provide Node, and the
+   *  About page must show facts, not UA-parse guesses. */
+  runtime?: BootstrapRuntime;
+}
+
+/** Main-process runtime versions surfaced on the About page (all optional so
+ *  older main-process payloads and test stubs without the field stay valid). */
+export interface BootstrapRuntime {
+  chromium: string;
+  electron: string;
+  node: string;
 }
 
 export interface DialogResult {

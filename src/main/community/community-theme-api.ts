@@ -170,7 +170,7 @@ export async function fetchThemes(
     method: 'GET',
     headers: {
       'User-Agent': 'AgentSkin/1.0',
-      'Accept': 'application/json',
+      Accept: 'application/json',
     },
     signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
   });
@@ -211,7 +211,7 @@ export async function getThemeDetail(id: string): Promise<CommunityThemeDetail> 
     method: 'GET',
     headers: {
       'User-Agent': 'AgentSkin/1.0',
-      'Accept': 'application/json',
+      Accept: 'application/json',
     },
     signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
   });
@@ -290,7 +290,7 @@ export async function downloadTheme(
 
 /** Single download attempt (streamed, size-capped, progress-reporting). */
 async function doFetchDownload(
-  id: string,
+  _id: string,
   url: string,
   signal: AbortSignal,
   onProgress?: (bytesDownloaded: number, totalBytes: number) => void,
@@ -299,7 +299,7 @@ async function doFetchDownload(
     method: 'GET',
     headers: {
       'User-Agent': 'AgentSkin/1.0',
-      'Accept': 'application/json',
+      Accept: 'application/json',
     },
     signal,
   });

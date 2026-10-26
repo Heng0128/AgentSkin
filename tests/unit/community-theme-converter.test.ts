@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /**
- * Tests for `convertThemePackage` — verifies it produces a valid v2
- * directory-based theme package (schemaVersion: 2 flat manifest, per-agent
- * CSS files, hero image file) that passes `validateManifest`.
+ * Tests for `convertThemePackage` — verifies it produces a valid v1
+ * single-file `agentskin-theme` bundle (schemaVersion: 1 nested manifest,
+ * per-agent inline CSS targets, base64 image assets) that passes the
+ * engine's `validateThemePackage` gate.
  *
  * Strategy: mock the `extractThemeZip` function to return a pre-created
  * temp directory containing theme.json + theme.css + hero.png, avoiding
@@ -120,7 +121,7 @@ describe('convertThemePackage', () => {
     vi.restoreAllMocks();
   });
 
-  it('produces a valid v2 directory-based package', async () => {
+  it('produces a valid v1 single-file agentskin-theme bundle', async () => {
     const extractDir = createMockExtractedTheme();
     // extractThemeZip returns: { extractDir, themeRoot }
     // themeRoot is the dir containing theme.json (same as extractDir here)
@@ -128,127 +129,99 @@ describe('convertThemePackage', () => {
 
     const dummyZip = Buffer.from('PK\x03\x04dummy-zip-bytes');
 
-    let result;
-    try {
-      result = await convertThemePackage(dummyZip, createMockMetadata());
+    const result = await convertThemePackage(dummyZip, createMockMetadata());
 
-      // Verify the package directory exists and has the expected structure
-      expect(fs.existsSync(result.packageDir)).toBe(true);
-      expect(fs.existsSync(path.join(result.packageDir, 'manifest.json'))).toBe(true);
-      expect(fs.existsSync(path.join(result.packageDir, 'assets', 'css'))).toBe(true);
-      expect(fs.existsSync(path.join(result.packageDir, 'assets', 'images'))).toBe(true);
+    // v1 bundles are in-memory JSON — no package directory is written to disk
+    expect(result.packageDir).toBe('');
 
-      // Parse the manifest.json from disk
-      const manifestJson = fs.readFileSync(path.join(result.packageDir, 'manifest.json'), 'utf-8');
-      const parsed = JSON.parse(manifestJson);
+    // Parse the manifest from the returned JSON string
+    const parsed = JSON.parse(result.manifestJson);
 
-      // Verify v2 format markers
-      expect(parsed.$schema).toBe('https://agentskin.dev/schema/manifest-v2.json');
-      expect(parsed.schemaVersion).toBe(2);
+    // Verify v1 format markers
+    expect(parsed.format).toBe('agentskin-theme');
+    expect(parsed.schemaVersion).toBe(1);
 
-      // Verify flat structure (no nested "theme" wrapper)
-      expect(parsed.id).toMatch(/^community-/);
-      expect(parsed.name).toMatch(/^community-/);
-      expect(parsed.displayName).toBe('Test Theme');
-      expect(parsed.version).toBe('1.0.0');
+    // Verify nested theme structure (v1 carries metadata under theme.copy)
+    expect(parsed.theme.id).toMatch(/^community-/);
+    expect(parsed.theme.displayName).toBe('Test Theme');
+    expect(parsed.theme.version).toBe('1.0.0');
 
-      // Verify author auto-fill
-      expect(parsed.author).toEqual({ name: 'TestAuthor' });
+    // Verify author auto-fill
+    expect(parsed.theme.copy.author).toEqual({ name: 'TestAuthor' });
 
-      // Verify mode derived from displayMeta
-      expect(parsed.mode).toBe('dark');
+    // Verify mode derived from displayMeta
+    expect(parsed.theme.copy.mode).toBe('dark');
 
-      // Verify category and tags
-      expect(parsed.category).toBe('community');
-      expect(parsed.tags).toContain('community');
-      expect(parsed.tags).toContain('dark');
-      expect(parsed.tags).toContain('gradient');
+    // Verify category and tags
+    expect(parsed.theme.copy.category).toBe('community');
+    expect(parsed.theme.copy.tags).toContain('community');
+    expect(parsed.theme.copy.tags).toContain('dark');
+    expect(parsed.theme.copy.tags).toContain('gradient');
 
-      // Verify hero image reference (file path, not base64)
-      expect(parsed.hero).toBe('assets/images/hero.png');
-      // icon and preview are flat filenames (schema pattern forbids path separators)
-      expect(parsed.icon).toBe('icon.png');
-      expect(parsed.preview).toBe('preview.png');
+    // Verify hero/icon/preview image assets are embedded as base64
+    expect(parsed.assets.images.hero.filename).toBe('hero.png');
+    expect(parsed.assets.images.hero.mimeType).toBe('image/png');
+    expect(typeof parsed.assets.images.hero.base64).toBe('string');
+    expect(parsed.assets.images.icon.filename).toBe('icon.png');
+    expect(parsed.assets.images.preview.filename).toBe('preview.png');
 
-      // Verify targets reference CSS file paths (not inline CSS)
-      for (const agent of ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode']) {
-        expect(parsed.targets[agent]).toBeDefined();
-        expect(parsed.targets[agent].css).toBe(`assets/css/${agent}.css`);
-      }
-
-      // Verify supportedAgents
-      expect(parsed.supportedAgents).toEqual([
-        'traework',
-        'qoderwork',
-        'workbuddy',
-        'doubao',
-        'codex',
-        'zcode',
-      ]);
-
-      // Verify license auto-fill
-      expect(parsed.license).toBe('CC-BY-NC-SA-4.0');
-
-      // Verify unofficial flag
-      expect(parsed.unofficial).toBe(true);
-
-      // Verify colors (14-token system)
-      expect(parsed.colors).toBeDefined();
-      expect(parsed.colors.background).toBeDefined();
-      expect(parsed.colors.foreground).toBeDefined();
-      expect(parsed.colors.accent).toBeDefined();
-
-      // Verify CSS files exist on disk
-      for (const agent of ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode']) {
-        const cssPath = path.join(result.packageDir, 'assets', 'css', `${agent}.css`);
-        expect(fs.existsSync(cssPath)).toBe(true);
-        const cssContent = fs.readFileSync(cssPath, 'utf-8');
-        expect(cssContent).toContain('background: #000');
-      }
-
-      // Verify hero image exists on disk (preserved as PNG)
-      const heroPath = path.join(result.packageDir, 'assets', 'images', 'hero.png');
-      expect(fs.existsSync(heroPath)).toBe(true);
-
-      // Verify flat icon and preview files exist in package root
-      expect(fs.existsSync(path.join(result.packageDir, 'icon.png'))).toBe(true);
-      expect(fs.existsSync(path.join(result.packageDir, 'preview.png'))).toBe(true);
-
-      // Verify colors in result
-      expect(result.colors).toBeDefined();
-      expect(typeof result.colors).toBe('object');
-
-      // Verify themeId
-      expect(result.themeId).toMatch(/^community-/);
-    } finally {
-      fs.rmSync(extractDir, { recursive: true, force: true });
-      // Clean up the package directory created by the converter
-      fs.rmSync(result.packageDir, { recursive: true, force: true });
+    // Verify targets carry inline CSS content (not file paths)
+    for (const agent of ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode']) {
+      expect(typeof parsed.targets[agent].css).toBe('string');
+      expect(parsed.targets[agent].css).toContain('background: #000');
     }
+
+    // Verify supportedAgents
+    expect(parsed.theme.copy.supportedAgents).toEqual([
+      'traework',
+      'qoderwork',
+      'workbuddy',
+      'doubao',
+      'codex',
+      'zcode',
+    ]);
+
+    // Verify license auto-fill
+    expect(parsed.theme.copy.license).toBe('CC-BY-NC-SA-4.0');
+
+    // Verify unofficial flag
+    expect(parsed.theme.copy.unofficial).toBe(true);
+
+    // Verify colors (14-token system)
+    expect(parsed.theme.copy.colors).toBeDefined();
+    expect(parsed.theme.copy.colors.background).toBeDefined();
+    expect(parsed.theme.copy.colors.foreground).toBeDefined();
+    expect(parsed.theme.copy.colors.accent).toBeDefined();
+
+    // Verify colors in result
+    expect(result.colors).toBeDefined();
+    expect(typeof result.colors).toBe('object');
+
+    // Verify themeId
+    expect(result.themeId).toMatch(/^community-/);
+
+    fs.rmSync(extractDir, { recursive: true, force: true });
   });
 
-  it('passes validateManifest when parsed', async () => {
+  it('passes the engine validateThemePackage gate when parsed', async () => {
     const extractDir = createMockExtractedTheme();
     mockExtract.mockResolvedValue({ extractDir, themeRoot: extractDir });
 
-    // Import the v2 manifest validator
-    const { validateManifest } = await import('../../src/main/catalog/manifest-validator');
+    // Import the engine's v1 bundle validator (authoritative gate — the same
+    // check ThemeLibrary.installFile / readTheme run on install)
+    const { validateThemePackage } = await import('../../src/engine/src/theme/package.mjs');
 
     const dummyZip = Buffer.from('PK\x03\x04dummy-zip-bytes');
 
-    let result;
     try {
-      result = await convertThemePackage(dummyZip, createMockMetadata());
+      const result = await convertThemePackage(dummyZip, createMockMetadata());
       const parsed = JSON.parse(result.manifestJson);
 
-      // This should produce zero errors — the manifest must be valid v2
-      const errors = validateManifest(parsed);
-      expect(errors).toEqual([]);
+      // Must parse through the engine gate without throwing — v1 bundles are
+      // all-or-nothing validated (no error list like the old v2 validator)
+      expect(() => validateThemePackage(parsed)).not.toThrow();
     } finally {
       fs.rmSync(extractDir, { recursive: true, force: true });
-      if (result?.packageDir) {
-        fs.rmSync(result.packageDir, { recursive: true, force: true });
-      }
     }
   });
 
@@ -264,21 +237,17 @@ describe('convertThemePackage', () => {
 
     const dummyZip = Buffer.from('PK\x03\x04dummy-zip-bytes');
 
-    let result;
     try {
-      result = await convertThemePackage(dummyZip, metadataNoAuthor);
+      const result = await convertThemePackage(dummyZip, metadataNoAuthor);
       const parsed = JSON.parse(result.manifestJson);
 
       // Author should be auto-filled with default
-      expect(parsed.author).toEqual({ name: 'DreamSkin Community' });
+      expect(parsed.theme.copy.author).toEqual({ name: 'DreamSkin Community' });
 
       // License should be auto-filled
-      expect(parsed.license).toBe('CC-BY-NC-SA-4.0');
+      expect(parsed.theme.copy.license).toBe('CC-BY-NC-SA-4.0');
     } finally {
       fs.rmSync(extractDir, { recursive: true, force: true });
-      if (result?.packageDir) {
-        fs.rmSync(result.packageDir, { recursive: true, force: true });
-      }
     }
   });
 
@@ -304,23 +273,16 @@ describe('convertThemePackage', () => {
 
     const dummyZip = Buffer.from('PK\x03\x04dummy-zip-bytes');
 
-    let result;
     try {
-      result = await convertThemePackage(dummyZip, createMockMetadata());
+      const result = await convertThemePackage(dummyZip, createMockMetadata());
       const parsed = JSON.parse(result.manifestJson);
 
-      // Hero should reference .jpg, not .png
-      expect(parsed.hero).toBe('assets/images/hero.jpg');
-
-      // Hero file should exist on disk as .jpg
-      expect(fs.existsSync(path.join(result.packageDir, 'assets', 'images', 'hero.jpg'))).toBe(
-        true,
-      );
+      // Hero asset should keep the .jpg filename and jpeg mime type
+      expect(parsed.assets.images.hero.filename).toBe('hero.jpg');
+      expect(parsed.assets.images.hero.mimeType).toBe('image/jpeg');
+      expect(typeof parsed.assets.images.hero.base64).toBe('string');
     } finally {
       fs.rmSync(extractDir, { recursive: true, force: true });
-      if (result?.packageDir) {
-        fs.rmSync(result.packageDir, { recursive: true, force: true });
-      }
     }
   });
 
@@ -334,9 +296,6 @@ describe('convertThemePackage', () => {
 
     // The converter's finally block should call cleanupExtractDir with the extractDir
     expect(mockCleanup).toHaveBeenCalledWith(extractDir);
-
-    // Clean up the package directory
-    fs.rmSync(result.packageDir, { recursive: true, force: true });
   });
 
   it('cleans up package directory on conversion error', async () => {

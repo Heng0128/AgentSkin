@@ -84,7 +84,7 @@ export function CommunityThemeCard({
       className={cn(
         'group relative flex flex-col overflow-hidden rounded-lg border bg-card text-left transition-[transform,border-color,box-shadow] duration-base ease-out',
         selected
-          ? 'border-primary ring-2 ring-primary/30'
+          ? 'border-primary as-glow'
           : 'border-border hover:-translate-y-[2px] hover:border-border-strong hover:shadow-elev2',
         className,
       )}

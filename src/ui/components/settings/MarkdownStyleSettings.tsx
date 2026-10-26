@@ -14,10 +14,9 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
+import type { AppController } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
-import { useShellStore } from '@/stores/shellStore';
 
-import { uiMessages } from '@shared/i18n';
 import type { MarkdownStyles } from '@shared/types/markdown';
 import { RotateCcw, Save } from 'lucide-react';
 
@@ -60,7 +59,7 @@ function ColorRow({
 }
 
 /** Live preview panel showing the current Markdown styles. */
-function MarkdownPreview({ styles }: { styles: MarkdownStyles }) {
+function MarkdownPreview({ styles, label }: { styles: MarkdownStyles; label: string }) {
   const headingStyle = (color?: string) => (color ? { color } : undefined);
   const codeStyle = {
     backgroundColor: styles.codeBackground || undefined,
@@ -69,7 +68,7 @@ function MarkdownPreview({ styles }: { styles: MarkdownStyles }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-[11px] font-medium text-foreground">Preview</span>
+      <span className="text-[11px] font-medium text-foreground">{label}</span>
       <div
         className="rounded border border-border bg-background p-3"
         style={styles.fontFamily ? { fontFamily: styles.fontFamily } : undefined}
@@ -81,7 +80,7 @@ function MarkdownPreview({ styles }: { styles: MarkdownStyles }) {
           Heading 1
         </h1>
         <h2
-          className="text-[13px] font-semibold"
+          className="text-ui font-semibold"
           style={headingStyle(styles.headingColorH2 || styles.headingColor)}
         >
           Heading 2
@@ -130,12 +129,16 @@ function MarkdownPreview({ styles }: { styles: MarkdownStyles }) {
  * # MarkdownStyleSettings
  *
  * Self-contained settings panel for runtime Markdown style customization.
- * Loads and persists via the AgentSkin IPC bridge.
+ * Loads and persists via the AgentSkin IPC bridge; `t` / `showToast` are
+ * passed in by the Settings page (same contract as CustomCssEditor).
  */
-export function MarkdownStyleSettings() {
-  const locale = useShellStore((s) => s.locale);
-  const s = uiMessages[locale];
-
+export function MarkdownStyleSettings({
+  t,
+  showToast,
+}: {
+  t: AppController['t'];
+  showToast: AppController['showToast'];
+}) {
   const [value, setValue] = useState<MarkdownStyles>(DEFAULT_STYLES);
   const [draft, setDraft] = useState<MarkdownStyles>(DEFAULT_STYLES);
   const [loading, setLoading] = useState(true);
@@ -170,21 +173,25 @@ export function MarkdownStyleSettings() {
     try {
       await api.saveMarkdownStyles(draft);
       setValue(draft);
+      showToast(t.settingsMarkdownStylesSaved);
     } catch {
-      // Non-fatal: value stays in draft, user can retry.
+      // Save failed: value stays in draft so the user can retry.
+      showToast(t.settingsMarkdownStylesFailed, 'destructive');
     } finally {
       setSaving(false);
     }
   };
 
   const handleReset = async () => {
-    setDraft(DEFAULT_STYLES);
     setSaving(true);
     try {
       await api.saveMarkdownStyles(DEFAULT_STYLES);
       setValue(DEFAULT_STYLES);
+      setDraft(DEFAULT_STYLES);
+      showToast(t.settingsMarkdownStylesResetDone);
     } catch {
-      // Non-fatal: reset stays in draft.
+      // Reset failed: keep the current draft untouched so nothing is lost.
+      showToast(t.settingsMarkdownStylesFailed, 'destructive');
     } finally {
       setSaving(false);
     }
@@ -193,7 +200,7 @@ export function MarkdownStyleSettings() {
   if (loading) {
     return (
       <div className="as-panel flex items-center justify-center p-8">
-        <span className="text-[11px] text-muted-foreground">Loading...</span>
+        <span className="text-[11px] text-muted-foreground">{t.loading}</span>
       </div>
     );
   }
@@ -204,64 +211,62 @@ export function MarkdownStyleSettings() {
     <div className="as-panel flex flex-col gap-4 p-4">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <span className="text-[13px] font-medium text-foreground">
-          {s.settingsMarkdownStylesTitle}
-        </span>
-        <span className="text-[11px] text-muted-foreground">{s.settingsMarkdownStylesDesc}</span>
+        <span className="text-ui font-medium text-foreground">{t.settingsMarkdownStylesTitle}</span>
+        <span className="text-[11px] text-muted-foreground">{t.settingsMarkdownStylesDesc}</span>
       </div>
 
       {/* Color controls */}
       <div className="flex flex-col gap-2.5">
         <ColorRow
-          label={s.settingsMarkdownStylesHeadingColor}
+          label={t.settingsMarkdownStylesHeadingColor}
           value={draft.headingColor}
           onChange={(v) => update('headingColor', v)}
           placeholder="#111111"
         />
         <ColorRow
-          label={s.settingsMarkdownStylesHeadingColorH1}
+          label={t.settingsMarkdownStylesHeadingColorH1}
           value={draft.headingColorH1}
           onChange={(v) => update('headingColorH1', v)}
           placeholder="#222222"
         />
         <ColorRow
-          label={s.settingsMarkdownStylesHeadingColorH2}
+          label={t.settingsMarkdownStylesHeadingColorH2}
           value={draft.headingColorH2}
           onChange={(v) => update('headingColorH2', v)}
           placeholder="#333333"
         />
         <ColorRow
-          label={s.settingsMarkdownStylesHeadingColorH3}
+          label={t.settingsMarkdownStylesHeadingColorH3}
           value={draft.headingColorH3}
           onChange={(v) => update('headingColorH3', v)}
           placeholder="#444444"
         />
         <ColorRow
-          label={s.settingsMarkdownStylesLinkColor}
+          label={t.settingsMarkdownStylesLinkColor}
           value={draft.linkColor}
           onChange={(v) => update('linkColor', v)}
           placeholder="#0969da"
         />
         <ColorRow
-          label={s.settingsMarkdownStylesCodeBackground}
+          label={t.settingsMarkdownStylesCodeBackground}
           value={draft.codeBackground}
           onChange={(v) => update('codeBackground', v)}
           placeholder="#f6f8fa"
         />
         <ColorRow
-          label={s.settingsMarkdownStylesCodeColor}
+          label={t.settingsMarkdownStylesCodeColor}
           value={draft.codeColor}
           onChange={(v) => update('codeColor', v)}
           placeholder="#24292f"
         />
         <ColorRow
-          label={s.settingsMarkdownStylesInlineCodeColor}
+          label={t.settingsMarkdownStylesInlineCodeColor}
           value={draft.inlineCodeColor}
           onChange={(v) => update('inlineCodeColor', v)}
           placeholder="#d73a49"
         />
         <ColorRow
-          label={s.settingsMarkdownStylesBlockquoteColor}
+          label={t.settingsMarkdownStylesBlockquoteColor}
           value={draft.blockquoteColor}
           onChange={(v) => update('blockquoteColor', v)}
           placeholder="#6a737d"
@@ -271,7 +276,7 @@ export function MarkdownStyleSettings() {
       {/* Font family */}
       <div className="flex items-center justify-between gap-3">
         <span className="text-[12px] text-muted-foreground">
-          {s.settingsMarkdownStylesFontFamily}
+          {t.settingsMarkdownStylesFontFamily}
         </span>
         <input
           type="text"
@@ -283,7 +288,7 @@ export function MarkdownStyleSettings() {
       </div>
 
       {/* Preview */}
-      <MarkdownPreview styles={draft} />
+      <MarkdownPreview styles={draft} label={t.settingsMarkdownStylesPreview} />
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-2 border-t border-border pt-3">
@@ -294,7 +299,7 @@ export function MarkdownStyleSettings() {
           className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground transition-colors duration-base hover:bg-muted hover:text-foreground"
         >
           <RotateCcw className="size-3" />
-          {s.settingsMarkdownStylesReset}
+          {t.settingsMarkdownStylesReset}
         </button>
         <button
           type="button"
@@ -303,12 +308,12 @@ export function MarkdownStyleSettings() {
           className={cn(
             'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] transition-colors duration-base',
             isModified && !saving
-              ? 'bg-cr-primary text-white hover:bg-cr-primary/90'
+              ? 'bg-primary text-white hover:bg-primary/90'
               : 'bg-muted text-muted-foreground/50 cursor-not-allowed',
           )}
         >
           <Save className="size-3" />
-          {saving ? 'Saving...' : s.settingsMarkdownStylesSave}
+          {t.settingsMarkdownStylesSave}
         </button>
       </div>
     </div>

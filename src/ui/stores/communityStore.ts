@@ -38,10 +38,7 @@
  */
 
 import { api } from '@/api/agentSkinClient';
-import {
-  fetchCodeDrobeThemesList,
-  fetchCodeDrobeThemeDetail,
-} from '@/api/community-direct-api';
+import { fetchCodeDrobeThemeDetail, fetchCodeDrobeThemesList } from '@/api/community-direct-api';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useThemeStore } from '@/stores/themeStore';
 

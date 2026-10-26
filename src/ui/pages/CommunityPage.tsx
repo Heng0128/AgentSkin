@@ -64,12 +64,15 @@ export function CommunityPage({ route }: CommunityPageProps) {
     setSelectedAuthorId(null);
   }, []);
 
-  const handleSelectTheme = useCallback((themeId: string | null) => {
-    if (themeId) {
-      setSelectedAuthorId(null);
-      void loadThemeDetail(themeId);
-    }
-  }, [loadThemeDetail]);
+  const handleSelectTheme = useCallback(
+    (themeId: string | null) => {
+      if (themeId) {
+        setSelectedAuthorId(null);
+        void loadThemeDetail(themeId);
+      }
+    },
+    [loadThemeDetail],
+  );
 
   // Parse "community.dreamskin" → "dreamskin"; strip unknown suffixes gracefully.
   // When the bare `community` route is accessed (e.g. browser refresh), treat it
@@ -108,7 +111,7 @@ export function CommunityPage({ route }: CommunityPageProps) {
       <div className="flex h-full min-h-0 flex-col">
         <PageHeader title={t.sourceCommunity} />
         <div className="flex min-h-0 flex-1 items-center justify-center p-6">
-          <span className="text-[13px] text-muted-foreground">Unknown community source</span>
+          <span className="text-ui text-muted-foreground">Unknown community source</span>
         </div>
       </div>
     );
@@ -119,11 +122,19 @@ export function CommunityPage({ route }: CommunityPageProps) {
       <PageHeader title={t.sourceCommunity} />
       <div className="flex min-h-0 min-h-0 flex-1">
         <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-          <CommunityTabPanel hideDetailPanel onAuthorClick={handleAuthorClick} onSelectTheme={handleSelectTheme} />
+          <CommunityTabPanel
+            hideDetailPanel
+            onAuthorClick={handleAuthorClick}
+            onSelectTheme={handleSelectTheme}
+          />
         </main>
         {/* Right panel — mutually exclusive: AuthorPanel vs SourceDetailPanel */}
         {selectedAuthorId && (
-          <AuthorPanel authorId={selectedAuthorId} onClose={handleAuthorClose} onSelectTheme={handleSelectTheme} />
+          <AuthorPanel
+            authorId={selectedAuthorId}
+            onClose={handleAuthorClose}
+            onSelectTheme={handleSelectTheme}
+          />
         )}
         {selectedThemeId && !selectedAuthorId && <SourceDetailPanel />}
       </div>

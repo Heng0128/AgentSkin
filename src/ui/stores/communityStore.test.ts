@@ -856,10 +856,7 @@ describe('communityStore — per-source RequestToken independence', () => {
 
     // DreamSkin path — slow, will be discarded by per-source RequestToken
     mockListCommunityThemes.mockImplementation(
-      () =>
-        new Promise((resolve) =>
-          setTimeout(() => resolve(makeListResult(dsThemes, 1)), 100),
-        ),
+      () => new Promise((resolve) => setTimeout(() => resolve(makeListResult(dsThemes, 1)), 100)),
     );
     // CodeDrobe path — fast, returns immediately
     mockFetchCodeDrobeThemesList.mockResolvedValue(makeCodeDrobeListResult(crThemes, 1));
@@ -898,9 +895,7 @@ describe('communityStore — per-source RequestToken independence', () => {
       dsCall++;
       if (dsCall === 1) {
         // Slow dreamskin call
-        return new Promise((resolve) =>
-          setTimeout(() => resolve(makeListResult(dsThemes, 1)), 30),
-        );
+        return new Promise((resolve) => setTimeout(() => resolve(makeListResult(dsThemes, 1)), 30));
       }
       return makeListResult(dsThemes, 1);
     });

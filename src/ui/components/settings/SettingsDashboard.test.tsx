@@ -62,6 +62,8 @@ const { mockUiMessages } = vi.hoisted(() => {
     settingsDashboardStatusInstalled: 'Installed',
     settingsDashboardStatusNotInstalled: 'Not installed',
     settingsDashboardRefresh: 'Refresh',
+    settingsDashboardEmpty: 'No apps detected',
+    settingsDashboardEmptyHint: 'Start a target app, then click Refresh',
   } as unknown as UiMessages;
 
   return {
@@ -227,6 +229,8 @@ describe('SettingsDashboard — rendering', () => {
     expect(html).toContain('0/0');
     // Should not render any agent cards
     expect(html).not.toContain('TRAE Work CN');
+    // Empty state prompts the user to start an app and refresh
+    expect(html).toContain('No apps detected');
   });
 });
 

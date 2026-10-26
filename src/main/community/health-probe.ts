@@ -12,8 +12,8 @@
 
 import * as https from 'node:https';
 import type { CommunitySourceId, CommunitySourceProbeResult } from '../../shared/types/community';
-import { API_BASE } from './community-theme-api';
 import { CODE_DROBE_API_BASE, IS_API_AVAILABLE } from './codedrobe-api';
+import { API_BASE } from './community-theme-api';
 
 const PROBE_TIMEOUT_MS = 2000;
 

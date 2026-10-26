@@ -238,7 +238,7 @@ export function CommunityThemePreview({
     <div className="flex flex-col gap-4">
       {/* Palette section */}
       <section>
-        <h3 className="mb-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <h3 className="mb-2 text-[11px] font-medium tracking-tight text-muted-foreground">
           {t.colors ?? 'Colors'}
         </h3>
         {hasColors ? (
@@ -252,7 +252,7 @@ export function CommunityThemePreview({
 
       {/* Mock UI section */}
       <section>
-        <h3 className="mb-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <h3 className="mb-2 text-[11px] font-medium tracking-tight text-muted-foreground">
           {t.communityTabMockUI ?? 'Mock Preview'}
         </h3>
         <MockUI colors={colorMap} />

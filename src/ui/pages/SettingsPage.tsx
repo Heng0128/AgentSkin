@@ -2,11 +2,13 @@
 
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
+import { AppMark } from '@/components/AppMark';
 import { DriftStatusPanel } from '@/components/diagnostics/DriftStatusPanel';
 import { PerformancePanel } from '@/components/diagnostics/PerformancePanel';
 import { SecondaryInjectTrace } from '@/components/diagnostics/SecondaryInjectTrace';
 import { SelectorProbePanel } from '@/components/diagnostics/SelectorProbePanel';
 import { VisualAnalysisPanel } from '@/components/diagnostics/VisualAnalysisPanel';
+import { Logo } from '@/components/Logo';
 import { MarkdownStyleSettings } from '@/components/settings/MarkdownStyleSettings';
 import { SettingsDashboard } from '@/components/settings/SettingsDashboard';
 import {
@@ -41,7 +43,10 @@ import {
   type RadiusScale,
   useSettingsStore,
 } from '@/stores/settingsStore';
+import { useShellStore } from '@/stores/shellStore';
+import { useStatusStore } from '@/stores/statusStore';
 
+import { AGENT_IDS, AGENT_META } from '@shared/types';
 import {
   CheckCircle2,
   Copy,
@@ -310,12 +315,150 @@ function McpSettingsPanel({
   );
 }
 
+/** SystemStatus.platform → user-facing OS name (platform names are not localized). */
+const PLATFORM_LABELS: Record<string, string> = {
+  win32: 'Windows',
+  darwin: 'macOS',
+  linux: 'Linux',
+};
+
+/**
+ * # AboutSection
+ *
+ * Product "About" view, trimmed to what mainstream About pages actually show:
+ * a centered brand hero (real logo mark + version + one-line tagline + copy
+ * action), a quiet self-labeling runtime strip (OS / Electron / Chromium /
+ * Node — facts from `process.versions` via bootstrap), the supported-adapters
+ * grid, and a single legal line. License boilerplate and third-party license
+ * tables live in `THIRD_PARTY_NOTICES.md` / `NOTICE`, not in the UI.
+ */
+function AboutSection({
+  t,
+  showToast,
+  appVersion,
+}: {
+  t: AppController['t'];
+  showToast: AppController['showToast'];
+  appVersion: string;
+}) {
+  const platform = useStatusStore((s) => s.status?.platform);
+  const runtime = useShellStore((s) => s.runtime);
+  const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
+
+  const platformLabel = platform ? (PLATFORM_LABELS[platform] ?? null) : null;
+
+  /** Self-labeling runtime facts for the hero footer — only real data shown,
+   *  so the strip disappears entirely before bootstrap resolves. */
+  const runtimeSegments = [
+    platformLabel,
+    runtime?.electron ? `Electron ${runtime.electron}` : null,
+    runtime?.chromium ? `Chromium ${runtime.chromium}` : null,
+    runtime?.node ? `Node.js ${runtime.node}` : null,
+  ].filter((segment): segment is string => Boolean(segment));
+
+  const handleCopy = async () => {
+    const text = `AgentSkin v${appVersion} (Electron ${runtime?.electron || '?'}, Chromium ${
+      runtime?.chromium || '?'
+    }, Node.js ${runtime?.node || '?'}, ${platformLabel ?? '?'})`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      showToast(t.copyLogsDone);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      showToast(t.copyLogsFailed, 'destructive');
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Product identity — brand hero with the real logo mark, runtime facts
+          as a hairline footer strip instead of a spec-sheet panel */}
+      <div className="as-panel relative overflow-hidden text-center">
+        {/* Ambient brand halo — pure decoration, sits behind the content */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-20 left-1/2 size-48 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+        />
+        <div className="relative flex flex-col items-center gap-3 px-6 pb-5 pt-8">
+          <Logo variant="color" className="size-16 rounded-lg shadow-lg" />
+          <div className="flex flex-col items-center gap-1.5">
+            <div className="flex items-center gap-2.5">
+              <p className="text-display font-semibold tracking-tight text-foreground">AgentSkin</p>
+              <span className="rounded-md bg-primary/10 px-2 py-0.5 font-mono text-[11px] tabular-nums text-primary">
+                v{appVersion}
+              </span>
+            </div>
+            <p className="max-w-sm text-caption leading-relaxed text-muted-foreground">
+              {t.settingsAboutDesc}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-1 h-7 gap-1.5 px-2.5 text-[11px]"
+            onClick={() => void handleCopy()}
+          >
+            {copied ? (
+              <CheckCircle2 className="size-3.5 text-cr-success" />
+            ) : (
+              <Copy className="size-3.5" />
+            )}
+            {t.settingsAboutCopyVersion}
+          </Button>
+        </div>
+        {runtimeSegments.length > 0 && (
+          <div className="relative border-t border-border px-4 py-2.5">
+            <p className="font-mono text-[11px] tabular-nums text-muted-foreground">
+              {runtimeSegments.join(' · ')}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Supported agents — real app icons, one line per adapter */}
+      <div className="as-panel flex flex-col gap-2.5 p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-caption font-medium text-foreground">
+            {t.settingsAboutSupportedAgents}
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            {t.settingsAboutAgentsCount(AGENT_IDS.length)}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {AGENT_IDS.map((id) => (
+            <div key={id} className="flex items-center gap-2.5 rounded-md bg-muted/50 px-3 py-2">
+              <AppMark appId={id} size={18} />
+              <span className="truncate text-[12px] text-foreground">
+                {AGENT_META[id].displayName}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Legal — a single quiet line; full notices live in THIRD_PARTY_NOTICES.md */}
+      <p className="text-center text-[11px] text-muted-foreground/70">{t.settingsAboutLegal}</p>
+    </div>
+  );
+}
+
 /**
  * # SettingsPage
  *
  * In-page settings — no separate dialog. Sits alongside Workspace and Themes
- * in the sidebar. A left section rail (General / System / About / Advanced)
- * switches the right-hand content, mirroring the old dialog layout but embedded.
+ * in the sidebar. A left section rail (General / Appearance / System /
+ * Advanced / About) switches the right-hand content, mirroring the old
+ * dialog layout but embedded.
  */
 export function SettingsPage({ controller }: { controller: AppController }) {
   const { t, appVersion, logs, showToast, settings } = controller;
@@ -343,15 +486,21 @@ export function SettingsPage({ controller }: { controller: AppController }) {
     };
   }, []);
 
+  /** Mark the copy as successful: check icon + toast for 2s. Resets any
+   *  pending timer so rapid re-clicks don't stack resets. */
+  const markCopied = useCallback(() => {
+    setCopied(true);
+    showToast(t.copyLogsDone);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
+  }, [showToast, t]);
+
   const handleCopy = useCallback(async () => {
     if (logs.length === 0) return;
     const text = logs.join('\n');
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
-      showToast(t.copyLogsDone);
-      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
-      copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
+      markCopied();
     } catch {
       try {
         const textarea = document.createElement('textarea');
@@ -362,15 +511,12 @@ export function SettingsPage({ controller }: { controller: AppController }) {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        setCopied(true);
-        showToast(t.copyLogsDone);
-        if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
-        copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
+        markCopied();
       } catch {
         showToast(t.copyLogsFailed, 'destructive');
       }
     }
-  }, [logs, showToast, t]);
+  }, [logs, markCopied, showToast, t]);
 
   // Load settings data on mount.
   // P3-2: controller.openSettings is already stable (useCallback with empty
@@ -385,8 +531,8 @@ export function SettingsPage({ controller }: { controller: AppController }) {
     { id: 'general', label: t.settingsGeneralTitle, icon: Settings },
     { id: 'appearance', label: t.settingsAppearance, icon: Palette },
     { id: 'system', label: t.settingsSystemTitle, icon: FileText },
-    { id: 'about', label: t.settingsAbout, icon: Info },
     { id: 'advanced', label: t.settingsAdvancedTitle, icon: LayoutDashboard },
+    { id: 'about', label: t.settingsAbout, icon: Info },
   ];
 
   /** Options for the radius SegmentedControl on the appearance section. */
@@ -423,9 +569,9 @@ export function SettingsPage({ controller }: { controller: AppController }) {
   const showSettingsSkeleton = settings === null;
 
   return (
-    <div className="setp flex h-full min-h-0 min-w-0">
+    <div className="flex h-full min-h-0 min-w-0">
       {/* Section nav */}
-      <aside className="set-rail hidden w-44 shrink-0 flex-col gap-0.5 overflow-y-auto pr-3 md:flex">
+      <aside className="hidden w-44 shrink-0 flex-col gap-0.5 overflow-y-auto pr-3 md:flex">
         <div className="px-2 pb-2">
           <SectionLabel label={t.settingsTitle} />
         </div>
@@ -445,7 +591,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
             {section === item.id && (
               <span
                 aria-hidden
-                className="as-brand-line absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full shadow-[0_0_6px_rgba(var(--brand-rgb),0.4)]"
+                className="as-brand-line absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full shadow-[0_0_6px_rgb(var(--brand-rgb)/0.4)]"
               />
             )}
             <item.icon
@@ -594,7 +740,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                     />
                   </SettingRow>
                 </div>
-                <MarkdownStyleSettings />
+                <MarkdownStyleSettings t={t} showToast={showToast} />
               </div>
             )}
             {section === 'system' &&
@@ -621,73 +767,64 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                 </div>
               ))}
             {section === 'about' && (
-              <div className="as-panel overflow-hidden">
-                <SettingRow title="AgentSkin" description={t.settingsAboutDesc}>
-                  <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
-                    v{appVersion}
-                  </span>
-                </SettingRow>
-                <SettingRow title={t.settingsCurrentVersion}>
-                  <span className="font-mono text-[11px] tabular-nums text-foreground">
-                    v{appVersion}
-                  </span>
-                </SettingRow>
-              </div>
+              <AboutSection t={t} showToast={showToast} appVersion={appVersion} />
             )}
             {section === 'advanced' && (
-              <div className="as-panel overflow-hidden">
+              <div className="flex flex-col gap-4">
                 <McpSettingsPanel t={t} showToast={showToast} />
                 <LiveDomRefreshIntervalEditor t={t} />
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="diagnostics" className="border-t border-border">
-                    <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
-                      {t.settingsDiagnosticsTitle}
-                    </AccordionTrigger>
-                    <AccordionContent className="px-3 pb-3">
-                      <PerformancePanel t={t} />
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="secondary-inject" className="border-t border-border">
-                    <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
-                      {t.settingsSecondaryInjectTitle}
-                    </AccordionTrigger>
-                    <AccordionContent className="px-3 pb-3">
-                      <SecondaryInjectTrace t={t} />
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="custom-css" className="border-t border-border">
-                    <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
-                      {t.settingsCustomCssTitle}
-                    </AccordionTrigger>
-                    <AccordionContent className="px-3 pb-3">
-                      <CustomCssEditor t={t} showToast={showToast} />
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="drift-status" className="border-t border-border">
-                    <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
-                      {t.settingsDriftStatusTitle}
-                    </AccordionTrigger>
-                    <AccordionContent className="px-3 pb-3">
-                      <DriftStatusPanel t={t} />
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="visual-analysis" className="border-t border-border">
-                    <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
-                      {t.settingsVisualAnalysisTitle}
-                    </AccordionTrigger>
-                    <AccordionContent className="px-3 pb-3">
-                      <VisualAnalysisPanel />
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="selector-probe" className="border-t border-border">
-                    <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
-                      {t.settingsSelectorProbeTitle}
-                    </AccordionTrigger>
-                    <AccordionContent className="px-3 pb-3">
-                      <SelectorProbePanel />
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+                <div className="as-panel overflow-hidden">
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="diagnostics" className="border-border">
+                      <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
+                        {t.settingsDiagnosticsTitle}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-3">
+                        <PerformancePanel t={t} />
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="secondary-inject" className="border-border">
+                      <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
+                        {t.settingsSecondaryInjectTitle}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-3">
+                        <SecondaryInjectTrace t={t} />
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="custom-css" className="border-border">
+                      <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
+                        {t.settingsCustomCssTitle}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-3">
+                        <CustomCssEditor t={t} showToast={showToast} />
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="drift-status" className="border-border">
+                      <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
+                        {t.settingsDriftStatusTitle}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-3">
+                        <DriftStatusPanel t={t} />
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="visual-analysis" className="border-border">
+                      <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
+                        {t.settingsVisualAnalysisTitle}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-3">
+                        <VisualAnalysisPanel />
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="selector-probe" className="border-border">
+                      <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
+                        {t.settingsSelectorProbeTitle}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-3">
+                        <SelectorProbePanel />
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
               </div>
             )}
           </div>

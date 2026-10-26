@@ -26,6 +26,7 @@ import type { Route } from '@/types/navigation';
 
 import { type AppLocale, DEFAULT_LOCALE, isAppLocale, uiMessages } from '@shared/i18n';
 import { registerLocaleReader } from '@shared/i18n/runtime-t';
+import type { BootstrapRuntime } from '@shared/types';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -40,6 +41,9 @@ type SetStateSetter<T> = (value: SetStateValue<T>) => void;
 interface ShellState {
   locale: AppLocale;
   appVersion: string;
+  /** Main-process runtime versions (Chromium/Electron/Node) from bootstrap —
+   *  consumed by the Settings About section. Null until boot completes. */
+  runtime: BootstrapRuntime | null;
   booting: boolean;
   route: Route;
   activeAgentId: string | null;
@@ -53,6 +57,7 @@ interface ShellState {
   // --- actions ---
   setLocale: (locale: AppLocale) => void;
   setAppVersion: (version: string) => void;
+  setRuntime: (runtime: BootstrapRuntime) => void;
   setBooting: (booting: boolean) => void;
   setRoute: (route: Route) => void;
   setActiveAgentId: (id: string | null) => void;
@@ -70,6 +75,7 @@ export const useShellStore = create<ShellState>()(
     (set) => ({
       locale: DEFAULT_LOCALE,
       appVersion: '',
+      runtime: null,
       booting: true,
       route: 'themes',
       activeAgentId: null,
@@ -86,6 +92,7 @@ export const useShellStore = create<ShellState>()(
         }
       },
       setAppVersion: (appVersion) => set({ appVersion }),
+      setRuntime: (runtime) => set({ runtime }),
       setBooting: (booting) => set({ booting }),
       setRoute: (route) => set({ route }),
       setActiveAgentId: (activeAgentId) => set({ activeAgentId }),

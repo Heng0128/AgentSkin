@@ -115,8 +115,7 @@ export async function fetchCodeDrobeThemesList(
   const PAGE_LIMIT = 24;
 
   // Map generic sort key → CodeDrobe values (downloads | newest).
-  const sort =
-    params.sort === 'popular' ? 'downloads' : 'newest';
+  const sort = params.sort === 'popular' ? 'downloads' : 'newest';
 
   const allThemes: ReturnType<typeof mapTheme>[] = [];
   const seenSlugs = new Set<string>();
@@ -141,7 +140,9 @@ export async function fetchCodeDrobeThemesList(
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch CodeDrobe themes (page ${pageCount + 1}): HTTP ${response.status}`);
+      throw new Error(
+        `Failed to fetch CodeDrobe themes (page ${pageCount + 1}): HTTP ${response.status}`,
+      );
     }
 
     const body = (await response.json()) as RawListResponse;
@@ -206,7 +207,9 @@ interface RawCategory {
 /**
  * 获取 CodeDrobe 主题分类列表。
  */
-export async function fetchCodeDrobeCategories(): Promise<import('@shared/types/community').CommunityCategory[]> {
+export async function fetchCodeDrobeCategories(): Promise<
+  import('@shared/types/community').CommunityCategory[]
+> {
   const url = `${CODE_DROBE_API_BASE}/categories`;
   const response = await fetch(url, {
     method: 'GET',
@@ -242,7 +245,9 @@ interface RawCreator {
 /**
  * 获取 CodeDrobe 创作者列表。
  */
-export async function fetchCodeDrobeCreators(): Promise<import('@shared/types/community').CommunityCreator[]> {
+export async function fetchCodeDrobeCreators(): Promise<
+  import('@shared/types/community').CommunityCreator[]
+> {
   const url = `${CODE_DROBE_API_BASE}/creators`;
   const response = await fetch(url, {
     method: 'GET',
@@ -268,7 +273,9 @@ export async function fetchCodeDrobeCreators(): Promise<import('@shared/types/co
 /**
  * 获取 CodeDrobe 单个创作者详情。
  */
-export async function fetchCodeDrobeCreatorDetail(handle: string): Promise<import('@shared/types/community').CommunityCreator> {
+export async function fetchCodeDrobeCreatorDetail(
+  handle: string,
+): Promise<import('@shared/types/community').CommunityCreator> {
   const url = `${CODE_DROBE_API_BASE}/creators/${encodeURIComponent(handle)}`;
   const response = await fetch(url, {
     method: 'GET',

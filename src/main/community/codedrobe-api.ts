@@ -14,7 +14,6 @@ import type {
   CommunityThemeDetail,
   CommunityThemeListParams,
   CommunityThemeListResult,
-  CommunityThemeSortKey,
   CommunityThemeSummary,
 } from '../../shared/types/community';
 import { mainError } from '../logger';
@@ -86,7 +85,7 @@ const CODEDROBE_APP_MAP: Record<string, string> = {
   workbuddy: 'workbuddy',
   doubao: 'doubao',
   zcode: 'zcode',
-}
+};
 
 function mapCodeDrobeToSummary(raw: RawCodeDrobeTheme): CommunityThemeSummary {
   const name = pickLocalized(raw.name) ?? raw.slug;
@@ -236,8 +235,10 @@ function httpsGetBuffer(
 
         if (statusCode >= 300 && statusCode < 400 && res.headers.location) {
           res.resume();
-          httpsGetBuffer(res.headers.location, timeoutMs, onProgress, abortSignal)
-            .then(resolve, reject);
+          httpsGetBuffer(res.headers.location, timeoutMs, onProgress, abortSignal).then(
+            resolve,
+            reject,
+          );
           return;
         }
 

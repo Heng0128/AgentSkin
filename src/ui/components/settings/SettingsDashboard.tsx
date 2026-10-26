@@ -13,6 +13,7 @@
  */
 
 import { useMemo } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import { useStatusStore } from '@/stores/statusStore';
 import { useThemeStore } from '@/stores/themeStore';
@@ -190,6 +191,8 @@ export interface DashboardT {
   settingsDashboardHoursAgo: (n: number) => string;
   settingsDashboardDaysAgo: (n: number) => string;
   settingsDashboardRefresh: string;
+  settingsDashboardEmpty: string;
+  settingsDashboardEmptyHint: string;
 }
 
 /** Props for the SettingsDashboard component. */
@@ -249,12 +252,22 @@ export function SettingsDashboard({ t }: SettingsDashboardProps) {
         </button>
       </div>
 
-      {/* Agent status grid — 6 adapters in a responsive grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {rows.map((row) => (
-          <AgentStatusCard key={row.appId} row={row} t={t} />
-        ))}
-      </div>
+      {/* Agent status grid — 6 adapters in a responsive grid, or an empty
+       *  state when the main process has not reported any apps yet. */}
+      {rows.length === 0 ? (
+        <EmptyState
+          icon={<Monitor className="text-muted-foreground" />}
+          title={t.settingsDashboardEmpty}
+          hint={t.settingsDashboardEmptyHint}
+          className="w-full py-8"
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {rows.map((row) => (
+            <AgentStatusCard key={row.appId} row={row} t={t} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

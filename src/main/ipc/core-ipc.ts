@@ -57,6 +57,13 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
       },
       locale: deps.locale,
       appVersion: app.getVersion(),
+      // Real runtime versions (About page spec sheet) — the renderer UA cannot
+      // provide the Node.js version, so it comes straight from the source.
+      runtime: {
+        chromium: process.versions.chrome ?? '',
+        electron: process.versions.electron ?? '',
+        node: process.versions.node ?? '',
+      },
     };
   });
 
