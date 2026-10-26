@@ -879,7 +879,16 @@ const VERIFICATION = {
   qoderwork: { name: 'agents-root', any: ['.agents-layout-root'] },
   workbuddy: { name: 'teams-root', any: ['.teams-container'] },
   doubao: { name: 'doubao-root', any: ['#root', 'body'] },
-  codex: { name: 'codex-root', any: ['main.main-surface', "main[class*='MainContentSurface']"] },
+  codex: {
+    name: 'codex-root',
+    // Upstream Codex-Dream-Skin contract (26.715→26.818): legacy class +
+    // stable data attribute + CSS-Module prefix, never a full hash.
+    any: [
+      "main:is(.main-surface, [data-app-shell-main-surface], [class*='_MainContentSurface_'])",
+      'main.main-surface',
+      "main[class*='MainContentSurface']",
+    ],
+  },
 };
 
 const SHADOWS = {

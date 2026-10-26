@@ -297,7 +297,7 @@ export async function tryEngineInjection(
     // (factory + all subsystems) come first, then optional per-agent config,
     // then the adapter thin wrapper.
     const finalAdapterJs = buildApplyExpression({
-      unifiedEngineSource: selfHealPatrolSource + '\n;' + unifiedEngineSource,
+      unifiedEngineSource: `${selfHealPatrolSource}\n;${unifiedEngineSource}`,
       adapterConfigSource,
       adapterJs,
     });
