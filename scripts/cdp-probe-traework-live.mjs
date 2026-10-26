@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 // Live CDP probe for TRAE SOLO CN — comprehensive data extraction
 import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 const PORTS = [9222, 50063, 65222, 9223, 9224, 9225];
 const OUTPUT =

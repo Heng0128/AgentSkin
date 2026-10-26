@@ -9,7 +9,7 @@
  * Enforces the project design-system invariant (C6). **Calibrated
  * 2026-08-20** to the project's actual visual spec (docs/design-tokens.md
  * §3.3/§4/§7.2 + the 2026-08-14 "6px 圆润" visual reform) —
- * the Quiet Workbench 设计系统（6px 圆润基准，4px 网格间距）。
+ * the project design system（6px 圆角基准，4px 网格间距）。
  * Detected violations:
  *
  * 1. Spacing — Tailwind `p-*`, `m-*`, `gap-*`, `space-*`, `top-*`,
@@ -26,7 +26,7 @@
  * 3. Border-radius — `rounded-none/sm/md/lg/full` plus arbitrary radii
  *    <= 8px and `inherit` are allowed (6px `rounded-md` is the baseline).
  *
- * 4. Box-shadow — `shadow-none`, `shadow-sm/md/lg/xl` (Quiet Workbench multi-level).
+ * 4. Box-shadow — `shadow-none`, `shadow-sm/md/lg/xl` (project multi-level).
  *
  * 9. Hardcoded colors — `rgba()`/`hsla()` with raw numeric channels are
  *    flagged. Whitelisted: `rgba(var(--x), alpha)`, `var(--token, rgba(...))`
@@ -54,7 +54,7 @@ const violations = [];
 // ---------------------------------------------------------------------------
 // Design-token constants (calibrated 2026-08-20 to the project's actual
 // visual spec — see docs/design-tokens.md §3.3/§4/§7.2 and the 2026-08-14
-// "6px 圆润" visual reform. The calibration reflects the Quiet Workbench design
+// "6px 圆角" visual reform. The calibration reflects the project design
 // system (6px radius baseline, 4px-grid spacing) — matches what the product
 // actually ships while still flagging off-ladder
 // values that should move to tokens.)
@@ -102,7 +102,7 @@ const ALLOWED_ROUNDED = new Set([
   'rounded-full',
 ]);
 
-/** Allowed shadow class names — Quiet Workbench multi-level system. */
+/** Allowed shadow class names — project multi-level system. */
 const ALLOWED_SHADOW = new Set([
   'shadow-none',
   'shadow-sm',

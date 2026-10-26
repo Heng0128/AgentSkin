@@ -39,7 +39,6 @@
 //   2 — unrecoverable error
 
 import fs from 'node:fs';
-import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -62,7 +61,7 @@ const APP_ATTRIBUTE_ANCHORS = {
  * A property like `color-scheme` or `text-shadow` applied to `:root` would
  * leak into every element.
  */
-const NON_VARIABLE_PROPERTIES = new Set([
+const _NON_VARIABLE_PROPERTIES = new Set([
   'color-scheme',
   'text-shadow',
   'background',

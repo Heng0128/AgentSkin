@@ -67,7 +67,12 @@ function selectors(css) {
 }
 
 function fmtSet(set) {
-  return [...set].sort().map((s) => `  - ${s}`).join('\n') || '  (none)';
+  return (
+    [...set]
+      .sort()
+      .map((s) => `  - ${s}`)
+      .join('\n') || '  (none)'
+  );
 }
 
 // ── load themes ─────────────────────────────────────────────────────
@@ -130,7 +135,9 @@ for (const t of v2Themes) {
     console.log(`[A] ${t.id}: ✗ ${deviations.length} agent(s) deviate — ${deviations.join('; ')}`);
   }
 }
-console.log(`[A] summary: ${gateAPass}/${v2Themes.length} themes fully explained by current generators\n`);
+console.log(
+  `[A] summary: ${gateAPass}/${v2Themes.length} themes fully explained by current generators\n`,
+);
 
 // ── engine layers + synth palettes (for Gate B/C) ───────────────────
 
@@ -139,19 +146,37 @@ const SYNTH = [
   {
     mode: 'light',
     colors: {
-      accent: '#0d9aa0', secondary: '#74dce4', background: '#f0f8fa', foreground: '#163f4b',
-      muted: '#557480', surface: '#ffffff', surfaceElevated: '#ffffff', border: '#249aa0',
-      codeBackground: '#eefbff', codeForeground: '#163f4b', inputBackground: '#fef1f5',
-      buttonBackground: '#0d9aa0', buttonForeground: '#ffffff',
+      accent: '#0d9aa0',
+      secondary: '#74dce4',
+      background: '#f0f8fa',
+      foreground: '#163f4b',
+      muted: '#557480',
+      surface: '#ffffff',
+      surfaceElevated: '#ffffff',
+      border: '#249aa0',
+      codeBackground: '#eefbff',
+      codeForeground: '#163f4b',
+      inputBackground: '#fef1f5',
+      buttonBackground: '#0d9aa0',
+      buttonForeground: '#ffffff',
     },
   },
   {
     mode: 'dark',
     colors: {
-      accent: '#5ad1e0', secondary: '#243b47', background: '#10181c', foreground: '#d8e8ec',
-      muted: '#6a8894', surface: '#16232a', surfaceElevated: '#1c2c35', border: '#2a5a64',
-      codeBackground: '#0c1418', codeForeground: '#9adcf0', inputBackground: '#18242c',
-      buttonBackground: '#5ad1e0', buttonForeground: '#062a30',
+      accent: '#5ad1e0',
+      secondary: '#243b47',
+      background: '#10181c',
+      foreground: '#d8e8ec',
+      muted: '#6a8894',
+      surface: '#16232a',
+      surfaceElevated: '#1c2c35',
+      border: '#2a5a64',
+      codeBackground: '#0c1418',
+      codeForeground: '#9adcf0',
+      inputBackground: '#18242c',
+      buttonBackground: '#5ad1e0',
+      buttonForeground: '#062a30',
     },
   },
 ];
@@ -233,21 +258,30 @@ lines.push(`- 日期: ${date}`);
 lines.push(`- 结论: **${allPass ? 'PASS — 可执行批量升级' : 'FAIL — 禁止批量升级'}**`, '');
 lines.push('## Gate A 冻结同构性', '');
 lines.push('| agent | 同构 | 结构变体数 |', '|---|---|---|');
-for (const a of AGENTS) lines.push(`| ${a} | ${gateA.perAgent[a].homogeneous ? '✓' : '✗'} | ${gateA.perAgent[a].variants} |`);
+for (const a of AGENTS)
+  lines.push(
+    `| ${a} | ${gateA.perAgent[a].homogeneous ? '✓' : '✗'} | ${gateA.perAgent[a].variants} |`,
+  );
 lines.push('', '## Gate B 原生 token 覆盖', '');
 for (const a of AGENTS) {
   const g = gateB.perAgent[a];
-  lines.push(`- **${a}**: 生成器 ${g.generatorNative} / 引擎 ${g.engineNative}${g.gaps.length ? `，缺口 ${g.gaps.length}:\n${fmtSet(new Set(g.gaps))}` : '，无缺口'}`);
+  lines.push(
+    `- **${a}**: 生成器 ${g.generatorNative} / 引擎 ${g.engineNative}${g.gaps.length ? `，缺口 ${g.gaps.length}:\n${fmtSet(new Set(g.gaps))}` : '，无缺口'}`,
+  );
 }
 lines.push('', '## Gate C 结构选择器覆盖', '');
 for (const a of AGENTS) {
   const g = gateC.perAgent[a];
-  lines.push(`- **${a}**: 生成器 ${g.generatorSelectors} 个选择器${g.gaps.length ? `，未覆盖 ${g.gaps.length}:\n${fmtSet(new Set(g.gaps))}` : '，全部覆盖'}`);
+  lines.push(
+    `- **${a}**: 生成器 ${g.generatorSelectors} 个选择器${g.gaps.length ? `，未覆盖 ${g.gaps.length}:\n${fmtSet(new Set(g.gaps))}` : '，全部覆盖'}`,
+  );
 }
 lines.push('', '## 结论', '');
-lines.push(allPass
-  ? '冻结 per-agent CSS 的全部内容可由 manifest.colors（palette 层）+ 引擎 tokens/cosmetic 层重构，删除安全。'
-  : '存在引擎层缺口，须先按上方缺口清单补齐 engines/<agent>/ 层，重跑本审计通过后才能执行批量升级。');
+lines.push(
+  allPass
+    ? '冻结 per-agent CSS 的全部内容可由 manifest.colors（palette 层）+ 引擎 tokens/cosmetic 层重构，删除安全。'
+    : '存在引擎层缺口，须先按上方缺口清单补齐 engines/<agent>/ 层，重跑本审计通过后才能执行批量升级。',
+);
 
 fs.mkdirSync(REPORTS_DIR, { recursive: true });
 const reportPath = path.join(REPORTS_DIR, `${date}-v3-engine-coverage-audit.md`);

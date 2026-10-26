@@ -18,7 +18,7 @@ import { formatReport, lintCssSelectors, scanThemePackage } from './theme-select
 // ---------------------------------------------------------------------------
 
 /** Create a temporary directory with theme CSS files for scanThemePackage tests. */
-async function createTempTheme(files) {
+async function _createTempTheme(files) {
   const tmpDir = await mkdtemp(joinTempTheme(files));
   return tmpDir;
 }

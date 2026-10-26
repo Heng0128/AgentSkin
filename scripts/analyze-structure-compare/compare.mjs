@@ -17,8 +17,6 @@ const IGNORE_UTILITY_RE =
   /^(hover|focus|active|disabled|checked|selected|visited|link|first|last|odd|even):/;
 const IGNORE_CLASS_RE =
   /^(flex|block|inline|grid|table|hidden|visible|relative|absolute|fixed|sticky|rounded|border|shadow|text-|bg-|p-|m-|w-|h-|gap-|items-|justify-|self-|overflow-|cursor-|select-|pointer-events-|object-|aspect-|break-|list-|font-|leading-|tracking-|whitespace-|uppercase|lowercase|capitalize|not-italic|underline|overline|line-through|antialiased|subpixel-antialiased|truncate|ellipsis|break-|line-clamp-|placeholder|caret-|accent-|appearance-|outline-|ring-|decoration-|fill-|stroke-|scroll-|snap-|columns-|backdrop-|transition|duration|ease|delay|animate|transform|origin|translate-|scale-|rotate-|skew-|origin-)/;
-const IGNORE_VAR_RE =
-  /^--(tw-|color-|background|border|shadow|ring-|opacity|transition|duration|ease-|delay-|animate-|font|text-|spacing|gap-|padding|margin|radius|z-index|transform|scale-|translate-|rotate-|blur|saturate|contrast|backdrop|outline|inset-)/;
 const IGNORE_HASH_RE = /_[A-Za-z0-9]{6,}/; // CSS Modules 哈希
 
 function isCssModuleNoise(token) {

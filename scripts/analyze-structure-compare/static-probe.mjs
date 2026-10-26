@@ -7,7 +7,7 @@
  * CSS 文件中的自定义属性声明。
  */
 
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import asar from '@electron/asar';
 import { discoverApp } from '../../src/engine/src/runtime/launcher.mjs';
 import { STATIC_BYTES_PER_FILE, STATIC_CSS_BYTES_TOTAL, STATIC_JS_FILE_CAP } from './constants.mjs';
@@ -49,9 +49,10 @@ function extractClassTokensFromJs(content) {
   const tokens = new Set();
   // 匹配 className="..." 或 className={'...'} 模式
   const re = /className\s*=\s*["'`]([^"'`]+)["'`]/g;
-  let m;
-  while ((m = re.exec(content)) !== null) {
+  let m = re.exec(content);
+  while (m !== null) {
     for (const cls of m[1].split(/\s+/)) if (cls) tokens.add(cls);
+    m = re.exec(content);
   }
   return tokens;
 }
@@ -60,9 +61,10 @@ function extractClassTokensFromJs(content) {
 function extractCssVarsFromCss(content) {
   const vars = new Set();
   const re = /--([A-Za-z0-9_-]+)\s*:/g;
-  let m;
-  while ((m = re.exec(content)) !== null) {
+  let m = re.exec(content);
+  while (m !== null) {
     if (!m[1].startsWith('agentskin-')) vars.add(`--${m[1]}`);
+    m = re.exec(content);
   }
   return vars;
 }
@@ -82,7 +84,7 @@ export async function probeStatic(adapter) {
   }
   try {
     const header = asar.listPackage(asarPath, { computeFiles: true });
-    if (!header || !header.files) {
+    if (!header?.files) {
       return { ok: false, error: 'asar 包为空或格式异常' };
     }
     // 收集 JS / CSS 文件

@@ -10,12 +10,9 @@
  * 4. All i18n keys are referenced somewhere in the UI codebase (no orphans)
  */
 
-import { readFileSync } from 'node:fs';
+import { globSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import pkg from 'glob';
-
-const { glob } = pkg;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..');
@@ -41,9 +38,10 @@ function success(msg) {
 // fully-qualified export name. uiMessages lives in index.ts (aggregated),
 // mainMessages lives in modules/main.ts. Searching by export marker across
 // all files is resilient to future file moves.
-const i18nFiles = glob
-  .sync(join(i18nDir, '{index,base}.ts'))
-  .concat(glob.sync(join(i18nModulesDir, '*.ts')));
+const i18nFiles = [
+  ...globSync(join(i18nDir, '{index,base}.ts')),
+  ...globSync(join(i18nModulesDir, '*.ts')),
+];
 if (i18nFiles.length === 0) {
   console.error(`✗ No i18n source files found in ${i18nDir}`);
   process.exit(1);
@@ -260,18 +258,24 @@ if (
 
 // 3. Check for unused keys (orphans)
 console.log('\n[3/4] Orphan key detection');
-const uiFiles = glob.sync(join(rootDir, 'src', 'ui', '**', '*.{ts,tsx}'));
-const mainFiles = glob.sync(join(rootDir, 'src', 'main', '**', '*.{ts,tsx}'));
+const uiFiles = globSync(join(rootDir, 'src', 'ui', '**', '*.{ts,tsx}'));
+const mainFiles = globSync(join(rootDir, 'src', 'main', '**', '*.{ts,tsx}'));
 const uiContent = uiFiles.map((f) => readFileSync(f, 'utf-8')).join('\n');
 const mainContent = mainFiles.map((f) => readFileSync(f, 'utf-8')).join('\n');
 
 function findOrphans(zhKeys, content, _label) {
   const usedKeys = new Set();
   for (const key of zhKeys) {
+    const esc = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const patterns = [
-      new RegExp(`t\\.${key}\\b`),
-      new RegExp(`t\\['${key}'\\]`),
-      new RegExp(`t\\["${key}"\\]`),
+      // 渲染进程：t.xxx / t['xxx'] / t["xxx"] / t`xxx` 与 t[`${...}xxx`] 后缀拼接
+      new RegExp(`t\\.${esc}\\b`),
+      new RegExp(`t\\['${esc}'\\]`),
+      new RegExp(`t\\["${esc}"\\]`),
+      // 主进程：getMainMessages().xxx（bundle-ipc 等 IPC 层的本地化错误消息）
+      new RegExp(`getMainMessages\\(\\)\\.${esc}\\b`),
+      // 通用兜底：任意 `.xxx` 属性访问（agentsStatusXxx 等按前缀动态派生的 key）
+      new RegExp(`\\.${esc}\\b`),
     ];
     if (patterns.some((p) => p.test(content))) {
       usedKeys.add(key);

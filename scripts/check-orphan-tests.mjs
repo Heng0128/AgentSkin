@@ -160,7 +160,7 @@ function inferSourceCandidates(testRelPath) {
 
   // --- Strategy A: co-located  (src/main/foo/bar.test.ts → src/main/foo/bar.ts) ---
   // Primary: same extension (bar.test.ts → bar.ts)
-  candidates.push(path.posix.join(dir, stem + '.' + originalExt));
+  candidates.push(path.posix.join(dir, `${stem}.${originalExt}`));
   // Secondary: try adjacent extensions (bar.test.ts could test .tsx/.mjs/.json in rare cases)
   for (const ext of ['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.d.ts']) {
     if (ext.slice(1) !== originalExt) {
@@ -172,7 +172,7 @@ function inferSourceCandidates(testRelPath) {
   if (dir.includes('/__tests__')) {
     const testsIndex = dir.indexOf('/__tests__');
     const parentSegment = dir.slice(0, testsIndex);
-    candidates.push(path.posix.join(parentSegment, stem + '.' + originalExt));
+    candidates.push(path.posix.join(parentSegment, `${stem}.${originalExt}`));
     for (const ext of ['.ts', '.tsx', '.mjs', '.js', '.jsx']) {
       if (ext.slice(1) !== originalExt) {
         candidates.push(path.posix.join(parentSegment, stem + ext));
@@ -196,7 +196,7 @@ function inferSourceCandidates(testRelPath) {
     if (testRelPath.startsWith(prefix)) {
       const rest = testRelPath.slice(prefix.length);
       const restDir = path.posix.dirname(rest);
-      candidates.push(path.posix.join(replacement, restDir, stem + '.' + originalExt));
+      candidates.push(path.posix.join(replacement, restDir, `${stem}.${originalExt}`));
       for (const ext of ['.ts', '.tsx', '.mjs']) {
         if (ext.slice(1) !== originalExt) {
           candidates.push(path.posix.join(replacement, restDir, stem + ext));
@@ -223,12 +223,12 @@ function inferSourceCandidates(testRelPath) {
       // tests/unit/scripts/foo.test.ts → scripts/.../foo
       const scriptRest = rest.slice('scripts/'.length);
       const scriptDir = path.posix.dirname(scriptRest);
-      candidates.push(path.posix.join('scripts', scriptDir, restStem + '.mjs'));
-      candidates.push(path.posix.join('scripts', scriptDir, restStem + '.ts'));
+      candidates.push(path.posix.join('scripts', scriptDir, `${restStem}.mjs`));
+      candidates.push(path.posix.join('scripts', scriptDir, `${restStem}.ts`));
     } else {
       // Best-effort: try src/main/ and src/shared/
       for (const root of ['src/main', 'src/shared']) {
-        candidates.push(path.posix.join(root, restDir, restStem + '.' + restExt));
+        candidates.push(path.posix.join(root, restDir, `${restStem}.${restExt}`));
         for (const ext of ['.ts', '.tsx', '.mjs']) {
           candidates.push(path.posix.join(root, restDir, restStem + ext));
         }
@@ -306,26 +306,33 @@ function resolveViaImports(testRelPath) {
   const testDir = path.posix.dirname(testRelPath);
 
   // Pattern 1 & 3: import / require specifiers
-  let match;
-  while ((match = importRegex.exec(content)) !== null) {
+  let match = importRegex.exec(content);
+  while (match !== null) {
     const specifier = match[1] ?? match[2];
-    if (!specifier) continue;
+    if (!specifier) {
+      match = importRegex.exec(content);
+      continue;
+    }
 
     // Skip bare node built-ins and external packages
     if (!specifier.startsWith('.') && !PATH_ALIASES.some((a) => specifier.startsWith(a.prefix))) {
+      match = importRegex.exec(content);
       continue;
     }
 
     if (checkSpecifier(specifier, testDir)) {
       return true;
     }
+    match = importRegex.exec(content);
   }
 
   // Pattern 2: path.resolve(__dirname, '...')
-  while ((match = resolveDirnameRegex.exec(content)) !== null) {
+  match = resolveDirnameRegex.exec(content);
+  while (match !== null) {
     const relativePath = match[1]; // e.g. 'manifest-v2.schema.json' or '../../../docs/schema.json'
     const resolved = path.posix.normalize(path.posix.join(testDir, relativePath));
     if (existsSync(path.join(PROJECT_ROOT, resolved))) return true;
+    match = resolveDirnameRegex.exec(content);
   }
 
   return false;
@@ -359,7 +366,7 @@ function isIgnored(testRelPath, ignorePatterns) {
   return ignorePatterns.some(
     (pattern) =>
       testRelPath === pattern ||
-      testRelPath.endsWith('/' + pattern) ||
+      testRelPath.endsWith(`/${pattern}`) ||
       testRelPath.includes(pattern),
   );
 }

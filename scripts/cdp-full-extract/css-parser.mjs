@@ -73,11 +73,18 @@ export function extractAllColors(value) {
   const colors = [];
   // 匹配 hex 颜色
   const hexRe = /#[0-9a-fA-F]{3,8}\b/g;
-  let m;
-  while ((m = hexRe.exec(value)) !== null) colors.push(m[0]);
+  let m = hexRe.exec(value);
+  while (m !== null) {
+    colors.push(m[0]);
+    m = hexRe.exec(value);
+  }
   // 匹配 rgb/rgba/hsl/hsla
   const funcRe = /(rgba?|hsla?)\([^)]+\)/g;
-  while ((m = funcRe.exec(value)) !== null) colors.push(m[0]);
+  m = funcRe.exec(value);
+  while (m !== null) {
+    colors.push(m[0]);
+    m = funcRe.exec(value);
+  }
   return colors;
 }
 

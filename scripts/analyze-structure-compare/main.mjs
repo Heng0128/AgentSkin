@@ -32,7 +32,7 @@ import {
 import { buildRuleTemplate, FALLBACK_RULE } from './rule-template.mjs';
 import { probeRuntime } from './runtime-probe.mjs';
 import { probeStatic } from './static-probe.mjs';
-import { debugLog, loadIgnoreList, loadShadowSeed, OPTIONS } from './utils.mjs';
+import { loadIgnoreList, loadShadowSeed, OPTIONS } from './utils.mjs';
 
 async function main() {
   const args = process.argv.slice(2);

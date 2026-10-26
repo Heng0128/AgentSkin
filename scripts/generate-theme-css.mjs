@@ -90,8 +90,8 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
     // P1 fix: 仅按 manifest.supportedAgents / targets / v3 apps 声明的 agent 生成 CSS，
     // 避免为未声明的 agent 产出冗余文件（如 demo-bridge-v2 仅 codex）。
     const declaredAgents = isV3
-      ? manifest.apps ?? []
-      : manifest.supportedAgents ?? Object.keys(manifest.targets ?? {});
+      ? (manifest.apps ?? [])
+      : (manifest.supportedAgents ?? Object.keys(manifest.targets ?? {}));
     const agentsToGenerate = Object.entries(GENERATORS).filter(([agent]) =>
       declaredAgents.includes(agent),
     );

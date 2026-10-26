@@ -21,7 +21,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { AGENT_SPECIFICITY_PROFILES, validateSpecificity } from '../../src/compiler/specificity.js';
 import { getAdapter } from '../../src/engine/src/adapters/index.mjs';
-import { hexToRgb, luminance } from '../../src/shared/theme/utils/color-utils.mjs';
+import { luminance } from '../../src/shared/theme/utils/color-utils.mjs';
 import {
   FINGERPRINT_FILENAME,
   generateBuildFingerprint,
@@ -30,7 +30,7 @@ import { SHA256SUMS_FILENAME, writeSha256Sums } from '../lib/theme-sha256sums.mj
 import { DEFAULT_TOKENS } from './constants.mjs';
 import { buildAgentCss } from './css-assembly.mjs';
 import { processThemeImages } from './image-processing.mjs';
-import { buildManifest, manifestColors, slugify } from './manifest.mjs';
+import { buildManifest } from './manifest.mjs';
 import { buildIcon, buildPreview } from './preview-icon.mjs';
 
 // ---------------------------------------------------------------------------

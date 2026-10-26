@@ -195,13 +195,13 @@ if (existsSync(cosmeticPath)) {
 }
 
 // Check 7: SPDX header present
-if (adapterContent !== null && adapterContent.includes('SPDX-License-Identifier')) {
+if (adapterContent?.includes('SPDX-License-Identifier')) {
   ok('adapter.mjs has SPDX header');
 } else if (adapterContent !== null) {
   console.error('  WARN: adapter.mjs missing SPDX-License-Identifier header');
 }
 
-if (configContent !== null && configContent.includes('SPDX-License-Identifier')) {
+if (configContent?.includes('SPDX-License-Identifier')) {
   ok('adapter-config.mjs has SPDX header');
 } else if (configContent !== null) {
   console.error('  WARN: adapter-config.mjs missing SPDX-License-Identifier header');

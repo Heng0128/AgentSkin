@@ -75,7 +75,7 @@ async function generateSums(dir) {
     const rel = relative(dir, file);
     lines.push(`${hash}  ${rel}`);
   }
-  return lines.join('\n') + '\n';
+  return `${lines.join('\n')}\n`;
 }
 
 // ---------------------------------------------------------------------------

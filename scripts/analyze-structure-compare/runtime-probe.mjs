@@ -15,7 +15,7 @@ import {
   SHADOW_RISK_SELECTORS_BY_AGENT,
   SHADOW_RISK_SELECTORS_COMMON,
 } from './constants.mjs';
-import { debugLog, OPTIONS } from './utils.mjs';
+import { OPTIONS } from './utils.mjs';
 
 // ---------------------------------------------------------------------------
 // CDP 表达式构建函数

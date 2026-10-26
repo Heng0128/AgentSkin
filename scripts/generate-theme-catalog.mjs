@@ -149,10 +149,10 @@ function detectStatus(manifest) {
   if (manifest.status) {
     return manifest.status;
   }
-  if (manifest.tags && manifest.tags.includes('deprecated')) {
+  if (manifest.tags?.includes('deprecated')) {
     return 'deprecated';
   }
-  if (manifest.version && manifest.version.startsWith('0.')) {
+  if (manifest.version?.startsWith('0.')) {
     return 'experimental';
   }
   return 'active';
@@ -298,7 +298,7 @@ async function main() {
     console.log('\n📝 Dry-run 模式，不写入文件。');
     console.log(JSON.stringify(catalog, null, 2));
   } else {
-    await fs.writeFile(CATALOG_PATH, JSON.stringify(catalog, null, 2) + '\n', 'utf-8');
+    await fs.writeFile(CATALOG_PATH, `${JSON.stringify(catalog, null, 2)}\n`, 'utf-8');
     console.log(`\n📄 已写入 ${path.relative(process.cwd(), CATALOG_PATH)}`);
   }
 }

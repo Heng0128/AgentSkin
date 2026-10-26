@@ -28,20 +28,21 @@ const ENGINES_DIR = path.join(ROOT, 'engines');
 const DRY = process.argv.includes('--dry-run');
 const AGENTS = ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'];
 
-const MARK = '/* [v3-cutover] ported from generator template — theme-agnostic, do not hand-edit values with palette literals */';
+const MARK =
+  '/* [v3-cutover] ported from generator template — theme-agnostic, do not hand-edit values with palette literals */';
 
 // synth 色板（与 audit 脚本一致）：值必须在输出中唯一可识别。
 const SYNTH = {
   mode: 'light',
   colors: {
-    accent: '#0a91a8',        // → --agentskin-accent
-    secondary: '#71dbe2',     // → --agentskin-secondary
-    background: '#eef7fa',    // → --agentskin-bg
-    foreground: '#123e4a',    // → --agentskin-text
-    muted: '#53727d',         // → --agentskin-muted
-    surface: '#fefefe',       // → --agentskin-surface
+    accent: '#0a91a8', // → --agentskin-accent
+    secondary: '#71dbe2', // → --agentskin-secondary
+    background: '#eef7fa', // → --agentskin-bg
+    foreground: '#123e4a', // → --agentskin-text
+    muted: '#53727d', // → --agentskin-muted
+    surface: '#fefefe', // → --agentskin-surface
     surfaceElevated: '#fbfbfc', // → --agentskin-surface-elevated
-    border: '#218fa8',        // → --agentskin-border
+    border: '#218fa8', // → --agentskin-border
     codeBackground: '#eafafd', // → --agentskin-code-bg
     codeForeground: '#123d4c', // → --agentskin-code-fg
     inputBackground: '#fdf0f4', // → --agentskin-input-bg
@@ -85,13 +86,10 @@ function varify(css) {
       (_m, a) => `color-mix(in srgb, var(${v}) ${Math.round(parseFloat(a) * 100)}%, transparent)`,
     );
     // rgb(r, g, b)（无 alpha，shade 派生）→ 无法无损 var 化，记 leftover
-    css = css.replace(
-      new RegExp(`rgba?\\(\\s*${r}\\s*,\\s*${g}\\s*,\\s*${b}\\s*\\)`, 'g'),
-      (m) => {
-        leftovers.add(m);
-        return m;
-      },
-    );
+    css = css.replace(new RegExp(`rgba?\\(\\s*${r}\\s*,\\s*${g}\\s*,\\s*${b}\\s*\\)`, 'g'), (m) => {
+      leftovers.add(m);
+      return m;
+    });
   }
   return { css, leftovers };
 }
@@ -103,16 +101,25 @@ function parseBlocks(css) {
   let i = 0;
   while (i < lines.length) {
     const line = lines[i].trim();
-    if (!line) { i++; continue; }
+    if (!line) {
+      i++;
+      continue;
+    }
     if (line.startsWith('@media')) {
       // 整块透传（含内层），找到配对右括号
-      let depth = 0, raw = [];
+      let depth = 0,
+        raw = [];
       do {
         raw.push(lines[i]);
         depth += (lines[i].match(/{/g) || []).length - (lines[i].match(/}/g) || []).length;
         i++;
       } while (i < lines.length && depth > 0);
-      blocks.push({ selector: raw[0].trim(), body: raw.join('\n'), isMedia: true, raw: raw.join('\n') });
+      blocks.push({
+        selector: raw[0].trim(),
+        body: raw.join('\n'),
+        isMedia: true,
+        raw: raw.join('\n'),
+      });
       continue;
     }
     if (line.endsWith('{')) {
@@ -175,20 +182,32 @@ for (const agent of AGENTS) {
 
   const tokenBlocks = [];
   const cosmeticBlocks = [];
-  let skippedPalette = 0, skippedArt = 0;
+  let skippedPalette = 0,
+    skippedArt = 0;
   const seenSels = new Set();
 
   for (const b of blocks) {
     const tokens = declaredTokens(b.body);
     const nativeTokens = [...tokens].filter((t) => !t.startsWith('--agentskin'));
-    const hasStructural = b.body.split('\n').some((l) => /^[a-z-]+\s*:/i.test(l.trim()) && !l.trim().startsWith('--'));
+    const hasStructural = b.body
+      .split('\n')
+      .some((l) => /^[a-z-]+\s*:/i.test(l.trim()) && !l.trim().startsWith('--'));
     const isArt = b.body.includes('var(--agentskin-art') || b.body.includes('--agentskin-art,');
     const isPaletteIdentity = !hasStructural && nativeTokens.length === 0 && tokens.size > 0;
 
-    if (isArt) { skippedArt++; continue; }
-    if (isPaletteIdentity) { skippedPalette++; continue; }
+    if (isArt) {
+      skippedArt++;
+      continue;
+    }
+    if (isPaletteIdentity) {
+      skippedPalette++;
+      continue;
+    }
 
-    if (b.isMedia) { cosmeticBlocks.push(b.raw); continue; }
+    if (b.isMedia) {
+      cosmeticBlocks.push(b.raw);
+      continue;
+    }
 
     if (nativeTokens.length > 0 && !hasStructural) {
       // 纯 token 覆盖块 — 逐 token 去重
@@ -219,9 +238,18 @@ for (const agent of AGENTS) {
     cosmeticBlocks.push(`${sel} {\n${b.body}\n}`);
   }
 
-  const report = { agent, tokenBlocks: tokenBlocks.length, cosmeticBlocks: cosmeticBlocks.length, skippedPalette, skippedArt, leftovers: [...leftovers] };
+  const report = {
+    agent,
+    tokenBlocks: tokenBlocks.length,
+    cosmeticBlocks: cosmeticBlocks.length,
+    skippedPalette,
+    skippedArt,
+    leftovers: [...leftovers],
+  };
   summary.push(report);
-  console.log(`${agent}: +${tokenBlocks.length} token块, +${cosmeticBlocks.length} 结构块 (跳过 palette=${skippedPalette}, art=${skippedArt})${leftovers.length ? ` ⚠ 残字面量: ${leftovers.join(' ')}` : ''}`);
+  console.log(
+    `${agent}: +${tokenBlocks.length} token块, +${cosmeticBlocks.length} 结构块 (跳过 palette=${skippedPalette}, art=${skippedArt})${leftovers.length ? ` ⚠ 残字面量: ${leftovers.join(' ')}` : ''}`,
+  );
 
   if (!DRY && (tokenBlocks.length || cosmeticBlocks.length)) {
     if (tokenBlocks.length) {
@@ -234,4 +262,7 @@ for (const agent of AGENTS) {
 }
 
 if (DRY) console.log('\n(dry-run — 未写入)');
-else console.log('\n已写入 engines/<agent>/{tokens,cosmetic}.css — 重跑 audit-engine-coverage.mjs 验证');
+else
+  console.log(
+    '\n已写入 engines/<agent>/{tokens,cosmetic}.css — 重跑 audit-engine-coverage.mjs 验证',
+  );

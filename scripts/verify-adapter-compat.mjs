@@ -29,7 +29,7 @@
 //   1 — warnings (some themes have minor issues)
 //   2 — errors (broken themes detected)
 
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -280,14 +280,14 @@ export function verifyTheme(themePath) {
   // --- Check 3: adapter CSS files ---
   const adapters = manifest.supportedAgents || [];
   const targets = manifest.targets || {};
-  const cssDir = join(themePath, 'assets', 'css');
+  const _cssDir = join(themePath, 'assets', 'css');
   let allAdapterCssOk = true;
   let allCssSyntaxOk = true;
 
   for (const adapter of adapters) {
     // Determine the CSS file path
     let cssRelativePath = `assets/css/${adapter}.css`;
-    if (targets[adapter] && targets[adapter].css) {
+    if (targets[adapter]?.css) {
       cssRelativePath = targets[adapter].css;
     }
 
@@ -430,11 +430,11 @@ function formatSummary(report) {
 
 function main() {
   const args = process.argv.slice(2);
-  const showReport = args.includes('--report');
+  const _showReport = args.includes('--report');
   const themeArg = args.find((a) => !a.startsWith('--'));
 
   let themes;
-  let singleMode = false;
+  let _singleMode = false;
 
   if (themeArg) {
     const themePath = resolve(themeArg);
@@ -443,7 +443,7 @@ function main() {
       process.exit(2);
     }
     themes = [themePath];
-    singleMode = true;
+    _singleMode = true;
   } else {
     themes = discoverThemes();
   }

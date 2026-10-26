@@ -15,7 +15,7 @@
 import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import net from 'node:net';
-import os, { networkInterfaces } from 'node:os';
+import os from 'node:os';
 
 // ---------------------------------------------------------------------------
 // Configuration

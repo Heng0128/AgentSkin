@@ -31,9 +31,28 @@ const AGENTS = ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'
 
 /** v3 schema 允许的 manifest 顶层键（与 manifest-v3.schema.json 同步）。 */
 const V3_ALLOWED_KEYS = new Set([
-  '$schema', 'schemaVersion', 'semanticVersion', 'id', 'name', 'displayName', 'version',
-  'description', 'themeCss', 'apps', 'overrides', 'mode', 'colors', 'hero', 'icon',
-  'preview', 'art', 'author', 'category', 'tags', 'license', 'unofficial',
+  '$schema',
+  'schemaVersion',
+  'semanticVersion',
+  'id',
+  'name',
+  'displayName',
+  'version',
+  'description',
+  'themeCss',
+  'apps',
+  'overrides',
+  'mode',
+  'colors',
+  'hero',
+  'icon',
+  'preview',
+  'art',
+  'author',
+  'category',
+  'tags',
+  'license',
+  'unofficial',
 ]);
 
 /** 剪掉不在 v3 schema 白名单的 v2 时代残留字段。 */
@@ -65,9 +84,13 @@ for (const id of themeIds()) {
     const changed = JSON.stringify(pruned) !== JSON.stringify(manifest);
     if (changed && !DRY) {
       fs.writeFileSync(manifestPath, `${JSON.stringify(pruned, null, 2)}\n`, 'utf8');
-      console.log(`${id}: pruned ${Object.keys(manifest).length - Object.keys(pruned).length} v2-era key(s) to v3 whitelist`);
+      console.log(
+        `${id}: pruned ${Object.keys(manifest).length - Object.keys(pruned).length} v2-era key(s) to v3 whitelist`,
+      );
     } else if (changed && DRY) {
-      console.log(`${id}: [dry] would prune ${Object.keys(manifest).length - Object.keys(pruned).length} key(s)`);
+      console.log(
+        `${id}: [dry] would prune ${Object.keys(manifest).length - Object.keys(pruned).length} key(s)`,
+      );
     } else {
       console.log(`${id}: already clean v3`);
     }
@@ -117,7 +140,10 @@ for (const id of themeIds()) {
       fs.rmSync(cssDir, { recursive: true, force: true });
       reportLine.actions.push('removed assets/css/');
     }
-    if (fs.existsSync(path.join(pkgDir, 'assets')) && fs.readdirSync(path.join(pkgDir, 'assets')).length === 0) {
+    if (
+      fs.existsSync(path.join(pkgDir, 'assets')) &&
+      fs.readdirSync(path.join(pkgDir, 'assets')).length === 0
+    ) {
       fs.rmdirSync(path.join(pkgDir, 'assets'));
       reportLine.actions.push('removed empty assets/');
     }
@@ -133,9 +159,15 @@ for (const id of themeIds()) {
     }
     // 4. 写回 manifest
     fs.writeFileSync(manifestPath, `${JSON.stringify(nextManifest, null, 2)}\n`, 'utf8');
-    reportLine.actions.push(`manifest → schemaVersion 3, apps=${apps.length}, overrides=${apps.length}`);
+    reportLine.actions.push(
+      `manifest → schemaVersion 3, apps=${apps.length}, overrides=${apps.length}`,
+    );
   } else {
-    reportLine.actions.push('(dry-run) manifest → v3', '(dry-run) move css → overrides/', '(dry-run) create theme.css');
+    reportLine.actions.push(
+      '(dry-run) manifest → v3',
+      '(dry-run) move css → overrides/',
+      '(dry-run) create theme.css',
+    );
   }
 
   report.push(reportLine);
@@ -160,7 +192,9 @@ fs.writeFileSync(
     '',
     '| 主题 | apps | css 文件数 | 动作 |',
     '|---|---|---|---|',
-    ...report.map((r) => `| ${r.id} | ${r.apps.join(', ')} | ${r.cssFiles} | ${r.actions.join('<br>')} |`),
+    ...report.map(
+      (r) => `| ${r.id} | ${r.apps.join(', ')} | ${r.cssFiles} | ${r.actions.join('<br>')} |`,
+    ),
     '',
   ].join('\n'),
   'utf8',

@@ -120,7 +120,7 @@ async function resolveHeroDataUrl(
   heroDataUrl: string | null | undefined,
   heroPath: string | null | undefined,
 ): Promise<string | null> {
-  if (heroDataUrl && heroDataUrl.startsWith('data:')) {
+  if (heroDataUrl?.startsWith('data:')) {
     return heroDataUrl;
   }
   if (heroPath) {
@@ -367,7 +367,7 @@ export async function injectThemeViaEngine(
     } else {
       throw new Error(`atomic injection returned: ${result}`);
     }
-  } catch (err) {
+  } catch (_err) {
     return {
       layersInjected: 0,
       adapterApplied: false,
@@ -425,7 +425,7 @@ export async function injectThemeViaEngine(
   // RC4-A: waitForTheme returns a rich WaitForThemeResult. `applied` is the
   // backward-compatible boolean (verdict === 'full'), equivalent to the old
   // isThemeFullyApplied(verification, { requireHero }) check.
-  const success = layersInjected >= 2 && adapterApplied && applied;
+  const _success = layersInjected >= 2 && adapterApplied && applied;
 
   return {
     layersInjected,

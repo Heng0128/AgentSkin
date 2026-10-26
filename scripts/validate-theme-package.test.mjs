@@ -16,7 +16,7 @@
  */
 
 import assert from 'node:assert/strict';
-import fs, { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, describe, it } from 'node:test';
@@ -79,7 +79,7 @@ function makePngWithAlpha() {
 }
 
 /** Minimal valid PNG without alpha (color type 2 = RGB). */
-function makePngWithoutAlpha() {
+function _makePngWithoutAlpha() {
   const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
   const ihdrLength = Buffer.alloc(4);
   ihdrLength.writeUInt32BE(13, 0);

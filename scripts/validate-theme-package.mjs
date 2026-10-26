@@ -224,9 +224,9 @@ export async function checkCssReferences(cssAbsPath, themeDir, themeId) {
   }
 
   const cssDir = path.dirname(cssAbsPath);
-  let match;
   CSS_URL_REGEX.lastIndex = 0;
-  while ((match = CSS_URL_REGEX.exec(cssContent)) !== null) {
+  let match = CSS_URL_REGEX.exec(cssContent);
+  while (match !== null) {
     const ref = match[1];
     // Skip data URIs, http(s) URLs, and absolute paths
     if (
@@ -235,6 +235,7 @@ export async function checkCssReferences(cssAbsPath, themeDir, themeId) {
       ref.startsWith('https://') ||
       path.isAbsolute(ref)
     ) {
+      match = CSS_URL_REGEX.exec(cssContent);
       continue;
     }
     // Resolve relative to the CSS file's directory
@@ -244,6 +245,7 @@ export async function checkCssReferences(cssAbsPath, themeDir, themeId) {
       errors.push(
         `${themeId}: CSS url() reference "${ref}" in ${path.relative(themeDir, cssAbsPath)} escapes theme directory`,
       );
+      match = CSS_URL_REGEX.exec(cssContent);
       continue;
     }
     try {
@@ -253,6 +255,7 @@ export async function checkCssReferences(cssAbsPath, themeDir, themeId) {
         `${themeId}: CSS url() reference "${ref}" in ${path.relative(themeDir, cssAbsPath)} does not resolve to an existing file`,
       );
     }
+    match = CSS_URL_REGEX.exec(cssContent);
   }
 
   return { errors };
@@ -337,7 +340,7 @@ export async function validateThemePackage(themeDir, options = {}) {
 
   // --- PNG alpha channel check ---
   if (!skipPngAlpha) {
-    const pngImagesDir = path.join(themeDir, 'assets', 'images');
+    const _pngImagesDir = path.join(themeDir, 'assets', 'images');
     const pngFiles = files.filter(
       (f) =>
         f.relPath.startsWith(`assets${path.sep}images${path.sep}`) &&
