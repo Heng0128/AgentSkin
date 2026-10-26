@@ -1,0 +1,219 @@
+{
+  "schema": "agentskin-selector-contract/1",
+  "description": "doubao 引擎选择器溯源合同（审计 D6 落地，格式对齐 engines/codex/selectors.contract.json）。登记 engines/doubao/{adapter-config.mjs,adapter.mjs,cosmetic.css,tokens.css,dark-mode-remap.mjs} 与 engines/shared/semantic-selectors.json#doubao 引用的每一个豆包 DOM 锚点。tier：L1 缺失 = 主题主行为受损；L2 缺失 = 精修静默降级。genericAttributes（role / aria-* / contenteditable / tabindex / style 子串）与 AgentSkin 自有命名空间（agentskin-* / data-agentskin-*）由守卫豁免。status 语义：alive = 2026-09-08 实窗命中；view-dependent = 首页视图零命中但依赖特定视图/交互态（会话滚动、弹窗开启等），待对应视图复验；inert = 当前构建确认零命中且无外部证据，仅保留为历史兜底。",
+  "verifiedAgainst": {
+    "live-probe": "2026-09-08 CDP 实窗探针（Windows 豆包，doubao://doubao-chat/chat 首页视图 + doubao-launcher + doubao-background，原生 dark，未注入主题）；完整 JSON 见 test-output/probe-live-2026-09-08.json（gitignored）",
+    "external": "doubao-skin-main 2026-08-29/31 豆包/豆包工作实窗验证（34 主题生效证据）",
+    "note": "本探针为消费版豆包（doubao://）；豆包工作（doubaowork://）的 --N*/--B*/--cr-composebox 家族由外部证据支撑，待我方豆包工作实窗复验"
+  },
+  "selectors": [
+    {
+      "key": "chat-list-wrapper",
+      "tier": "L1",
+      "anchors": ["chat_list_wrapper"],
+      "anchorType": "testid",
+      "status": "alive",
+      "evidence": "探针 hit=1（chat + launcher 视图）；SELECTORS.mainSurface / route:chat-list / detectRoute"
+    },
+    {
+      "key": "leftside-nav",
+      "tier": "L1",
+      "anchors": ["chat_route_layout_leftside_nav"],
+      "anchorType": "testid",
+      "status": "alive",
+      "evidence": "探针 hit=1；SELECTORS.sidebar / leftSideNav / cosmetic 语义色作用域"
+    },
+    {
+      "key": "flow-chat-sidebar",
+      "tier": "L1",
+      "anchors": ["flow_chat_sidebar"],
+      "anchorType": "testid",
+      "status": "alive",
+      "evidence": "探针 hit=1；SELECTORS.flowChatSidebar / heuristic 匹配器"
+    },
+    {
+      "key": "chat-input",
+      "tier": "L1",
+      "anchors": ["chat_input"],
+      "anchorType": "testid",
+      "status": "alive",
+      "evidence": "探针 hit=1；SELECTORS.composer / route:chat-detail / INPUT_LINE_FRAME_CSS"
+    },
+    {
+      "key": "input-guidance",
+      "tier": "L1",
+      "anchors": ["input-guidance"],
+      "status": "alive",
+      "evidence": "探针 hit=4；composer 候选 / INPUT_LINE_FRAME_CSS / tokens.css --input-guidance-* 宿主变量族（扫描 12 声明，组件作用域）"
+    },
+    {
+      "key": "input-container-flex",
+      "tier": "L2",
+      "anchors": ["input-container", "flex"],
+      "status": "alive",
+      "evidence": "探针 hit=3；cosmetic.css 输入框玻璃 / INPUT_LINE_FRAME_CSS"
+    },
+    {
+      "key": "greeting-text",
+      "tier": "L2",
+      "anchors": ["greeting-text-"],
+      "status": "alive",
+      "evidence": "探针 hit=1；2026-09-08 审计 D4 新增类名优先锚点（外部证据 doubao-skin 2026-08-30 greeting 遮罩修复）"
+    },
+    {
+      "key": "greeting-welcome",
+      "tier": "L2",
+      "anchors": ["greeting", "welcome", "welcome-text"],
+      "status": "view-dependent",
+      "evidence": "探针 greeting=1 / welcome=0（首页）；semanticTextScope / findGreetingElement 兜底 / welcomeImage 族"
+    },
+    {
+      "key": "chat-route-main",
+      "tier": "L2",
+      "anchors": ["chat-route-main"],
+      "anchorType": "id",
+      "status": "alive-external",
+      "evidence": "探针 hit=1；我方引擎暂未引用（候选：豆皮运行时安全层用它做主区透明，纳入未来 surface 分层专题）"
+    },
+    {
+      "key": "header-height",
+      "tier": "L2",
+      "anchors": ["h-header-height"],
+      "status": "alive",
+      "evidence": "探针 hit=1；cosmetic.css 标题栏 / dark-mode 元素覆写"
+    },
+    {
+      "key": "sidebar-nav-item",
+      "tier": "L2",
+      "anchors": ["sidebar_nav_item"],
+      "status": "alive",
+      "evidence": "探针 hit=11；cosmetic.css 导航行清理"
+    },
+    {
+      "key": "conversation-item",
+      "tier": "L2",
+      "anchors": ["conversation-item"],
+      "status": "alive",
+      "evidence": "探针 hit=42；dark-mode 历史列表覆写（本族是 dark-mode 元素区唯一高命中锚点）"
+    },
+    {
+      "key": "flex-grow-center",
+      "tier": "L2",
+      "anchors": ["flex-grow", "items-center"],
+      "status": "alive",
+      "evidence": "探针 hit=2；applyHeuristicStyles mainArea 定位"
+    },
+    {
+      "key": "scrollbar-thumb",
+      "tier": "L2",
+      "anchors": ["show-scrollbar-thumb"],
+      "status": "view-dependent",
+      "evidence": "探针 hit=0（首页无滚动条）；tokens.css 滚动条遮蔽补丁；外部证据豆皮同锚点实窗生效"
+    },
+    {
+      "key": "semi-popup-shadow",
+      "tier": "L2",
+      "anchors": ["semi-popupview-dark", "semi-popupview-light"],
+      "status": "view-dependent",
+      "evidence": "探针 hit=0（弹窗未开）；tokens.css 弹层遮蔽补丁，Semi 公开类，待弹窗视图复验"
+    },
+    {
+      "key": "semi-component-classes",
+      "tier": "L2",
+      "anchors": ["semi-modal", "semi-button", "semi-portal", "semi-dropdown-menu", "semi-popover"],
+      "status": "view-dependent",
+      "evidence": "探针 hit=0（首页）；2026-09-08 S2 替换 .ant-* 时引入的 Semi 公开类候选，承载角色由 button/[role]/[contenteditable] 通用项担任；待弹窗/菜单视图复验，若持续零命中则回退删除"
+    },
+    {
+      "key": "suggest-glass-family",
+      "tier": "L2",
+      "anchors": [
+        "suggest",
+        "recommend",
+        "topic",
+        "quick-action",
+        "shortcut",
+        "suggest-message-list-wrapper"
+      ],
+      "status": "inert",
+      "evidence": "探针全 0（首页建议卡类名为 CSS Modules 哈希）；SUGGEST_GLASS_KILLER + native-defect-fixes suggest 规则当前空转。根治方向：豆皮式 aria-label 运行时标记（处理日常工作/内容创作/调研分析/设计与创意 四类卡），登记为后续引擎能力"
+    },
+    {
+      "key": "welcome-image-family",
+      "tier": "L2",
+      "anchors": [
+        "welcome-image",
+        "guide-image",
+        "home-bg",
+        "illustration",
+        "home-illustration",
+        "mascot",
+        "logo-decoration",
+        "home-header"
+      ],
+      "status": "view-dependent",
+      "evidence": "探针 hit=0（首页无欢迎图？待确认——用户可见欢迎区可能用哈希类）；welcomeImage 候选族保留"
+    },
+    {
+      "key": "darkmode-substring-fallbacks",
+      "tier": "L2",
+      "anchors": [
+        "history-item",
+        "chat-item",
+        "session-item",
+        "titlebar",
+        "header-bar",
+        "suggestion-card",
+        "recommend-card",
+        "guide-card",
+        "message-content",
+        "chat-content",
+        "msg-body",
+        "composer-actions",
+        "input-actions",
+        "chat-input-actions",
+        "account",
+        "user-info",
+        "search",
+        "chat-input",
+        "input-box",
+        "composer",
+        "input-area",
+        "input-wrapper",
+        "message-list",
+        "left-side"
+      ],
+      "status": "inert",
+      "evidence": "探针全 0（首页视图；input-actions=1 除外，探针实证存活）；dark-mode 元素覆写区遗留子串候选。2026-09-08 已删同区 6 枚虚构 .dbx-* 精确类（探针确认全 0）。保留为视图兜底，会话视图复验后决定去留"
+    },
+    {
+      "key": "semantic-legacy-classes",
+      "tier": "L2",
+      "anchors": [
+        "chat-main",
+        "conversation-panel",
+        "chat-list",
+        "chat-input-container",
+        "modal-root",
+        "app-container"
+      ],
+      "status": "inert",
+      "evidence": "探针全 0；semantic-selectors.json#doubao 遗留候选，已降为末位（承载由 main/aside/[contenteditable] 通用项），复验持续 0 则删"
+    },
+    {
+      "key": "removed-fabricated",
+      "tier": "L2",
+      "anchors": [
+        "dbx-history-item",
+        "dbx-titlebar",
+        "dbx-suggestion-card",
+        "dbx-composer-actions",
+        "dbx-account-info",
+        "dbx-text-secondary",
+        "content-KTJ1Rj"
+      ],
+      "status": "removed",
+      "evidence": "2026-09-08 审计 D3/D4 删除（探针确认全 0；.dbx-* 系按前缀规律推测生成，豆包组件类实为 CSS Modules 哈希 + data-testid；KTJ1Rj 为构建 hash 片段）"
+    }
+  ]
+}

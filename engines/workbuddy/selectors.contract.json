@@ -1,0 +1,168 @@
+{
+  "schema": "agentskin-selector-contract/1",
+  "description": "workbuddy 引擎选择器溯源合同（审计 D6/W1/W2 落地，格式对齐 engines/codex/selectors.contract.json）。登记 engines/workbuddy/{adapter-config.mjs,adapter.mjs,cosmetic.css,tokens.css} 与 engines/shared/semantic-selectors.json#workbuddy 引用的每一个 WorkBuddy DOM 锚点。tier/status 语义同 doubao 合同。",
+  "verifiedAgainst": {
+    "live-probe": "2026-09-08 CDP 实窗探针（Windows WorkBuddy，file:///C:/Program Files/WorkBuddy/resources/app.asar/renderer/index.html，html.class='dark cb-dark vscode-dark'，未注入主题）；完整 JSON 见 test-output/probe-live-2026-09-08.json（gitignored）",
+    "external": "doubao-skin-main 2026-08-31 WorkBuddy 5.3.14 macOS 实窗探针（.teams-container/.conversation-list/.main-content/.chat-container/.wb-home-composer/.wb-button 稳定 landmark）",
+    "note": "平台/版本漂移已确认：.chat-container/.main-content/.wb-cb-chat/.wb-cb-input 在 5.3.14 macOS 存活、当前 Windows 构建零命中——保留为版本兜底候选，勿当作前向兼容承诺"
+  },
+  "selectors": [
+    {
+      "key": "teams-container",
+      "tier": "L1",
+      "anchors": ["teams-container"],
+      "status": "alive",
+      "evidence": "探针 hit=1；semantic-selectors root 首位；豆皮 5.3.14 同证"
+    },
+    {
+      "key": "app-identity",
+      "tier": "L1",
+      "anchors": ["data-application-name=workbuddy"],
+      "anchorType": "attr",
+      "status": "alive",
+      "evidence": "探针 hit=1（body）；2026-09-08 审计 W2 曾按'无证据'移除，实窗探针推翻并恢复"
+    },
+    {
+      "key": "conversation-sidebar",
+      "tier": "L1",
+      "anchors": ["conversation-sidebar"],
+      "status": "alive",
+      "evidence": "探针 hit=1；findSidebar / SELECTORS.sidebar；豆皮侧栏 adapter 主锚点"
+    },
+    {
+      "key": "sidebar-next",
+      "tier": "L2",
+      "anchors": [
+        "sidebar-next",
+        "sidebar-next-main-header",
+        "sidebar-next-body",
+        "detail-panel",
+        "detail-sidebar"
+      ],
+      "status": "alive",
+      "evidence": "探针 hit=11/2/3；tokens.css 侧栏遮蔽补丁块（审计 W1 判'证据悬空'，实窗推翻——当前 Windows 构建活跃）"
+    },
+    {
+      "key": "conversation-list-family",
+      "tier": "L2",
+      "anchors": [
+        "conversation-list",
+        "conversation-list-header",
+        "conversation-list-content",
+        "conversation-list-tabs",
+        "conversation-list-tab-button",
+        "conversation-section-label",
+        "conversation-agent-card",
+        "conversation-show-more-button",
+        "conversation-list-footer"
+      ],
+      "status": "alive",
+      "evidence": "探针 hit=1/1/1/1/7/2/13/2/1；SELECTORS.conversationList；豆皮侧栏结构规则同族"
+    },
+    {
+      "key": "collapsible-section",
+      "tier": "L2",
+      "anchors": ["collapsible-section-header", "headerTopPadding"],
+      "status": "alive",
+      "evidence": "探针 hit=5；cosmetic.css 分组标题（_header_ 子串组合待细分复验）"
+    },
+    {
+      "key": "home-composer",
+      "tier": "L1",
+      "anchors": ["wb-home-composer", "wb-home-composer__input-slot"],
+      "status": "alive",
+      "evidence": "探针 hit=1/1；semantic-selectors composer 首位（2026-09-08 补入）；豆皮输入区主锚点"
+    },
+    {
+      "key": "home-page",
+      "tier": "L2",
+      "anchors": ["wb-home-page", "wb-home-page__main-content"],
+      "status": "alive",
+      "evidence": "探针 hit=1/1；semantic-selectors main 首位"
+    },
+    {
+      "key": "teams-main",
+      "tier": "L2",
+      "anchors": ["teams-main-content", "teams-content-wrapper"],
+      "status": "alive",
+      "evidence": "探针 hit=1/1；SELECTORS.mainArea / applyHeuristicStyles mainArea"
+    },
+    {
+      "key": "wb-button",
+      "tier": "L2",
+      "anchors": ["wb-button", "wb-button--ghost"],
+      "status": "alive",
+      "evidence": "探针 hit=9/8；semantic-selectors button（替换零命中的 .ms-Button）"
+    },
+    {
+      "key": "scene-tabs",
+      "tier": "L2",
+      "anchors": ["wb-scene-tabs", "wb-scene-tabs__pill"],
+      "status": "alive",
+      "evidence": "探针 hit=1/3；豆皮类型切换轨道同族"
+    },
+    {
+      "key": "quick-actions",
+      "tier": "L2",
+      "anchors": ["quick-actions", "quick-actions__item", "quick-action"],
+      "status": "alive",
+      "evidence": "探针 hit=1/8；adapter.mjs native-defect-fix（quick-actions-shadow）实证有效"
+    },
+    {
+      "key": "grid-view",
+      "tier": "L2",
+      "anchors": ["_gridViewItem_", "_gridView_"],
+      "status": "alive",
+      "evidence": "探针 hit=4/1；SELECTORS.gridViewItem / route:grid-view（CSS Module local-name 子串，半稳定）"
+    },
+    {
+      "key": "dropdown",
+      "tier": "L2",
+      "anchors": ["_dropdown_", "view-selector", "_dropdownRoot_"],
+      "status": "partial",
+      "evidence": "探针 _dropdown_=1 / _dropdownRoot_=0 / [class*=dropdown]=1；SELECTORS.dropdown 保留 _dropdown_ 组合，_dropdownRoot_ 当前构建零命中降为兜底"
+    },
+    {
+      "key": "checkin-card",
+      "tier": "L2",
+      "anchors": ["daily-checkin"],
+      "status": "alive",
+      "evidence": "探针 hit=1；豆皮 promo card 收束规则同锚点（shadow DOM 宿主层）"
+    },
+    {
+      "key": "user-menu",
+      "tier": "L2",
+      "anchors": ["user-menu-trigger"],
+      "status": "alive",
+      "evidence": "探针 hit=1；豆皮 hover 规则同锚点"
+    },
+    {
+      "key": "input-container",
+      "tier": "L2",
+      "anchors": ["input-container"],
+      "status": "alive",
+      "evidence": "探针 hit=2；semantic-selectors composer 兜底"
+    },
+    {
+      "key": "version-drift-fallbacks",
+      "tier": "L2",
+      "anchors": ["wb-cb-chat", "wb-cb-input", "chat-container", "main-content"],
+      "status": "view-dependent",
+      "evidence": "当前 Windows 构建 hit=0；豆皮 5.3.14 macOS 实窗存活（.wb-cb-chat 在其 adapter、.chat-container/.main-content 在其 landmark 清单）——版本/平台漂移兜底，勿删但勿依赖"
+    },
+    {
+      "key": "dead-mainarea-substring",
+      "tier": "L2",
+      "anchors": ["_mainArea_"],
+      "status": "inert",
+      "evidence": "探针 hit=0；findInputContainer 兜底 #2 / SELECTORS.mainArea 候选——当前构建零命中，mainArea 由 .teams-main-content 承载；保留观察一个版本周期"
+    },
+    {
+      "key": "removed-fluent-guesses",
+      "tier": "L2",
+      "anchors": ["ms-Dialog", "ms-Button", "ms-ContextualMenu", "conversation-surface"],
+      "status": "removed",
+      "evidence": "2026-09-08 审计 W2 从 semantic-selectors 移除；探针确认全 0（Fluent UI 前缀系按'VS Code 系=Fluent'规律推测，WorkBuddy 实为自研 wb-* kit）"
+    }
+  ]
+}

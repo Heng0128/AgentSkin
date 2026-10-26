@@ -1,0 +1,39 @@
+{
+  "schema": "agentskin-selector-contract/1",
+  "description": "codex 引擎选择器溯源合同（C14）。engines/codex 三个文件 + src/engine 侧 codex runtime 引用的每一个 Codex DOM 锚点（类名 / 类名子串 / data-* 属性 / data-testid）都必须能溯源到本合同的某个条目；新增锚点须先在本合同登记（附 tier 与证据）再进入 CSS/JS。tier 语义对齐上游 Codex-Dream-Skin selectors.json：L1 缺失 = 皮肤主行为受损（doctor 判 unhealthy），L2 缺失 = 精修静默降级（仅提示）。genericAttributes（role / aria-* / contenteditable / tabindex）与 AgentSkin 自有命名空间（agentskin-* / data-agentskin-* / dream-*）由守卫脚本豁免，不入合同。",
+  "verifiedAgainst": {
+    "upstream": "Codex-Dream-Skin selectors.json 2026-08-27（26.715→26.818 双端实测）",
+    "local": "engines/codex 历史 PROBE 注释 + 2026-09-07 锚点同步"
+  },
+  "selectors": [
+    { "key": "shell-main", "tier": "L1", "anchors": ["main-surface", "data-app-shell-main-surface", "_MainContentSurface_"], "evidence": "upstream shell-main；26.727.40816 新增 data 属性 + CSS Module 前缀，.main-surface 兼容旧版" },
+    { "key": "left-panel", "tier": "L1", "anchors": ["app-shell-left-panel"], "evidence": "upstream left-panel；双端稳定语义类" },
+    { "key": "header-tint", "tier": "L1", "anchors": ["app-header-tint", "data-app-shell-header-edge-scroll", "_Header_"], "evidence": "upstream header-tint；26.727.40816 新增 data 属性 + _Header_ CSS Module" },
+    { "key": "home-icon", "tier": "L1", "anchors": ["home-icon"], "anchorType": "testid", "evidence": "upstream stableTestids；首页路由判定信号，双端一致" },
+    { "key": "top-fade", "tier": "L2", "anchors": ["app-shell-main-content-top-fade", "data-app-shell-main-content-top-fade", "_MainContentTopFade_"], "evidence": "upstream main-content-top-fade；主题背景下移除原生白色 fade" },
+    { "key": "content-frame", "tier": "L2", "anchors": ["app-shell-main-content-frame"], "evidence": "upstream wide 模式 border-top: 0 修正" },
+    { "key": "composer-root", "tier": "L2", "anchors": ["composer-surface-chrome", "_ComposerLayoutRoot_", "data-composer-surface-variant", "data-composer-radius-variant"], "evidence": "upstream composer-chrome；26.814+ 迁移 _ComposerLayoutRoot_ CSS Module + 稳定 surface/radius 语义属性" },
+    { "key": "composer-body", "tier": "L2", "anchors": ["_ComposerLayoutBody_"], "evidence": "upstream 26.803+ 输入表面内层节点；双表面清理（防双层玻璃）" },
+    { "key": "composer-footer", "tier": "L2", "anchors": ["_ComposerLayoutFooter_", "data-composer-footer-responsive", "_footer_"], "evidence": "upstream composer-toolbar 三版本兼容链" },
+    { "key": "composer-placeholder", "tier": "L2", "anchors": ["placeholder"], "evidence": "upstream p.placeholder::after 伪元素 placeholder 重着色" },
+    { "key": "home-utility", "tier": "L2", "anchors": ["_homeUtilityBar_", "_ComposerHomeUtilityBar_"], "evidence": "upstream home-utility；CSS Modules 前缀跨端稳定" },
+    { "key": "home-suggestions", "tier": "L2", "anchors": ["group\\/home-suggestions"], "evidence": "upstream home-suggestions；Tailwind group 命名空间类" },
+    { "key": "thread-surface", "tier": "L2", "anchors": ["thread-scroll-container"], "evidence": "upstream thread-surface；双端活动会话快照均存在" },
+    { "key": "composer-fade", "tier": "L2", "anchors": ["bg-gradient-to-t", "from-token-main-surface-primary"], "evidence": "upstream sticky composer 第二层不透明 fade 清理" },
+    { "key": "message", "tier": "L2", "anchors": ["data-message-author-role", "data-local-conversation-user-anchor", "data-local-conversation-final-assistant"], "evidence": "upstream message；语义属性边界（旧 role 属性 + 26.727+ 语义属性）" },
+    { "key": "reasoning-annotation", "tier": "L2", "anchors": ["data-response-annotation-conversation", "data-response-annotation-target"], "evidence": "upstream 流式 reasoning 卡；终稿复位消费 data-local-conversation-final-assistant" },
+    { "key": "markdown", "tier": "L2", "anchors": ["_markdown"], "evidence": "upstream markdown；CSS Modules 前缀" },
+    { "key": "editor", "tier": "L2", "anchors": ["ProseMirror"], "evidence": "upstream .ProseMirror caret/着色" },
+    { "key": "focus-wrapper", "tier": "L2", "anchors": ["data-vscode-context"], "evidence": "upstream [data-vscode-context][tabindex]:focus-visible 焦点环误伤修正" },
+    { "key": "utility-wrapper", "tier": "L2", "anchors": ["bg-token-main-surface-primary", "h-full", "w-full"], "evidence": "upstream PR 类路由全尺寸不透明 wrapper 透明化（只清全窗包裹，不动卡片）" },
+    { "key": "primary-button", "tier": "L2", "anchors": ["bg-token-foreground"], "evidence": "upstream 全局 primary 按钮 accent 化" },
+    { "key": "send-button", "tier": "L2", "anchors": ["bg-primary-solid"], "evidence": "upstream 发送/停止/语音按钮 accent 键帽（aria-label 兼容为 genericAttribute）" },
+    { "key": "sidebar-item", "tier": "L2", "anchors": ["sidebar-item"], "evidence": "本仓 PROBE：button.sidebar-item 精确行锚点" },
+    { "key": "sidebar-project", "tier": "L2", "anchors": ["data-app-action-sidebar-project-id"], "evidence": "本仓 PROBE：项目行锚点" },
+    { "key": "sidebar-thread-state", "tier": "L2", "anchors": ["data-app-action-sidebar-thread-selected", "data-app-action-sidebar-thread-active"], "evidence": "本仓 PROBE：活动会话状态为精确属性而非类" },
+    { "key": "settings-panel", "tier": "L2", "anchors": ["data-settings-panel-slug"], "evidence": "upstream settings-panel；Codex 26.727 设置页稳定导航锚点" },
+    { "key": "overlay-popper", "tier": "L2", "anchors": ["data-radix-popper-content-wrapper"], "evidence": "upstream overlay-popper；Radix 浮层容器" },
+    { "key": "csp-meta", "tier": "L2", "anchors": ["http-equiv"], "evidence": "adapter-config detectCSP 的 meta[http-equiv=\"Content-Security-Policy\"] 探针" },
+    { "key": "composer-expanded", "tier": "L2", "anchors": ["data-composer-expanded"], "evidence": "adapter-config deepConfig composer-open 路由测试锚点" }
+  ]
+}

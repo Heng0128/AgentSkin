@@ -1,0 +1,97 @@
+{
+  "schema": "agentskin-selector-contract/1",
+  "description": "zcode 引擎选择器溯源合同（2026-09-08 六引擎 X 光探针落地）。tier/status 语义同 codex 合同。⚠ 采样局限：仅聊天渲染窗（index.html）；ZCode 的编辑器窗口未开，全部 monaco/pdf/katex 锚点标记 view-dependent 而非 dead。",
+  "verifiedAgainst": {
+    "live-probe": "2026-09-08 CDP 探针（ZCode 主窗，file:///C:/Program Files/ZCode/resources/app.asar/out/renderer/index.html）；完整数据 test-output/probe-all6-2026-09-08.json（gitignored）",
+    "external": "无"
+  },
+  "selectors": [
+    {
+      "key": "workspace-sidebar",
+      "tier": "L1",
+      "anchors": ["data-workspace-sidebar-panel"],
+      "anchorType": "attr",
+      "status": "alive",
+      "evidence": "探针 hit=1；adapter-config findSidebar 策略 0（probe-verified exact anchor）——本引擎最稳锚点"
+    },
+    {
+      "key": "theme-classes",
+      "tier": "L1",
+      "anchors": ["dark", "theme-zai-dark"],
+      "status": "alive",
+      "evidence": "探针 hit=1；宿主外观声明类（tokens.css 注释同源：--color-* 挂 :root/.dark/.theme-zai-dark）"
+    },
+    {
+      "key": "chat-input",
+      "tier": "L1",
+      "anchors": ["[contenteditable]", "[role='button']"],
+      "status": "alive",
+      "evidence": "探针 hit=1/3；通用语义承载"
+    },
+    {
+      "key": "monaco-family",
+      "tier": "L2",
+      "anchors": [
+        "monaco-workbench",
+        "editor-instance",
+        "monaco-editor-background",
+        "part sidebar",
+        "inputarea",
+        "monaco-editor",
+        "monaco-button",
+        "monaco-dropdown",
+        "monaco-overlay",
+        "context-view",
+        "editor",
+        "code-area",
+        "terminal"
+      ],
+      "status": "view-dependent",
+      "evidence": "探针全 0（编辑器窗口未开）；semantic-selectors + cosmetic 的 Monaco 族需在编辑器视图复验——若 ZCode 编辑器为独立 webview target，探针需扩至该窗口"
+    },
+    {
+      "key": "pdf-family",
+      "tier": "L2",
+      "anchors": [
+        "pdfViewer",
+        "pdf-viewer",
+        "pdfToolbar",
+        "pdf-toolbar",
+        "pdfSidebar",
+        "pdf-sidebar",
+        "pdfSidebarContainer"
+      ],
+      "status": "view-dependent",
+      "evidence": "探针 0（PDF 预览未开）；cosmetic PDF 块"
+    },
+    {
+      "key": "katex",
+      "tier": "L2",
+      "anchors": ["katex", "katex-display", "katex-html", "katex-mathml"],
+      "status": "view-dependent",
+      "evidence": "探针 0（当前会话无公式渲染）"
+    },
+    {
+      "key": "button-substrings",
+      "tier": "L2",
+      "anchors": ["primary", "send", "submit"],
+      "status": "inert-or-view-dependent",
+      "evidence": "探针 0；cosmetic button[class*='primary'/'send'/'submit'] 高脆弱子串（primary 类子串易误伤）——建议改 [contenteditable] 邻近几何或 data-* 路线"
+    },
+    {
+      "key": "overlay-substrings",
+      "tier": "L2",
+      "anchors": ["popover", "modal", "tooltip"],
+      "status": "view-dependent",
+      "evidence": "探针 0（浮层未开）；cosmetic 浮层透明化块"
+    },
+    {
+      "key": "aria-current",
+      "tier": "L2",
+      "anchors": ["aria-current"],
+      "status": "view-dependent",
+      "evidence": "探针 0；导航选中态属性"
+    }
+  ],
+  "tokenNotes": "tokens.css 为**有意占位**（L0 空操作，token 所有权在主题层 zcodeColorTokenOverrides/shellTokenOverrides，见文件头注释）——tokens=0 非缺陷。未覆盖宿主族：--tw-prose:36（Tailwind typography 插件变量，代码块/引用排版走原生色，主题化候选）、--color-terminal:22/--color-usage:11/--color-context:7/--color-git:8（主题层未映射的 --color-* 子族，纳入 zcode 主题生成器扩展专题）。"
+}

@@ -102,7 +102,7 @@ Step 5: evaluate(finalAdapterJs)  →  执行 unified/engine.mjs + adapter-confi
 | `qoderwork/` | qoderwork | --color-* token, DeepCore open-only shadow | IIFE |
 | `workbuddy/` | workbuddy | --cb-* / --wb-* token, ambient-router | IIFE |
 | `doubao/` | doubao | --dbx-* 系列 + dark-mode-remap + background-self-heal | IIFE |
-| `codex/` | codex | 多版本选择器 + codex-dream-skin 兼容 + CSP 降级链 | IIFE |
+| `codex/` | codex | 多版本选择器（`selectors.contract.json` 溯源合同 C14）+ codex-dream-skin 兼容 + CSP 降级链 | IIFE |
 | `zcode/` | zcode | file:// 协议 + 启发式 token 发现, geometry-based 侧边栏检测 | **config-driven** |
 
 ### adapter.mjs 大小（约）
@@ -124,6 +124,7 @@ Step 5: evaluate(finalAdapterJs)  →  执行 unified/engine.mjs + adapter-confi
 |---|--------|------|
 | C4 | 分层依赖方向 | 层数从 8 → 5：palette → tokens → cosmetic → theme → custom + adapter[visual, dynamic, deep-core] |
 | C11 | 注入引擎协作无冲突 | 单 MO 实例 + 单 cooldown 状态 + 单 --ag-* 变量块 |
+| C14 | codex 选择器溯源 | `codex/selectors.contract.json`（tier + 证据）；`check-selector-provenance.mjs` 双向校验 |
 
 ### 验证方式
 

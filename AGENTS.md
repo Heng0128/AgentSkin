@@ -108,6 +108,10 @@ AgentSkin 采用四引擎分工合作 + 统一编排的注入架构：
 | C9 | 缺陷规范文档新鲜度 | check:defect-doc | docs/native-defect-fixes.md |
 | C10 | 变量桥接契约 | — | 已废弃：桥接主题在 RFC 统一化后移除，不再有桥接契约检查 |
 | C11 | 注入引擎协作无冲突 | check-injection-orchestration | src/shared/injection/orchestrator.ts |
+| C12 | 孤立测试检测 | check-orphan-tests | tests/ + `.orphan-tests-ignore` |
+| C13 | 类名契约：源码中当类名用的字符串必须在构建产物中有规则 | check-css-classes | docs/design-tokens.md §13.2 |
+| C14 | 选择器溯源：codex 引擎每个 Codex DOM 锚点必须溯源到已验证合同（双向：未登记 → FAIL；合同条目 0 消费 → FAIL） | check-selector-provenance | engines/codex/selectors.contract.json |
+| C15 | 选择器可解析性：semantic-selectors.json 全部候选结构合法（括号/引号平衡、逗号卫生） | check-selector-parsability | engines/shared/semantic-selectors.json |
 
 ## 7. 黄金规则
 

@@ -29,11 +29,16 @@
 | `check-i18n.mjs` | 验证 i18n 完整性：中英 key 对齐、空翻译检测、孤儿 key 检测 | `glob` (外部) |
 | `check-selector-fragility.mjs` | 选择器健壮性 lint（B3）：检测脆弱选择器，warn-only | 无内部 import |
 | `check-css-scope.mjs` | 验证 adapter CSS 作用域：确保每条规则锚定在对应适配器的 host class 下，防止 CSS 泄漏到其他应用 DOM | 无内部 import |
+| `check-css-classes.mjs` | 类名契约（C13）：以**构建产物**为真相源，反查 `src/` 里当类名用却从未生成规则的字符串（命名空间错配导致的死类名），并普查 CSS 重复选择器（含 `:root`/`*`/元素选择器）。产物缺失时 SKIP；`--update` 写基线，`--json` 机读 | 无内部 import |
+| `css-classes.baseline.json` | C13 的已接受债务基线：记录已知死类名及其文件数上限、重复选择器组。只可缩减（新增引用即失败），防止守卫静默失效 | — |
 | `check-theme-staleness.mjs` | 验证 Palette-CSS 同步（C3） | `./theme-tokens.mjs`, `./wcag-apca-check.mjs` |
 | `check-store-contracts.mjs` | 验证 Store 契约一致性（C5） | 无内部 import |
 | `check-license-header.mjs` | 验证 SPDX 头部（C7） | 无内部 import |
 | `check-semantic-contract.mjs` | 验证语义 Quant 层契约 | `../src/engine/**` (跨目录) |
 | `check-orphan-tests.mjs` | 检测孤立测试（C12）：测试文件找不到对应源码时 fail，支持 `.orphan-tests-ignore` 忽略列表、tsconfig 路径别名、`path.resolve(__dirname, ...)` 解析 | 无内部 import |
+| `check-selector-provenance.mjs` | 选择器溯源（C14，codex）：engines/codex 各文件的每个 Codex DOM 锚点（类名/`[class*=]`/`[class~=]`/data-* 属性/data-testid 值）必须溯源到 `engines/codex/selectors.contract.json`；双向校验（未登记锚点 → FAIL；合同条目 0 消费 → FAIL），对标上游 Codex-Dream-Skin provenance 流程防化石选择器 | 无内部 import |
+| `check-selector-parsability.mjs` | 选择器可解析性（C15）：`engines/shared/semantic-selectors.json` 全部候选的零依赖结构校验（括号/引号平衡、逗号卫生、非空），防 `[role='navigation'`（2026-09-08 审计 S1）与 `:is(...),`（2026-09-07 workbuddy）两类静默失效；导出 `validateSelector` 供 `.test.mjs` 自测 | 无内部 import |
+| `probe-engine/` | **六引擎深度适配实窗探针（探测整合入口）**：`node scripts/probe-engine/<engine>.mjs --port <cdpPort> [--json]`。每引擎一支、各自适配（严禁互相套用）：① 身份页面分样（豆包 doubao:// 与 chrome:// 双文档、codex app:// 路由、workbuddy 严格 renderer、zcode 聊天/编辑器窗识别）② 外观读取器（data-theme / class 正则 / .theme-zai-dark / data-vscode-context 各走各的）③ 结构断言（每引擎 3 条专属，如 workbuddy 侧栏双实现并存、codex data-* 承载）④ token 精确名期望（族名前缀不作期望；占位 L0 引擎不设）⑤ **四源锚点面**：A=anchors/index.mjs 注册表（PROBE-DATE 2026-08-23，任一变体零命中→**DRIFT 报警**）、B=lib/landmarks、C=自家 selectors.contract.json 逐变体复验、D=引擎文件全量提取。取代 cdp-probe-*.mjs 的锚点校验职能（截图/结构对拍等专项仍归原脚本）；只读，不点击不读正文 | `../anchors/index.mjs`, `../lib/landmarks/index.mjs` |
 
 ### 适配器校验脚本（validate-*）
 

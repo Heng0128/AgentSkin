@@ -1,0 +1,147 @@
+{
+  "schema": "agentskin-selector-contract/1",
+  "description": "qoderwork 引擎选择器溯源合同（2026-09-08 六引擎 X 光探针落地）。tier/status 语义同 codex 合同。⚠ 采样局限：主窗 + voice-overlay 两页；artifact/MCP/quickpick/canvas/design/writing 各功能面板未打开，其锚点全部标记 view-dependent 而非 dead。",
+  "verifiedAgainst": {
+    "live-probe": "2026-09-08 CDP 探针（QoderWork CN 主窗 + voice-overlay.html）；完整数据 test-output/probe-all6-2026-09-08.json（gitignored）",
+    "external": "无"
+  },
+  "selectors": [
+    {
+      "key": "layout-shell",
+      "tier": "L1",
+      "anchors": [
+        "agents-layout-root",
+        "agents-layout-body",
+        "agents-content-area",
+        "agents-sidebar",
+        "data-resizable-sidebar"
+      ],
+      "status": "alive",
+      "evidence": "探针 hit=1；semantic-selectors root/sidebar 承载（2026-09-08 重排后）"
+    },
+    {
+      "key": "composer",
+      "tier": "L1",
+      "anchors": ["chat-input-editor-text"],
+      "status": "alive",
+      "evidence": "探针 hit=2；semantic-selectors composer 首位（2026-09-08 补入）"
+    },
+    {
+      "key": "state-attrs",
+      "tier": "L2",
+      "anchors": ["data-active", "data-theme"],
+      "status": "alive",
+      "evidence": "探针 hit=1；cosmetic/adapter 状态选择器"
+    },
+    {
+      "key": "header-family",
+      "tier": "L2",
+      "anchors": [
+        "agents-header",
+        "titlebar",
+        "title-bar",
+        "top-bar",
+        "topbar",
+        "app-header",
+        "window-header",
+        "header"
+      ],
+      "status": "inert-or-view-dependent",
+      "evidence": "探针全 0；adapter-config header 候选族（2026-09-07 曾按探针更新过 .agents-layout-root 首子元素路线）——当前构建 header 类名疑已哈希化，需实窗 DOM 复查"
+    },
+    {
+      "key": "artifact-mcp-panels",
+      "tier": "L2",
+      "anchors": [
+        "artifact-preview",
+        "artifact-container",
+        "artifact-viewer",
+        "artifact-content",
+        "artifact-body",
+        "artifact-header",
+        "artifact-toolbar",
+        "mcp-preview",
+        "mcp-container",
+        "mcp-iframe",
+        "mcp-header",
+        "preview-frame",
+        "preview-iframe",
+        "preview-toolbar"
+      ],
+      "status": "view-dependent",
+      "evidence": "探针 0（面板未开）；cosmetic.css 大段 artifact/MCP 结构规则待面板视图复验"
+    },
+    {
+      "key": "quickpick",
+      "tier": "L2",
+      "anchors": [
+        "quickpick",
+        "command-palette",
+        "picker-container",
+        "quickpick-input",
+        "picker-input",
+        "command-input",
+        "quickpick-item",
+        "picker-item",
+        "command-item"
+      ],
+      "status": "view-dependent",
+      "evidence": "探针 0（palette 未开）；cosmetic 命令面板规则"
+    },
+    {
+      "key": "canvas-design-writing",
+      "tier": "L2",
+      "anchors": [
+        "canvas",
+        "design-surface",
+        "artboard",
+        "canvas-toolbar",
+        "canvas-sidebar",
+        "design-toolbar",
+        "design-panel",
+        "canvas-canvas",
+        "design-canvas",
+        "artboard-surface",
+        "writing",
+        "editor-surface",
+        "editor-container",
+        "writing-sidebar",
+        "editor-sidebar",
+        "writing-toolbar",
+        "editor-toolbar",
+        "writing-editor",
+        "editor-content"
+      ],
+      "status": "view-dependent",
+      "evidence": "探针 0（设计/写作模式未开）；cosmetic 三大模式块"
+    },
+    {
+      "key": "editor-kit",
+      "tier": "L2",
+      "anchors": ["cm-editor", "cm-content", "cm-line", "ProseMirror"],
+      "status": "view-dependent",
+      "evidence": "探针 0；CodeMirror/ProseMirror 在写作面板内懒加载"
+    },
+    {
+      "key": "extension-nav",
+      "tier": "L2",
+      "anchors": [
+        "group/extensions-nav",
+        "data-extension-nav-item",
+        "data-view-id",
+        "h-[36px]",
+        "max-w-[240px]"
+      ],
+      "status": "inert-or-view-dependent",
+      "evidence": "探针 0；扩展导航与 Tailwind 工具类子串锚点——工具类子串（h-[36px]）本质脆弱，建议改结构选择器"
+    },
+    {
+      "key": "removed-ant-guesses",
+      "tier": "L2",
+      "anchors": ["ant-modal", "ant-drawer", "ant-btn", "ant-dropdown", "ant-popover"],
+      "status": "removed",
+      "evidence": "2026-09-08 探针 .ant-btn=0（主窗 6 个 [role=button] 渲染下仍零）→ 非 Ant Design 栈，semantic-selectors 已删"
+    }
+  ],
+  "tokenNotes": "tokens.css 108 覆写 108 真实（100% 命中，六引擎最佳）。未覆盖宿主族：--mobile-app:7、--color-shadow:9、--color-highlight:5（低量级，暂不动）；--tw-* 为 Tailwind 内部变量（不应覆写）。"
+}

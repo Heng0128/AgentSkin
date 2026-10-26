@@ -1,0 +1,137 @@
+{
+  "schema": "agentskin-selector-contract/1",
+  "description": "traework 引擎选择器溯源合同（2026-09-08 六引擎 X 光探针落地）。tier/status 语义同 codex 合同。⚠ 采样局限：仅主窗当前视图（1 page target）；zero ≠ dead，标记 view-dependent 的条目需在对应视图（会话消息流、设置页、菜单展开）复验后才可清理。",
+  "verifiedAgainst": {
+    "live-probe": "2026-09-08 CDP 探针（TRAE SOLO CN，vscode-file:// 主窗，title=TraeWork CN）；完整数据 test-output/probe-all6-2026-09-08.json（gitignored）",
+    "external": "无（豆皮不覆盖 traework）"
+  },
+  "selectors": [
+    {
+      "key": "task-list",
+      "tier": "L1",
+      "anchors": [
+        "task-list-base",
+        "task-list-panel",
+        "task-list-scroller",
+        "task-list-new-task-item",
+        "task-list-group-new-btn",
+        "task-list-skills-item"
+      ],
+      "status": "alive",
+      "evidence": "探针 hit=1/1/1/4/3/3；cosmetic.css 任务列表族"
+    },
+    {
+      "key": "composer-v2",
+      "tier": "L1",
+      "anchors": [
+        "chat-input-v2-editor-part",
+        "chat-input-v2-send-button",
+        "chat-input-v2-input-box-editable",
+        "messageInputContainer",
+        "messageInputChatInput"
+      ],
+      "status": "alive",
+      "evidence": "探针 hit=1；adapter-config + cosmetic 输入区族"
+    },
+    {
+      "key": "plugin-toolbar",
+      "tier": "L2",
+      "anchors": ["messageInputPluginToolbar", "messageInputPluginToolbarIconWrapper"],
+      "status": "alive",
+      "evidence": "探针 hit=1/3；cosmetic 插件工具条"
+    },
+    {
+      "key": "solo-shell",
+      "tier": "L1",
+      "anchors": [
+        "panel-container",
+        "solo-lite",
+        "solo-theme",
+        "solo-lite-panel-box-shadow",
+        "solo-lite-panel-border"
+      ],
+      "status": "alive",
+      "evidence": "探针 hit=1；semantic-selectors root + cosmetic 壳层。注意：.solo-lite-layout 探针 0（当前视图未渲染该容器），降为兜底"
+    },
+    {
+      "key": "mode-switcher",
+      "tier": "L2",
+      "anchors": ["mode-switcher-btn"],
+      "status": "alive",
+      "evidence": "探针 hit=1；cosmetic 模式切换"
+    },
+    {
+      "key": "task-shadow",
+      "tier": "L2",
+      "anchors": ["task-list-shadow-top", "task-list-shadow-bottom"],
+      "status": "partial",
+      "evidence": "bottom=1 alive / top=0（滚动位置相关）"
+    },
+    {
+      "key": "trae-ref",
+      "tier": "L2",
+      "anchors": ["data-trae-ref", "data-view-id"],
+      "status": "view-dependent",
+      "evidence": "探针 0（当前视图无该属性）；semantic-selectors 与 adapter 多处引用——若后续视图复验仍全零则整族降级"
+    },
+    {
+      "key": "bubble-family",
+      "tier": "L2",
+      "anchors": [
+        "message-bubble",
+        "messageBubble",
+        "msg-bubble",
+        "chat-bubble",
+        "message-content",
+        "msg-content",
+        "user-message__text-box",
+        "user-message-navigator__mask"
+      ],
+      "status": "view-dependent",
+      "evidence": "探针全 0（首页无消息流）；cosmetic 气泡族需在会话视图复验"
+    },
+    {
+      "key": "avatar-link",
+      "tier": "L2",
+      "anchors": ["agent-avatar", "avatar", "file-link", "link"],
+      "status": "view-dependent",
+      "evidence": "探针 0（无消息流）；cosmetic 头像/文件链接"
+    },
+    {
+      "key": "glow-killers",
+      "tier": "L2",
+      "anchors": [
+        "chat-input-primary-glow",
+        "chat-input-v2-action",
+        "chat-input-v2-toolbar-btn",
+        "messageInputToolbarBtn",
+        "messageInputToolbarButton"
+      ],
+      "status": "inert-or-view-dependent",
+      "evidence": "探针全 0；输入框光晕/动作按钮清理规则——当前构建未见该类，保留观察"
+    },
+    {
+      "key": "generic-fallbacks",
+      "tier": "L2",
+      "anchors": [
+        "chat-panel",
+        "message-list",
+        "conversation",
+        "main-content",
+        "workspace",
+        "chat-view",
+        "side-panel",
+        "input-area",
+        "monaco-workbench",
+        "segmented",
+        "solo-mobile-compact-btn",
+        "markdown-file-link",
+        "solo-lite-chat-panel-container",
+        "solo-lite-layout"
+      ],
+      "status": "inert",
+      "evidence": "探针全 0；多为早期按语义猜测的通用子串候选，由承载锚点（panel-container/main/[contenteditable]）替代，建议下轮清理"
+    }
+  ],
+  "tokenNotes": "tokens.css 150 覆写中 21 个在本构建未声明：--vscode-input-validation-* ×9、--status-{warning,success,info}-surface ×3、--chat-bubble-* ×3、--brand-{primary,primary-hover,primary-active,surface} ×4、--solo-surface-{elevated,overlay} ×2（懒加载或猜测名，保留但标注）。未覆盖宿主原生族（覆盖扩展候选，需专题）：--bg-bg:45、--text-text:23、--brand-brand:22、--ras-{heading,body,status,code}:185、--query-tag:26、--popup-menu:22、--viz-viz:18、--color-data:20、--heading:32"
+}
