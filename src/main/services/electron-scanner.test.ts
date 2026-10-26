@@ -327,7 +327,8 @@ describe('electron-scanner', () => {
     expect(result.other).toHaveLength(1);
     expect(result.other[0]).toMatchObject({
       exePath: 'D:\\Apps\\MyApp\\MyApp.exe',
-      productName: 'SomeApp',
+      // Registry DisplayName ("MyApp") now wins over the PE name ("SomeApp").
+      productName: 'MyApp',
       companyName: 'Unknown Inc',
       adapterMatch: null,
     });
@@ -583,6 +584,121 @@ describe('electron-scanner', () => {
   });
 
   // -----------------------------------------------------------------------
+  // Scenario 9b — L3 backfills productName from the L2 registry index when
+  // the exe's PE block has no ProductName. The same app is found by BOTH the
+  // registry sweep (authoritative DisplayName) and the filesystem sweep; the
+  // backfill makes L3's identity key match L2's so the two fold into ONE
+  // correctly-named tile instead of a stray raw-exe-filename tile.
+  // -----------------------------------------------------------------------
+  it('L3 backfills productName from the registry index when PE ProductName is empty', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+
+    // The exe's PE block omits ProductName (empty 3rd field). The registry
+    // DisplayName ("Visual Studio Code") is the only authoritative human name.
+    const vsCodeExe = 'D:\\VSCode\\Code\\Code.exe';
+    configureExecMocks(
+      '1.0.0|1.0.0||VS Code Editor|Microsoft',
+      'Visual Studio Code|1.0.0|D:\\VSCode\\Code',
+    );
+
+    // L3 discovers the app under a custom root (exe sits next to resources/).
+    readdirMap.set('D:\\VSCode', ['Code']);
+    statMap.set('D:\\VSCode\\Code', 'dir');
+    statMap.set('D:\\VSCode\\Code\\resources\\app.asar', 'asar');
+    readdirMap.set('D:\\VSCode\\Code', ['Code.exe']);
+    statMap.set(vsCodeExe, 'file');
+
+    const result = await scanElectronApps({ useCache: false, extraDirs: ['D:\\VSCode'] });
+
+    // A single merged tile (not two): L2's registry entry wins the merge.
+    expect(result.other).toHaveLength(1);
+    const app = result.other[0];
+    expect(app.exePath).toBe(vsCodeExe);
+    // Backfilled from the registry DisplayName — NOT the raw exe filename "Code".
+    expect(app.productName).toBe('Visual Studio Code');
+    expect(app.source).toBe('registry');
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 9c — versioned vendor layout: an L3-only app (no registry entry,
+  // empty PE) shows the install-dir product name, not the raw exe filename.
+  // This is the Quark case: exe is `apollocmd.exe` under `Quark\7.1.7.975`,
+  // and the folder (not the exe) is what the user recognizes as "Quark".
+  // -----------------------------------------------------------------------
+  it('L3 shows the install-dir product name for a versioned layout when PE + registry are empty', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+    configureExecMocks('', ''); // PE read empty; registry sweep empty
+
+    const root = 'D:\\Quark';
+    const versionDir = `${root}\\7.1.7.975`;
+    const exe = `${versionDir}\\apollocmd.exe`;
+
+    readdirMap.set(root, ['7.1.7.975']);
+    statMap.set(versionDir, 'dir');
+    statMap.set(`${versionDir}\\resources\\app.asar`, 'asar');
+    readdirMap.set(versionDir, ['apollocmd.exe', 'resources']);
+    statMap.set(exe, 'file');
+
+    const result = await scanElectronApps({ useCache: false, extraDirs: [root] });
+
+    expect(result.other).toHaveLength(1);
+    const app = result.other[0];
+    expect(app.exePath).toBe(exe);
+    // Not the raw exe filename "apollocmd" — the product folder is "Quark".
+    expect(app.productName).toBe('Quark');
+    expect(app.source).toBe('filesystem');
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 9d — cross-version registry backfill via the product-folder key.
+  // L2 records Quark's registry DisplayName ("夸克") keyed on one version dir;
+  // L3 discovers a DIFFERENT version dir of the same app. The product-folder
+  // key ("quark") lines them up so L3 backfills the localized registry name
+  // instead of the raw exe filename — the exact Quark case observed on a real
+  // machine (`apollocmd.exe` under `Quark\<version>`).
+  // -----------------------------------------------------------------------
+  it('L3 backfills the localized registry name across version dirs via the product-folder key', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+    // PE empty; registry lists Quark at an older version payload dir.
+    configureExecMocks('', '夸克|7.0.7.940|C:\\Quark\\7.0.7.940');
+
+    // L2's location (registry) hosts apollocmd.exe.
+    readdirMap.set('C:\\Quark\\7.0.7.940', ['apollocmd.exe']);
+    statMap.set('C:\\Quark\\7.0.7.940\\apollocmd.exe', 'file');
+
+    // L3 discovers a NEWER version dir of the same app (via extraDirs root).
+    readdirMap.set('C:\\Quark', ['7.1.7.975']);
+    statMap.set('C:\\Quark\\7.1.7.975', 'dir');
+    statMap.set('C:\\Quark\\7.1.7.975\\resources\\app.asar', 'asar');
+    readdirMap.set('C:\\Quark\\7.1.7.975', ['apollocmd.exe', 'resources']);
+    statMap.set('C:\\Quark\\7.1.7.975\\apollocmd.exe', 'file');
+
+    const result = await scanElectronApps({ useCache: false, extraDirs: ['C:\\Quark'] });
+
+    // One merged tile: L3's dir backfilled "夸克" via the product-folder key, so
+    // its identity matches L2's and the registry entry wins the merge.
+    expect(result.other).toHaveLength(1);
+    const app = result.other[0];
+    expect(app.productName).toBe('夸克');
+    expect(app.source).toBe('registry');
+  });
+
+  // -----------------------------------------------------------------------
   // Scenario 10 — non-skippable timeout surfaces via mainWarn
   // -----------------------------------------------------------------------
   it('does not crash when detectInstallation throws', async () => {
@@ -705,7 +821,8 @@ describe('electron-scanner', () => {
       source: null,
     });
 
-    // Registry sweep empty; PE read empty → name falls back to the exe name.
+    // Registry sweep empty; PE read empty → name falls back to the install
+    // directory's product name (walks up past the `app-4.0.0` version folder).
     configureExecMocks('', '');
 
     const local = 'C:\\Users\\me\\AppData\\Local';
@@ -727,7 +844,8 @@ describe('electron-scanner', () => {
 
     expect(result.other).toHaveLength(1);
     expect(result.other[0].exePath).toBe(`${appDir}\\slack.exe`);
-    // PE name empty → fallback to the exe filename ("slack").
+    // PE + registry empty → fallback to the install-dir product name
+    // (`app-4.0.0` is a version segment, so it walks up to `slack`).
     expect(result.other[0].productName).toBe('slack');
   });
 
@@ -866,9 +984,11 @@ describe('electron-scanner', () => {
       source: null,
     });
 
-    // Capture the PowerShell args passed to execFileAsync for the registry
-    // sweep (the only non-includeStderr call — L1 is mocked to not install).
-    let capturedArgs: string[] = [];
+    // Capture the PowerShell args passed to execFileAsync for every
+    // non-includeStderr sweep call (L2 registry + L2.5 msix + L3.5 shortcut —
+    // L1 is mocked to not install). The WOW6432Node assertion targets the
+    // registry sweep among them.
+    const capturedScripts: string[] = [];
     mockExecFileAsync.mockImplementation(
       (
         _cmd: string,
@@ -879,18 +999,20 @@ describe('electron-scanner', () => {
         if (options?.includeStderr) {
           return Promise.resolve({ stdout: '', stderr: '', errorMessage: null, errorCode: null });
         }
-        capturedArgs = args;
+        capturedScripts.push(args.join(' '));
         return Promise.resolve('');
       },
     );
 
     await scanElectronApps({ useCache: false });
 
-    const script = capturedArgs.join(' ');
-    expect(script).toContain('WOW6432Node');
-    expect(script).toContain(
-      'HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
-    );
+    expect(
+      capturedScripts.some((script) =>
+        script.includes(
+          'HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+        ),
+      ),
+    ).toBe(true);
   });
 
   // -----------------------------------------------------------------------
@@ -1099,7 +1221,8 @@ describe('electron-scanner', () => {
       expect(result.other).toHaveLength(1);
       expect(result.other[0]).toMatchObject({
         exePath: 'D:\\Apps\\MyApp\\MyApp.exe',
-        productName: 'SomeApp',
+        // Registry DisplayName ("MyApp") now wins over the PE name ("SomeApp").
+        productName: 'MyApp',
         companyName: 'Unknown Inc',
         version: '0.9.0',
         adapterMatch: null,

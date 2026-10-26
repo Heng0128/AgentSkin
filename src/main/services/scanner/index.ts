@@ -3,7 +3,7 @@
 /**
  * # Electron App Scanner
  *
- * Three-layer Windows scanner that discovers locally installed Electron
+ * Five-layer Windows scanner that discovers locally installed Electron
  * applications and classifies them as "adapted" (backed by an AgentSkin
  * adapter) or "other" (raw Electron, no backing adapter yet).
  *
@@ -11,23 +11,29 @@
  *   - **L1 — known agents**: for each of the 6 known AgentId, delegate to the
  *     existing `detectInstallation()` from `install-detection.ts`. Matched exes
  *     are tagged with their `adapterMatch: AgentId`.
- *   - **L2 — registry sweep**: enumerate `HKLM\...\Uninstall\*` and check
- *     whether any `InstallLocation` contains `resources/app.asar` or
- *     `resources/app`. Every hit is probed for its PE version info and matched
- *     against every adapter's `installHints`.
+ *   - **L2 — registry sweep**: enumerate the Uninstall registry
+ *     (HKLM 64-bit + WOW6432Node 32-bit + HKCU per-user) and check whether any
+ *     `InstallLocation` contains `resources/app.asar` or `resources/app`. Every
+ *     hit is probed for its PE version info and matched against every adapter's
+ *     `installHints`.
+ *   - **L2.5 — MSIX sweep**: `Get-AppxPackage` enumeration for Store-packaged
+ *     apps the Uninstall registry never lists (see `collectors/msix.ts`).
  *   - **L3 — filesystem sweep**: walk common Program Files / AppData roots,
  *     look for subdirectories containing `resources/app(.asar)`. Same PE probe
  *     + hint matching as L2.
+ *   - **L3.5 — Start-menu shortcut sweep**: resolve `.lnk` targets for
+ *     green/portable Electron software the registry + filesystem sweeps both
+ *     missed (see `collectors/shortcut.ts`).
  *
- * Each `ScannedApp` gets a stable `id` (SHA-256 of the exe path) but the scan
- * folds multi-version installs into ONE entry per product identity as they
- * are discovered (`StreamMerge`) — the renderer receives a clean `add`/`update`
- * event stream and the settled result is exactly what was streamed. An
+ * The five layers form the discovery union; identities are deduplicated by
+ * normalized `productName | companyName` (StreamMerge) so the same app found
+ * by multiple layers folds into one entry, keeping the most user-facing
+ * source (`agent` > `registry` > `msix` > `shortcut` > `filesystem`). An
  * in-memory cache with a 5-minute TTL avoids repeated full scans when the
  * renderer polls the launcher repeatedly; callers can bypass it with
  * `useCache: false`.
  *
- * Timing: the whole operation is bounded by `SCAN_TIMEOUT_MS` (20s). On
+ * Timing: the whole operation is bounded by `SCAN_TIMEOUT_MS` (35s). On
  * timeout we return whatever partial results have been gathered so far.
  *
  * Module is main-process only (PowerShell via `execFileAsync`, registry,
@@ -51,7 +57,10 @@ import {
   scanFilesystemParallel,
 } from './collectors/filesystem';
 import { scanKnownAgents } from './collectors/knownAgent';
+import { scanMsixPackages } from './collectors/msix';
 import { scanRegistry, scanRegistryV2 } from './collectors/registry';
+import type { RegistryNameIndex } from './collectors/shared';
+import { scanStartMenuShortcuts } from './collectors/shortcut';
 import { scannerPipeline } from './flags';
 import { freshCache, getInflight, setCachedScan, setInflight } from './infra/cache';
 import { loadPersistedScan, savePersistedScan } from './infra/persist-cache';
@@ -60,6 +69,13 @@ import { StreamMerge } from './pipeline/stream-merge';
 import type { ScanOptions } from './types';
 
 export { resolveScanRoots } from './collectors/filesystem';
+export { parseMsixLine, pickMsixIcon, scanMsixPackages } from './collectors/msix';
+export {
+  nameFromShortcut,
+  parseShortcutLine,
+  scanStartMenuShortcuts,
+  startMenuRoots,
+} from './collectors/shortcut';
 export { scannerPipeline } from './flags';
 export { getCachedScan, invalidateScanCache } from './infra/cache';
 export { loadPersistedScan, savePersistedScan } from './infra/persist-cache';
@@ -99,7 +115,10 @@ async function enrichIcons(
   const otherWithIcons = await Promise.all(
     result.other.map(async (app) => {
       if (app.iconPath) return app;
-      const iconPath = await extractAppIcon(app.exePath);
+      // The scan may have discovered a curated icon location (MSIX Assets
+      // PNG / Start-menu .ico); it ranks between the PE probe and the OS
+      // shell icon inside extractAppIcon.
+      const iconPath = await extractAppIcon(app.exePath, app.iconHint);
       if (!iconPath) return app;
       onApp?.({ op: 'icon', appId: app.id, iconPath });
       return { ...app, iconPath };
@@ -201,6 +220,10 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
     const isTimedOut = () => Date.now() > deadline;
     const pipeline = scannerPipeline();
 
+    // L2 populates this with a registry DisplayName per exe so L3 can backfill
+    // a proper product name when an app's PE block has no ProductName (avoids
+    // degrading to the raw exe filename, which for a few apps ≠ the product).
+    const registryNameIndex: RegistryNameIndex = new Map();
     // Identity-merged collect: every discovered app folds into the stream
     // merger (one entry per product), and the renderer gets a clean
     // `add`/`update` event stream instead of the raw multi-version flood —
@@ -249,9 +272,9 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
         merger.entries().map((a) => normalizeProductName(a.productName || a.exePath)),
       );
       if (pipeline === 'v2') {
-        await scanRegistryV2(collect, isTimedOut, knownProducts);
+        await scanRegistryV2(collect, isTimedOut, knownProducts, registryNameIndex);
       } else {
-        await scanRegistry(collect, isTimedOut);
+        await scanRegistry(collect, isTimedOut, registryNameIndex);
       }
       mainWarn(
         'ElectronScanner',
@@ -262,12 +285,20 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
         degradedSources.push('L3');
         mainWarn('ElectronScanner', 'scan timed out after L2 — returning partial result');
       } else {
+        // L2.5 — MSIX / Store packages (skipped entirely on timeout; the
+        // registry sweep above never sees them).
+        const t25 = Date.now();
+        await scanMsixPackages(collect, isTimedOut);
+        mainWarn(
+          'ElectronScanner',
+          `L2.5 done ${Date.now() - t25}ms seen=${merger.size} timedOut=${isTimedOut()}`,
+        );
         // L3 — filesystem sweep.
         const t3 = Date.now();
         if (pipeline === 'v2') {
-          await scanFilesystemParallel(collect, isTimedOut, extraDirs);
+          await scanFilesystemParallel(collect, isTimedOut, extraDirs, registryNameIndex);
         } else {
-          await scanFilesystem(collect, isTimedOut, extraDirs);
+          await scanFilesystem(collect, isTimedOut, extraDirs, registryNameIndex);
         }
         mainWarn(
           'ElectronScanner',
@@ -277,13 +308,26 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
           timedOut = true;
           degradedSources.push('L3');
           mainWarn('ElectronScanner', 'scan timed out during L3 — returning partial result');
+        } else {
+          // L3.5 — Start-menu shortcut sweep (green/portable software the
+          // registry + filesystem sweeps both missed).
+          const t35 = Date.now();
+          await scanStartMenuShortcuts(collect, isTimedOut);
+          mainWarn(
+            'ElectronScanner',
+            `L3.5 done ${Date.now() - t35}ms seen=${merger.size} timedOut=${isTimedOut()}`,
+          );
         }
       }
     }
 
     // The final result is exactly what was streamed (identity-merged), so the
     // renderer's incremental merges and the settled result can never diverge.
-    const merged = merger.finalize();
+    // Sections sort by display name for a stable, scannable grid order — the
+    // renderer renders in array order and has no sort of its own.
+    const byName = (a: ScannedApp, b: ScannedApp) =>
+      a.productName.localeCompare(b.productName, 'zh-Hans-CN', { sensitivity: 'base' });
+    const merged = merger.finalize().sort(byName);
     const adapted = merged.filter((a) => a.adapterMatch);
     const other = merged.filter((a) => !a.adapterMatch);
 

@@ -93,6 +93,16 @@ describe('StreamMerge', () => {
     expect(m.size).toBe(2);
   });
 
+  it('normalizes equivalent version formats into one entry (1.0 vs 1.0.0.0)', () => {
+    const m = new StreamMerge();
+    m.upsert(app({ id: 'a', productName: 'App', version: '1.0' }));
+    // Same product, same build — PE read "1.0.0.0", registry said "1.0".
+    expect(m.upsert(app({ id: 'b', productName: 'App', version: '1.0.0.0' }))).toBe('discard');
+    const [merged] = m.finalize();
+    expect(merged.version).toBe('1.0.0');
+    expect(merged.versions).toEqual(['1.0.0']);
+  });
+
   it('finalize matches the accumulated entries (stream === final)', () => {
     const m = new StreamMerge();
     const apps = [

@@ -23,7 +23,7 @@ import { useShellStore } from '@/stores/shellStore';
 
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
-import type { ScannedApp } from '@shared/types';
+import { AGENT_META, type ScannedApp } from '@shared/types';
 import { Eye, EyeOff, Play, X } from 'lucide-react';
 
 export function AppDetailsDrawer() {
@@ -70,48 +70,66 @@ export function AppDetailsDrawer() {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-          {/* Identity: icon + name + status */}
+          {/* Identity: icon + name + publisher + status */}
           <div className="flex items-center gap-3 pr-8">
             {app.adapterMatch ? (
-              <AppMark appId={app.adapterMatch} size={36} />
+              <AppMark appId={app.adapterMatch} size={44} />
             ) : (
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-lg font-normal text-muted-foreground">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted text-[16px] font-semibold text-muted-foreground">
                 {app.productName.slice(0, 1).toUpperCase()}
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium leading-snug">{app.productName}</p>
-              <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <p className="truncate text-sm font-semibold leading-snug">{app.productName}</p>
+              {app.companyName ? (
+                <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                  {app.companyName}
+                </p>
+              ) : null}
+              <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <span
                   className={cn(
                     'inline-block size-1.5 shrink-0 rounded-full',
                     isRunning ? 'bg-cr-success' : 'bg-muted-foreground/25',
                   )}
                 />
-                {isRunning ? t.appDetailsRunning : t.appDetailsNotStarted}
+                {isRunning ? (
+                  <>
+                    {t.appDetailsRunning}
+                    {app.adapterMatch && (
+                      <span
+                        className={
+                          running?.debugReady ? 'text-muted-foreground/60' : 'text-cr-warning'
+                        }
+                      >
+                        {' '}
+                        · {running?.debugReady ? t.agentsDebugReady : t.appDetailsConnecting}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  t.appDetailsNotStarted
+                )}
               </p>
             </div>
           </div>
 
+          {/* Adapted agent — which AgentSkin adapter drives this app */}
+          {app.adapterMatch && (
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
+              <AppMark appId={app.adapterMatch} size={20} />
+              <span className="truncate text-[11px] font-medium text-foreground">
+                {AGENT_META[app.adapterMatch].displayName}
+              </span>
+              <span className="ml-auto shrink-0 rounded bg-accent px-1.5 py-0.5 text-micro font-medium text-accent-foreground">
+                {t.appDetailsAdapted}
+              </span>
+            </div>
+          )}
+
           {/* Metadata grid */}
           <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-lg border border-border bg-muted/30 px-3.5 py-3">
-            <DetailRow label={t.appDetailsPath} value={app.exePath} mono />
-            <DetailRow
-              label={t.appDetailsStatus}
-              value={
-                isRunning ? (
-                  <span className="flex items-center gap-1.5">
-                    <span className="inline-block size-2 rounded-full bg-cr-success" />
-                    {t.appDetailsRunning}
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1.5">
-                    <span className="inline-block size-2 rounded-full bg-muted-foreground/25" />
-                    {t.appDetailsNotStarted}
-                  </span>
-                )
-              }
-            />
+            <DetailRow label={t.appDetailsVersion} value={app.version ?? t.appDetailsUnknown} />
             <DetailRow
               label={t.appDetailsCdpPort}
               value={
@@ -119,16 +137,21 @@ export function AppDetailsDrawer() {
               }
             />
             <DetailRow label={t.appDetailsPid} value={running?.pid ? String(running.pid) : '—'} />
-            <DetailRow label={t.appDetailsAdapter} value={app.adapterMatch ?? '—'} />
             <DetailRow label={t.appDetailsSource} value={app.source ?? '—'} />
+            <DetailRow
+              label={t.appDetailsAdapter}
+              value={app.adapterMatch ? AGENT_META[app.adapterMatch].displayName : '—'}
+              fullWidth
+            />
+            <DetailRow label={t.appDetailsPath} value={app.exePath} mono fullWidth />
           </div>
 
-          {/* Action buttons */}
-          <div className="mt-auto flex items-center gap-2">
+          {/* Actions — stacked for a clearer primary/secondary hierarchy */}
+          <div className="mt-auto flex flex-col gap-2 border-t border-border pt-4">
             <Button
               variant="primary"
               size="sm"
-              className="flex-1"
+              className="w-full"
               onClick={() => void launch(app)}
               disabled={isRunning}
             >
@@ -138,7 +161,7 @@ export function AppDetailsDrawer() {
             <Button
               variant="outline"
               size="sm"
-              className="flex-1"
+              className="w-full"
               onClick={() => toggleHidden(app.id)}
             >
               {isHidden ? (
@@ -165,16 +188,23 @@ function DetailRow({
   label,
   value,
   mono = false,
+  fullWidth = false,
 }: {
   label: string;
   value: React.ReactNode;
   mono?: boolean;
+  /** Span both grid columns (long values like paths). */
+  fullWidth?: boolean;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-0.5">
+    <div className={cn('flex min-w-0 flex-col gap-0.5', fullWidth && 'col-span-2')}>
       <span className="text-micro text-muted-foreground">{label}</span>
       <span
-        className={cn('truncate text-[11px] text-foreground', mono && 'font-mono tabular-nums')}
+        className={cn(
+          'text-[11px] text-foreground',
+          mono && 'font-mono tabular-nums',
+          fullWidth ? 'break-all' : 'truncate',
+        )}
       >
         {value}
       </span>

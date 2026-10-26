@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { compareVersions, identityKey, isHigherPriority } from '@shared/app-identity';
+import {
+  compareVersions,
+  identityKey,
+  isHigherPriority,
+  normalizeVersion,
+} from '@shared/app-identity';
 import type { ScannedApp } from '@shared/types/agent';
 
 /**
@@ -40,18 +45,27 @@ export class StreamMerge {
    *   the group so the final `versions` list stays complete.
    */
   upsert(app: ScannedApp): StreamMergeOp {
-    const key = identityKey(app);
+    // Normalize the version to the shared `主版本.次版本.修订` shape up front so
+    // the `versions` set dedupes registry ("1.0") vs PE ("1.0.0.0") readings of
+    // the same build into one entry, and every streamed/final payload carries
+    // the same canonical format.
+    const version = app.version ? normalizeVersion(app.version) : app.version;
+    const normalized = version === app.version ? app : { ...app, version };
+    const key = identityKey(normalized);
     const existing = this.groups.get(key);
     if (!existing) {
       this.groups.set(key, {
-        best: app,
-        versions: new Set(app.version && app.version.length > 0 ? [app.version] : []),
+        best: normalized,
+        versions: new Set(
+          normalized.version && normalized.version.length > 0 ? [normalized.version] : [],
+        ),
       });
       return 'add';
     }
-    if (app.version && app.version.length > 0) existing.versions.add(app.version);
-    if (isHigherPriority(app, existing.best)) {
-      existing.best = app;
+    if (normalized.version && normalized.version.length > 0)
+      existing.versions.add(normalized.version);
+    if (isHigherPriority(normalized, existing.best)) {
+      existing.best = normalized;
       return 'update';
     }
     return 'discard';

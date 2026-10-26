@@ -18,7 +18,9 @@
 import { useState } from 'react';
 import { AppMark } from '@/components/AppMark';
 import { cn } from '@/lib/utils';
+import { useShellStore } from '@/stores/shellStore';
 
+import { uiMessages } from '@shared/i18n';
 import type { ScannedApp } from '@shared/types';
 
 /** Running state of an app — determines the status dot color. */
@@ -48,7 +50,7 @@ function resolveRunningState(
   isRunning: boolean,
   port: number | null,
 ): AppRunningState {
-  if (isLaunching) return 'idle';
+  if (isLaunching) return 'launching';
   if (!isRunning) return 'idle';
   return port === null ? 'running-no-port' : 'running';
 }
@@ -60,6 +62,7 @@ function StatusDot({ state }: { state: AppRunningState }) {
         'size-2.5 rounded-full ring-2 ring-background',
         state === 'running' && 'bg-cr-success',
         state === 'running-no-port' && 'bg-cr-warning',
+        state === 'launching' && 'animate-pulse bg-primary',
         state === 'idle' && 'bg-muted-foreground/30',
       )}
     />
@@ -76,6 +79,8 @@ export function AppCard({
   onDoubleClick,
 }: AppCardProps) {
   const [imgError, setImgError] = useState(false);
+  const locale = useShellStore((s) => s.locale);
+  const t = uiMessages[locale];
   const runningState = resolveRunningState(isLaunching, isRunning, port);
 
   // Letter placeholder: first character of the product name (uppercase).
@@ -90,13 +95,16 @@ export function AppCard({
   return (
     <button
       type="button"
+      title={t.appsCardHint}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
         'group flex h-auto w-full flex-col items-center gap-2.5 rounded-lg border border-border bg-card p-3.5 as-shine',
         'transition-all duration-base ease-out hover:border-border-strong hover:bg-card2 hover:shadow-lg hover:-translate-y-0.5',
         'active:scale-[0.98]',
-        isRunning && 'border-cr-success/30 bg-cr-success/[0.03]',
+        runningState === 'running' && 'border-cr-success/30 bg-cr-success/[0.03]',
+        runningState === 'running-no-port' && 'border-cr-warning/30 bg-cr-warning/[0.03]',
+        runningState === 'launching' && 'border-primary/30 bg-primary/[0.03]',
       )}
     >
       {/* Icon */}
@@ -124,14 +132,21 @@ export function AppCard({
         )}
       </div>
 
-      {/* Name + port */}
+      {/* Name + port (or "starting" hint while a launch is in flight) */}
       <div className="flex w-full flex-col items-center gap-0.5">
         <span className="max-w-full truncate text-[12px] font-medium leading-tight">
           {app.productName}
         </span>
-        {showRunningStatus && port !== null && (
-          <span className="font-mono text-[11px] tabular-nums text-muted-foreground">:{port}</span>
-        )}
+        {showRunningStatus &&
+          (isLaunching ? (
+            <span className="text-[11px] text-muted-foreground">{t.appsCardStarting}</span>
+          ) : port !== null ? (
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+              :{port}
+            </span>
+          ) : runningState === 'running-no-port' ? (
+            <span className="text-[11px] text-cr-warning">{t.appsStatusNoPort}</span>
+          ) : null)}
       </div>
     </button>
   );

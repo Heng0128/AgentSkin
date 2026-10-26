@@ -7,8 +7,8 @@ import { DIR_CONCURRENCY_LIMIT, mapConcurrent } from '../infra/concurrency';
 import { readExeInfo } from '../infra/ps';
 import { matchAgainstHints } from '../pipeline/match';
 import type { ElectronMarker, ScanRoot } from '../types';
-import { hashPath, nameFromExe } from '../util';
-import { findAnyExe } from './shared';
+import { hashPath, nameFromExe, productNameFromDir } from '../util';
+import { findAnyExe, lookupRegistryName, type RegistryNameIndex } from './shared';
 
 /**
  * Common install roots where Electron apps are likely to live (Windows).
@@ -168,11 +168,28 @@ async function hasElectronMarker(dir: string): Promise<ElectronMarker> {
   return { isElectron: confidence >= 50, confidence: Math.min(confidence, 100) };
 }
 
-/** Probe a confirmed Electron app dir: locate its exe, read PE info, and collect. */
+/**
+ * Probe a confirmed Electron app dir: locate its exe, read PE info, and collect.
+ *
+ * Name resolution, most-authoritative first:
+ *   1. PE version block `ProductName` — the vendor's embedded name, when present.
+ *   2. L2 registry `DisplayName` (localized, e.g. "夸克"/"抖音") — looked up by
+ *      the exe path OR by walking the install dir's ancestors, so a versioned
+ *      `Vendor\App\1.2.3` install still matches a registry entry keyed on the
+ *      parent payload dir.
+ *   3. The install directory's product name (nearest non-version ancestor) —
+ *      covers apps that are NOT in the Uninstall registry (portable / per-user)
+ *      whose exe is named after a version or build hash.
+ *   4. The raw exe filename — absolute last resort.
+ *
+ * Carrying the backfilled company/version keeps L3's identity key aligned with
+ * L2's so the same app folds into a single tile.
+ */
 async function collectElectronApp(
   dir: string,
   collect: (app: ScannedApp) => void,
   confidence: number,
+  registryNameIndex?: RegistryNameIndex,
 ): Promise<void> {
   const exePath = await findAnyExe(dir);
   if (!exePath) return;
@@ -181,15 +198,34 @@ async function collectElectronApp(
   // Read PE version info so L3-discovered apps carry the same metadata as
   // L1/L2 (productName, companyName, version, adapterMatch). The global
   // PowerShell concurrency pool (withPsConcurrency) bounds the spawn fan-out,
-  // and a failed read degrades gracefully to the exe-filename fallback.
+  // and a failed read degrades gracefully to the registry / directory / exe fallback.
   const info = await readExeInfo(exePath).catch(() => null);
+  // The L2 registry index carries the authoritative localized DisplayName
+  // (e.g. "抖音"/"夸克"); PE ProductName and PE FileDescription ("WeChat"
+  // rather than "WeChat.exe") follow, then the install-dir and exe basename
+  // progressive fallbacks.
+  const reg = lookupRegistryName(registryNameIndex, exePath, dir);
+  const productName =
+    reg?.displayName ||
+    info?.productName ||
+    (info?.fileDescription || '').trim() ||
+    productNameFromDir(dir) ||
+    nameFromExe(exePath);
+  const companyName = info?.companyName || reg?.companyName || '';
+  const version = info?.version || reg?.version || undefined;
+  const adapterMatch = info
+    ? matchAgainstHints(info)
+    : reg
+      ? matchAgainstHints({ productName: reg.displayName, fileDescription: '' })
+      : null;
+
   collect({
     id: hash,
     exePath,
-    productName: info?.productName || nameFromExe(exePath),
-    companyName: info?.companyName ?? '',
-    version: info?.version ?? undefined,
-    adapterMatch: info ? matchAgainstHints(info) : null,
+    productName,
+    companyName,
+    version,
+    adapterMatch,
     confidence,
     source: 'filesystem',
   });
@@ -210,6 +246,7 @@ async function walkDir(
   depth: number,
   collect: (app: ScannedApp) => void,
   isTimedOut: () => boolean,
+  registryNameIndex?: RegistryNameIndex,
 ): Promise<void> {
   if (isTimedOut()) return;
   let entries: string[] = [];
@@ -245,11 +282,11 @@ async function walkDir(
       if (isTimedOut()) return;
       const marker = await hasElectronMarker(sub);
       if (marker.isElectron) {
-        await collectElectronApp(sub, collect, marker.confidence);
+        await collectElectronApp(sub, collect, marker.confidence, registryNameIndex);
         return; // an app dir — don't descend into it
       }
       if (depth > 1) {
-        await walkDir(sub, depth - 1, collect, isTimedOut);
+        await walkDir(sub, depth - 1, collect, isTimedOut, registryNameIndex);
       }
     },
   );
@@ -275,11 +312,12 @@ export async function scanFilesystem(
   collect: (app: ScannedApp) => void,
   isTimedOut: () => boolean,
   extraDirs: string[],
+  registryNameIndex?: RegistryNameIndex,
 ): Promise<void> {
   const roots = resolveScanRoots(extraDirs);
   for (const root of roots) {
     if (isTimedOut()) return;
-    await walkDir(root.dir, root.depth, collect, isTimedOut);
+    await walkDir(root.dir, root.depth, collect, isTimedOut, registryNameIndex);
   }
 }
 
@@ -293,10 +331,11 @@ export async function scanFilesystemParallel(
   collect: (app: ScannedApp) => void,
   isTimedOut: () => boolean,
   extraDirs: string[],
+  registryNameIndex?: RegistryNameIndex,
 ): Promise<void> {
   const roots = resolveScanRoots(extraDirs);
   await mapConcurrent(roots, DIR_CONCURRENCY_LIMIT, async (root) => {
     if (isTimedOut()) return;
-    await walkDir(root.dir, root.depth, collect, isTimedOut);
+    await walkDir(root.dir, root.depth, collect, isTimedOut, registryNameIndex);
   });
 }

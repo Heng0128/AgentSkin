@@ -44,6 +44,7 @@
 
 import { execFile, spawn } from 'node:child_process';
 import net from 'node:net';
+import os from 'node:os';
 import path from 'node:path';
 import { requireAdapter } from '../../adapters/registry';
 import { toMessage } from '../../shared/errors';
@@ -187,9 +188,9 @@ export function configureLauncher(deps: LauncherDeps): void {
  * callers can catch and treat a missing executable as "not found" rather
  * than crashing.
  */
-function execFileAsync(cmd: string, args: string[]): Promise<string> {
+function execFileAsync(cmd: string, args: string[], timeoutMs = 5000): Promise<string> {
   return new Promise((resolve, reject) => {
-    execFile(cmd, args, { windowsHide: true, timeout: 5000 }, (error, stdout) => {
+    execFile(cmd, args, { windowsHide: true, timeout: timeoutMs }, (error, stdout) => {
       if (error) reject(error);
       else resolve(stdout);
     });
@@ -258,6 +259,55 @@ function spawnApp(exePath: string, args: string[]): ReturnType<typeof spawn> {
   });
   child.unref();
   return child;
+}
+
+/**
+ * MSIX (Windows Store) executables live under the ACL-protected WindowsApps
+ * directory. Direct `spawn()` of such an exe does not preserve Chromium CLI
+ * flags (package activation strips or rewrites them), so they must be launched
+ * through a shortcut whose target bakes the args in — mirrors the proven
+ * workaround in `app-discovery.ts` (`launchMsixViaShortcut`).
+ *
+ * Returns false when the PowerShell shortcut launch could not be created.
+ */
+async function launchMsixViaShortcut(exePath: string, args: string[]): Promise<boolean> {
+  const shortcutPath = path.join(
+    os.tmpdir(),
+    `agentskin-${path.basename(exePath, '.exe')}-${Date.now()}.lnk`,
+  );
+  const argString = args.map((a) => `"${a}"`).join(' ');
+  const psCommands = [
+    '$shell = New-Object -ComObject WScript.Shell',
+    `$shortcut = $shell.CreateShortcut("${shortcutPath.replace(/\\/g, '\\\\')}")`,
+    `$shortcut.TargetPath = "${exePath.replace(/\\/g, '\\\\')}"`,
+    `$shortcut.Arguments = '${argString}'`,
+    `$shortcut.WorkingDirectory = "${path.dirname(exePath).replace(/\\/g, '\\\\')}"`,
+    '$shortcut.Save()',
+    `Start-Process -FilePath "${shortcutPath.replace(/\\/g, '\\\\')}"`,
+  ].join('; ');
+  try {
+    await execFileAsync(
+      'powershell',
+      [
+        '-NoLogo',
+        '-NoProfile',
+        '-NonInteractive',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-Command',
+        psCommands,
+      ],
+      20000,
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Whether `exePath` sits inside an MSIX WindowsApps package directory. */
+function isMsixExecutable(exePath: string): boolean {
+  return /WindowsApps/i.test(exePath);
 }
 
 /**
@@ -518,11 +568,33 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
       };
     }
 
-    const child = spawnApp(exePath, [
-      `--remote-debugging-port=${port}`,
-      '--remote-debugging-address=127.0.0.1',
-    ]);
-    const pid = child.pid ?? -1;
+    // MSIX (Windows Store) apps do not preserve CDP arguments through a direct
+    // spawn(): package activation strips them. Bake the args into a temporary
+    // .lnk and launch through it so the MSIX container receives them. The PID
+    // is unknown in that case (-1) — CDP port discovery below still finds the
+    // port via the adapter's DevToolsActivePort / TCP probes.
+    let pid = -1;
+    if (isMsixExecutable(exePath) && process.platform === 'win32') {
+      const launched = await launchMsixViaShortcut(exePath, [
+        `--remote-debugging-port=${port}`,
+        '--remote-debugging-address=127.0.0.1',
+      ]);
+      if (!launched) {
+        return {
+          ok: false,
+          port: null,
+          state: 'failed',
+          message: 'MSIX app launch failed: shortcut creation error',
+        };
+      }
+    } else {
+      const child = spawnApp(exePath, [
+        `--remote-debugging-port=${port}`,
+        '--remote-debugging-address=127.0.0.1',
+      ]);
+      pid = child.pid ?? -1;
+      trackExit(child, appId, pid);
+    }
     const portLabel = port === 0 ? 'random' : String(port);
     _log(
       `[launcher] ${appId}: spawned PID ${pid} (adapted, port=${portLabel}, adapter=${adapterId})`,
@@ -536,11 +608,10 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
       actualPort = (await probeTcpPort(port, CDP_PROBE_TIMEOUT)) ? port : null;
     }
 
-    trackExit(child, appId, pid);
     // Sync to coordinator (runtime state single source of truth)
     getAppRunStateCoordinator().updateState(appId, {
       running: true,
-      pid,
+      pid: Math.max(pid, 0),
       port: actualPort,
       debugReady: actualPort !== null,
     });

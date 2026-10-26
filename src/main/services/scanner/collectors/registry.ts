@@ -8,7 +8,7 @@ import { withPsConcurrency } from '../infra/concurrency';
 import { readExeInfo, readExeInfosBatch } from '../infra/ps';
 import { matchAgainstHints } from '../pipeline/match';
 import { hashPath, nameFromExe } from '../util';
-import { findAnyExe } from './shared';
+import { findAnyExe, type RegistryNameIndex, registerInIndex } from './shared';
 
 /**
  * Build a PowerShell script that returns every Uninstall entry whose install
@@ -47,11 +47,12 @@ function buildElectronRegistryScript(): string {
     "    else { $p = ($us -split ' ' | Where-Object { $_ -match '\\.exe$' } | Select-Object -First 1) }",
     "    if ($p) { $p = $p.Trim().Trim('\"'); $loc = Split-Path $p -Parent }",
     '  }',
-    '  if ($loc -and (',
-    "    (Test-Path (Join-Path $loc 'resources\\app.asar')) -or",
-    "    (Test-Path (Join-Path $loc 'resources\\app'))",
-    '  )) {',
-    '    "$($_.DisplayName)|$($_.DisplayVersion)|$loc"',
+    '  if ($loc) {',
+    '    $payload = $null',
+    "    if ((Test-Path (Join-Path $loc 'resources\\app.asar')) -or (Test-Path (Join-Path $loc 'resources\\app'))) { $payload = $loc } else {",
+    "      $payload = Get-ChildItem -LiteralPath $loc -Directory -ErrorAction SilentlyContinue | Where-Object { (Test-Path (Join-Path $_.FullName 'resources\\app.asar')) -or (Test-Path (Join-Path $_.FullName 'resources\\app')) } | Select-Object -First 1 | ForEach-Object { $_.FullName }",
+    '    }',
+    '    if ($payload) { "$($_.DisplayName)|$($_.DisplayVersion)|$payload" }',
     '  }',
     '}',
   ].join('\n');
@@ -75,6 +76,7 @@ function parseRegistryLine(
 export async function scanRegistry(
   collect: (app: ScannedApp) => void,
   isTimedOut: () => boolean,
+  index?: RegistryNameIndex,
 ): Promise<void> {
   let raw: string;
   try {
@@ -119,6 +121,24 @@ export async function scanRegistry(
 
   for (const { entry, exePath, info } of resolved) {
     if (isTimedOut()) return;
+    // Record this entry under BOTH the resolved exe and the payload directory
+    // (with its ancestor candidates) so the L3 sweep backfills it whether it
+    // matched the same exe or discovered the same install from a versioned
+    // sub-folder. The registry DisplayName is the authoritative human name;
+    // carry the PE company/version so L3's identity key stays aligned with
+    // L2's for the same physical app.
+    if (index) {
+      registerInIndex(
+        index,
+        {
+          displayName: entry.displayName,
+          companyName: info?.companyName ?? '',
+          version: info?.version ?? entry.version ?? null,
+        },
+        exePath,
+        entry.location,
+      );
+    }
     // When the PE read fails, fall back to the registry DisplayName for hint
     // matching instead of dropping the adapter match entirely — the registry
     // name is often the only reliable identity signal (localized names,
@@ -126,10 +146,19 @@ export async function scanRegistry(
     const adapterInfo = info
       ? matchAgainstHints(info)
       : matchAgainstHints({ productName: entry.displayName, fileDescription: '' });
+    // Name resolution chain (most-authoritative first):
+    //   registry DisplayName → PE ProductName → PE FileDescription → exe basename.
+    // FileDescription ("WeChat" rather than "WeChat.exe") beats the raw exe
+    // filename when both higher signals are empty.
+    const productName =
+      entry.displayName ||
+      info?.productName ||
+      (info?.fileDescription || '').trim() ||
+      nameFromExe(exePath);
     collect({
       id: hashPath(exePath),
       exePath,
-      productName: info?.productName || entry.displayName || nameFromExe(exePath),
+      productName,
       companyName: info?.companyName ?? '',
       version: info?.version ?? entry.version ?? undefined,
       adapterMatch: adapterInfo,
@@ -163,6 +192,7 @@ export async function scanRegistryV2(
   collect: (app: ScannedApp) => void,
   isTimedOut: () => boolean,
   knownProducts?: ReadonlySet<string>,
+  index?: RegistryNameIndex,
 ): Promise<void> {
   let raw: string;
   try {
@@ -200,6 +230,20 @@ export async function scanRegistryV2(
   for (const { entry, exePath } of withExe) {
     if (isTimedOut()) return;
     const info = infoMap.get(exePath as string) ?? null;
+    // Record under exe + payload-directory keys so L3 backfills by either
+    // (see `registerInIndex`).
+    if (index) {
+      registerInIndex(
+        index,
+        {
+          displayName: entry.displayName,
+          companyName: info?.companyName ?? '',
+          version: info?.version ?? entry.version ?? null,
+        },
+        exePath as string,
+        entry.location,
+      );
+    }
     // When the PE read fails, fall back to the registry DisplayName for hint
     // matching instead of dropping the adapter match entirely — the registry
     // name is often the only reliable identity signal (localized names,
@@ -207,10 +251,17 @@ export async function scanRegistryV2(
     const adapterInfo = info
       ? matchAgainstHints(info)
       : matchAgainstHints({ productName: entry.displayName, fileDescription: '' });
+    // Name resolution chain (most-authoritative first):
+    //   registry DisplayName → PE ProductName → PE FileDescription → exe basename.
+    const productName =
+      entry.displayName ||
+      info?.productName ||
+      (info?.fileDescription || '').trim() ||
+      nameFromExe(exePath as string);
     collect({
       id: hashPath(exePath as string),
       exePath: exePath as string,
-      productName: info?.productName || entry.displayName || nameFromExe(exePath as string),
+      productName,
       companyName: info?.companyName ?? '',
       version: info?.version ?? entry.version ?? undefined,
       adapterMatch: adapterInfo,

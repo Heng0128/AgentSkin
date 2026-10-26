@@ -316,14 +316,13 @@ describe('electron-launcher', () => {
       expect(spawnArgs[0]).toBe('--remote-debugging-port=9337');
     });
 
-    it('uses the adapter preferred port when no explicit preferredPort given', async () => {
-      const adapter = createMockAdapter({ runningPids: [] });
+    it('spawns with port=0 (random) when useAdapterPreferredPort is set — ports are never fixed', async () => {
+      const adapter = createMockAdapter({ runningPids: [], debugPorts: [9451] });
       mockRequireAdapter.mockReturnValue(asAdapter(adapter));
-      // qoderwork is configured with preferredPort=9223; with useAdapterPreferredPort
-      // the launcher should select a port from the configured fallback range
-      // starting at 9223 and walking forward. The exact port may vary based on
-      // which ports are occupied (by other adapters running concurrently).
       mockSpawnSuccess(7777);
+      // Mock net.connect to succeed so discoverRandomPort resolves immediately
+      // instead of burning the full 8000ms discovery timeout.
+      mockNetConnectSuccess();
 
       const result = await launchApp({
         appId: 'app-qoder-no-override',
@@ -336,18 +335,19 @@ describe('electron-launcher', () => {
       expect(result.state).toBe('launched');
       expect(mockSpawn).toHaveBeenCalledOnce();
       const spawnArgs = mockSpawn.mock.calls[0][1] as string[];
-      // The resolved port must be within the agent fallback range [9222, 9357].
-      const resolvedPort = Number(spawnArgs[0].replace('--remote-debugging-port=', ''));
-      expect(resolvedPort).toBeGreaterThanOrEqual(9223);
-      expect(resolvedPort).toBeLessThanOrEqual(9357);
+      // Adapter preferred ports are 0 (random-port policy) — Chromium picks.
+      expect(spawnArgs[0]).toBe('--remote-debugging-port=0');
+      // The real port is discovered afterwards via DevToolsActivePort files.
+      expect(result.port).toBe(9451);
     });
 
-    it('walks forward from the adapter preferred port when it is occupied', async () => {
-      const adapter = createMockAdapter({ runningPids: [] });
+    it('stays on the random-port path even when band ports are occupied (useAdapterPreferredPort)', async () => {
+      const adapter = createMockAdapter({ runningPids: [], debugPorts: [9517] });
       mockRequireAdapter.mockReturnValue(asAdapter(adapter));
-      // traework preferred port is 9222 — occupy it (bind fails); 9223 is free.
-      mockNetBindFail();
+      // Under the random-port policy the launcher never walks a fixed band
+      // from an adapter "home" port — occupied band probes are irrelevant.
       mockSpawnSuccess(8888);
+      mockNetConnectSuccess();
 
       const result = await launchApp({
         appId: 'app-trae-fallback',
@@ -358,9 +358,9 @@ describe('electron-launcher', () => {
       });
 
       expect(result.state).toBe('launched');
-      expect(mockSpawn).toHaveBeenCalledOnce();
       const spawnArgs = mockSpawn.mock.calls[0][1] as string[];
-      expect(spawnArgs[0]).toBe('--remote-debugging-port=9223');
+      expect(spawnArgs[0]).toBe('--remote-debugging-port=0');
+      expect(result.port).toBe(9517);
     });
 
     it('returns state=failed when all port candidates are occupied', async () => {

@@ -108,8 +108,13 @@ function largestSquarePng(buf: Buffer): Buffer | null {
  * Extract an app icon as a `data:` URL, or `null` on any failure.
  *
  * @param exePath Absolute path to the executable.
+ * @param iconHint Optional fallback icon location discovered during the scan —
+ *   an MSIX package's Assets PNG (scale/DPI-matched, so hi-dpi sharp) or a
+ *   shortcut's `.ico` IconLocation. Tried between the PE probe and the OS
+ *   shell icon: it is a curated asset for exactly the exes whose own PE
+ *   resources render a generic icon.
  */
-export async function extractAppIcon(exePath: string): Promise<string | null> {
+export async function extractAppIcon(exePath: string, iconHint?: string): Promise<string | null> {
   // 1. Embedded PNG inside .rsrc (VS Code forks / Electron apps with PNG icons).
   //    Probing first is critical: getFileIcon falls back to a non-empty generic
   //    icon for these exes, so emptiness can't be used to trigger PNG fallback.
@@ -124,6 +129,18 @@ export async function extractAppIcon(exePath: string): Promise<string | null> {
     }
   } catch {
     // fall through to the next fallback.
+  }
+
+  // 1.5. Scan-discovered icon asset (MSIX Assets PNG / shortcut .ico). Only
+  //      trusted sources reach here: the collectors verified the path lives
+  //      under the app's own package/install directory.
+  if (iconHint) {
+    try {
+      const img = nativeImage.createFromPath(iconHint);
+      if (!img.isEmpty()) return img.toDataURL();
+    } catch {
+      // Unreadable hint — fall through to the OS shell icon.
+    }
   }
 
   // 2. Standard ICO/DIB icon via the OS shell (GetFileIcon / SHGetFileInfo).

@@ -2,6 +2,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { productNameFromDir } from '../util';
 
 /**
  * Executable names that are almost never an Electron app's main entry point.
@@ -114,4 +115,80 @@ export async function findAnyExe(installDir: string): Promise<string | null> {
   }
 
   return null;
+}
+
+/**
+ * A registry-derived name entry recorded by L2 (the Uninstall sweep) so L3
+ * (the filesystem sweep) can backfill a proper product name when the exe's PE
+ * version block has no `ProductName`. Both sweeps resolve the exe with the same
+ * `findAnyExe`, so keying by the normalized exe path lines them up for the
+ * common "exe sits next to `resources/`" layout.
+ *
+ * `companyName` / `version` are carried alongside `displayName` so that, when
+ * L3 backfills, its `identityKey` (normalized `product|company`) matches L2's
+ * entry and the same physical app folds into a single tile instead of two.
+ */
+export interface RegistryNameEntry {
+  displayName: string;
+  companyName: string;
+  version: string | null;
+}
+
+/**
+ * Normalized-exe-path → L2 registry name entry. Populated during the L2 sweep,
+ * consumed by the L3 sweep. Pass `undefined` to disable backfill (e.g. tests
+ * that only exercise one layer).
+ */
+export type RegistryNameIndex = Map<string, RegistryNameEntry>;
+
+/** Lowercase + trim an exe path to use as a stable, case-insensitive index key. */
+export function normalizeExeKey(exePath: string): string {
+  return exePath.trim().toLowerCase();
+}
+
+/**
+ * A name-based index key: the lowercased product-folder name derived from a
+ * directory (via `productNameFromDir`). L2 and L3 both derive this the same
+ * way for the same physical app — even across version sub-folders
+ * (`Vendor\App\1.2.3`) — so it lines them up without ever keying on a broad
+ * shared ancestor like `C:\Program Files` (which many apps would clobber).
+ * Empty when no name-like folder exists.
+ */
+function productKey(dir: string): string {
+  return productNameFromDir(dir).trim().toLowerCase();
+}
+
+/**
+ * Look up a registry name for an L3-discovered app: first by its exact exe
+ * path, then by the derived product-folder name (covers versioned
+ * `<App>\<version>` layouts where L2 recorded a different version dir).
+ */
+export function lookupRegistryName(
+  index: RegistryNameIndex | undefined,
+  exePath: string,
+  dir: string,
+): RegistryNameEntry | null {
+  if (!index) return null;
+  const byExe = index.get(normalizeExeKey(exePath));
+  if (byExe) return byExe;
+  const key = productKey(dir);
+  return key ? (index.get(key) ?? null) : null;
+}
+
+/**
+ * Insert one registry entry under every key an L3 lookup might use (the
+ * resolved exe path plus the derived product-folder name), so L3 reaches it
+ * whether it matched by exe or by the product folder it was discovered under.
+ */
+export function registerInIndex(
+  index: RegistryNameIndex,
+  entry: RegistryNameEntry,
+  exePath: string | null,
+  location: string,
+): void {
+  const keys = new Set<string>();
+  if (exePath) keys.add(normalizeExeKey(exePath));
+  const key = productKey(location);
+  if (key) keys.add(key);
+  for (const k of keys) index.set(k, entry);
 }

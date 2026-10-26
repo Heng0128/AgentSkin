@@ -44,7 +44,12 @@ export async function scanKnownAgents(
         collect({
           id: hash,
           exePath,
-          productName: info?.productName || probe.displayName,
+          // Name chain: PE ProductName → adapter display name (the curated,
+          // registry-DisplayName-equivalent for a known agent) → PE
+          // FileDescription. The adapter name outranks FileDescription because
+          // it is the canonical product identity for a known agent.
+          productName:
+            info?.productName || probe.displayName || (info?.fileDescription || '').trim(),
           companyName: info?.companyName ?? '',
           version: info?.version ?? detection.version ?? undefined,
           adapterMatch: probe.id,

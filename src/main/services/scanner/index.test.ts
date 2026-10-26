@@ -27,6 +27,14 @@ vi.mock('./collectors/registry', () => ({
   scanRegistryV2: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('./collectors/msix', () => ({
+  scanMsixPackages: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('./collectors/shortcut', () => ({
+  scanStartMenuShortcuts: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('./flags', () => ({
   scannerPipeline: vi.fn().mockReturnValue('v2'),
 }));
@@ -57,7 +65,9 @@ vi.mock('../../../shared/app-identity', () => ({
 
 import { resolveScanRoots } from './collectors/filesystem';
 import { scanKnownAgents } from './collectors/knownAgent';
+import { scanMsixPackages } from './collectors/msix';
 import { scanRegistryV2 } from './collectors/registry';
+import { scanStartMenuShortcuts } from './collectors/shortcut';
 import { scanElectronApps } from './index';
 import { freshCache, getInflight, setCachedScan } from './infra/cache';
 import { loadPersistedScan, savePersistedScan } from './infra/persist-cache';
@@ -155,7 +165,7 @@ describe('scanner/index', () => {
   });
 
   describe('scan execution', () => {
-    it('executes L1 → L2 → L3 pipeline', async () => {
+    it('executes L1 → L2 → L2.5 → L3 → L3.5 pipeline', async () => {
       vi.mocked(freshCache).mockReturnValue(null);
       vi.mocked(loadPersistedScan).mockResolvedValue(null);
 
@@ -166,10 +176,16 @@ describe('scanner/index', () => {
       vi.mocked(scanRegistryV2).mockImplementationOnce(async () => {
         callOrder.push('L2');
       });
+      vi.mocked(scanMsixPackages).mockImplementationOnce(async () => {
+        callOrder.push('L2.5');
+      });
+      vi.mocked(scanStartMenuShortcuts).mockImplementationOnce(async () => {
+        callOrder.push('L3.5');
+      });
 
       await scanElectronApps({ useCache: false });
 
-      expect(callOrder).toEqual(['L1', 'L2']);
+      expect(callOrder).toEqual(['L1', 'L2', 'L2.5', 'L3.5']);
     });
 
     it('returns scan result with meta', async () => {

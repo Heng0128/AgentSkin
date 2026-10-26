@@ -47,6 +47,7 @@ import { FilterChips } from '@/components/ui/filter-chips';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageToolbar } from '@/components/ui/page-toolbar';
 import { SkeletonProvider } from '@/components/ui/SkeletonProvider';
+import { SectionLabel } from '@/components/ui/section-label';
 import { Spinner } from '@/components/ui/spinner';
 import { useAppsStore } from '@/stores/appsStore';
 import { useShellStore } from '@/stores/shellStore';
@@ -128,6 +129,16 @@ export function AppsPage() {
         return all.filter((a) => !hiddenApps.has(a.id));
     }
   }, [categoryFilter, adapted, other, hiddenApps]);
+
+  /** Per-section lists for the two labelled groups shown under the "all" tab. */
+  const adaptedVisible = useMemo(
+    () => adapted.filter((a) => !hiddenApps.has(a.id)),
+    [adapted, hiddenApps],
+  );
+  const otherVisible = useMemo(
+    () => other.filter((a) => !hiddenApps.has(a.id)),
+    [other, hiddenApps],
+  );
 
   /** Build filter chips options with counts appended to labels. */
   const filterOptions = useMemo(() => {
@@ -225,17 +236,23 @@ export function AppsPage() {
             />
           </div>
 
-          {/* Scan progress bar */}
+          {/* Scan progress — caption + bar so the user sees what is happening */}
           {scanning && (
-            <div
-              className="mb-4 h-1 overflow-hidden rounded-full bg-muted"
-              role="progressbar"
-              aria-valuenow={scanProgress}
-            >
+            <div className="mb-4 flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>{t.appsStatusScanning}</span>
+                <span className="font-mono tabular-nums">{scanProgress}%</span>
+              </div>
               <div
-                className="h-full rounded-full bg-primary transition-all duration-slow"
-                style={{ width: `${scanProgress}%` }}
-              />
+                className="h-1 overflow-hidden rounded-full bg-muted"
+                role="progressbar"
+                aria-valuenow={scanProgress}
+              >
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-slow"
+                  style={{ width: `${scanProgress}%` }}
+                />
+              </div>
             </div>
           )}
 
@@ -253,17 +270,19 @@ export function AppsPage() {
 
           {/* Status legend */}
           <div className="as-stat-bar mb-4">
-            <span className="flex items-center gap-2 text-[11px]">
+            <span className="text-[11px] font-medium tracking-tight text-foreground">
+              {t.appsStatusLabel}
+            </span>
+            <span className="as-hairline-v h-3.5" />
+            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <span className="inline-block size-2 rounded-full bg-cr-success" />
               {t.appsStatusRunning}
             </span>
-            <span className="as-hairline-v h-3.5" />
-            <span className="flex items-center gap-2 text-[11px]">
+            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <span className="inline-block size-2 rounded-full bg-muted-foreground/25" />
               {t.appsStatusStopped}
             </span>
-            <span className="as-hairline-v h-3.5" />
-            <span className="flex items-center gap-2 text-[11px]">
+            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <span className="inline-block size-2 rounded-full bg-cr-warning" />
               {t.appsStatusNoPort}
             </span>
@@ -272,16 +291,45 @@ export function AppsPage() {
           {/* App grid — skeleton during initial scan, real cards when data arrives */}
           <SkeletonProvider
             loading={scanning && !scanResult}
-            config={{ body: 'grid', count: 8, aspect: '1/1', columns: 8 }}
+            config={{ body: 'grid', count: 6, aspect: '1/1', columns: 6 }}
             className="mb-6"
           >
-            {/* App grid — single unified grid based on active category */}
-            {visibleApps.length > 0 && (
-              <section className="mb-6">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-                  {visibleApps.map(renderCard)}
-                </div>
-              </section>
+            {/* "All" tab → two labelled sections; other tabs → a single grid */}
+            {categoryFilter === 'all' ? (
+              <>
+                {adaptedVisible.length > 0 && (
+                  <section className="mb-6">
+                    <SectionLabel
+                      label={t.appsFilterAdapted}
+                      count={adaptedVisible.length}
+                      className="mb-3"
+                    />
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                      {adaptedVisible.map(renderCard)}
+                    </div>
+                  </section>
+                )}
+                {otherVisible.length > 0 && (
+                  <section className="mb-6">
+                    <SectionLabel
+                      label={t.appsFilterOther}
+                      count={otherVisible.length}
+                      className="mb-3"
+                    />
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                      {otherVisible.map(renderCard)}
+                    </div>
+                  </section>
+                )}
+              </>
+            ) : (
+              visibleApps.length > 0 && (
+                <section className="mb-6">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                    {visibleApps.map(renderCard)}
+                  </div>
+                </section>
+              )
             )}
           </SkeletonProvider>
 

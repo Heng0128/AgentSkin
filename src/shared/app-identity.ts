@@ -21,7 +21,7 @@
  * version-directory engine — and only falls back to version comparison
  * within the same source.
  *
- *   `agent` > `registry` > `filesystem` (then highest version).
+ *   `agent` > `registry` > `msix` > `shortcut` > `filesystem` (then highest version).
  */
 
 import type { ScannedApp } from './types/agent';
@@ -75,8 +75,36 @@ export function identityKey(app: ScannedApp): string {
   return `${product}|${company}`;
 }
 
-/** Source rank used by {@link isHigherPriority} (agent > registry > filesystem). */
-const SOURCE_RANK: Record<string, number> = { agent: 3, registry: 2, filesystem: 1 };
+/**
+ * Normalize a version string to a consistent `主版本.次版本.修订` shape:
+ *   - pad short versions to 3 segments (`1.0` → `1.0.0`, `5` → `5.0.0`);
+ *   - collapse trailing all-zero segments beyond 3 (`1.0.0.0` → `1.0.0`);
+ *   - keep meaningful build segments (`7.0.7.940` stays — the build id
+ *     distinguishes side-by-side installs);
+ *   - preserve a non-numeric suffix (`1.2.3-beta` → `1.2.3-beta`).
+ * This keeps `1.0.0.0` (PE) and `1.0` (registry DisplayVersion) of the same
+ * app from coexisting as two formats after the merge.
+ */
+export function normalizeVersion(version: string): string {
+  const v = version.trim();
+  if (!v) return v;
+  // Numeric main body + optional non-numeric suffix ("-beta", "b", …).
+  const m = v.match(/^(\d+(?:\.\d+)*)(.*)$/);
+  if (!m) return v;
+  const segs = m[1].split('.');
+  while (segs.length > 3 && segs[segs.length - 1] === '0') segs.pop();
+  while (segs.length < 3) segs.push('0');
+  return `${segs.join('.')}${m[2]}`;
+}
+
+/** Source rank used by {@link isHigherPriority} (agent > registry > msix > shortcut > filesystem). */
+const SOURCE_RANK: Record<string, number> = {
+  agent: 5,
+  registry: 4,
+  msix: 3,
+  shortcut: 2,
+  filesystem: 1,
+};
 
 /** Rank an app's discovery source, defaulting to filesystem (lowest). */
 export function sourceRank(app: ScannedApp): number {

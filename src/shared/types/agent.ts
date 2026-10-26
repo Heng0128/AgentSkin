@@ -171,9 +171,16 @@ export interface ScannedApp {
   /**
    * 发现来源，用于多版本去重时决定「用户实际在用的入口」。
    * `agent`（适配器检测）> `registry`（注册表，指向 launcher）>
+   * `msix`（商店包 PackageManager，指向包内主 exe）>
+   * `shortcut`（开始菜单 .lnk 兜底，指向快捷方式目标 exe）>
    * `filesystem`（版本目录里的引擎 exe）。
    */
-  source?: 'agent' | 'registry' | 'filesystem';
+  source?: 'agent' | 'registry' | 'msix' | 'shortcut' | 'filesystem';
+  /**
+   * 图标提取提示路径（内部字段，不参与展示）：商店应用的 Assets 图标、
+   * .lnk 的 IconLocation 等。图标提取失败时优先从这里取，再退到 exe 本体。
+   */
+  iconHint?: string;
   /** 多版本目录中收集到的所有版本（按版本号降序、去重），仅 v2 merge 后填充 */
   versions?: string[];
   /** 该入口是否为该产品的默认（用户实际在用）入口，仅 v2 merge 后填充 */
