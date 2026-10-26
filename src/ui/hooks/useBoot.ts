@@ -17,19 +17,22 @@ import { api } from '@/api/agentSkinClient';
 import { useThemeStore } from '@/stores/themeStore';
 
 import type { AppLocale } from '@shared/i18n';
+import type { BootstrapRuntime } from '@shared/types';
 import { useConcurrencyReporter } from './useConcurrencyReporter';
 
 interface UseBootDeps {
   fail: (error: unknown) => void;
   setLocaleState: (locale: AppLocale) => void;
   setAppVersion: (version: string) => void;
+  setRuntime: (runtime: BootstrapRuntime) => void;
   setBooting: (booting: boolean) => void;
   setLogs: Dispatch<SetStateAction<string[]>>;
   refreshStatus: () => Promise<void>;
 }
 
 export function useBoot(deps: UseBootDeps): void {
-  const { fail, setLocaleState, setAppVersion, setBooting, setLogs, refreshStatus } = deps;
+  const { fail, setLocaleState, setAppVersion, setRuntime, setBooting, setLogs, refreshStatus } =
+    deps;
   // P1 audit #12: in-flight guard for the 3s status poll. Lives outside the
   // effect so it survives effect re-runs (and so we don't call useRef inside
   // the effect, which would violate the rules of hooks).
@@ -68,6 +71,7 @@ export function useBoot(deps: UseBootDeps): void {
         if (disposed) return;
         setLocaleState(boot.locale);
         setAppVersion(boot.appVersion);
+        if (boot.runtime) setRuntime(boot.runtime);
       } catch (error) {
         if (!disposed) {
           fail(error instanceof Error ? error : new Error(String(error)));
@@ -149,5 +153,5 @@ export function useBoot(deps: UseBootDeps): void {
       window.removeEventListener('focus', onFocus);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setLocaleState, refreshStatus, setLogs, setBooting, setAppVersion, fail]);
+  }, [setLocaleState, setAppVersion, setRuntime, setLogs, setBooting, refreshStatus, fail]);
 }

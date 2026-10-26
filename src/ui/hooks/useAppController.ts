@@ -67,11 +67,13 @@ export function useAppController() {
   // -----------------------------------------------------------------------
   const locale = useShellStore((s) => s.locale);
   const appVersion = useShellStore((s) => s.appVersion);
+  const runtime = useShellStore((s) => s.runtime);
   const route = useShellStore((s) => s.route);
   const activeAgentId = useShellStore((s) => s.activeAgentId);
   const logs = useShellStore((s) => s.logs);
   const injectDockOpen = useShellStore((s) => s.injectDockOpen);
   const setAppVersion = useShellStore((s) => s.setAppVersion);
+  const setRuntime = useShellStore((s) => s.setRuntime);
   const setBooting = useShellStore((s) => s.setBooting);
   const setLocaleState = useShellStore((s) => s.setLocale);
   const setLogs = useShellStore((s) => s.setLogs);
@@ -194,6 +196,7 @@ export function useAppController() {
     fail,
     setLocaleState,
     setAppVersion,
+    setRuntime,
     setBooting,
     setLogs,
     refreshStatus,
@@ -409,6 +412,7 @@ export function useAppController() {
       locale,
       setLocale,
       appVersion,
+      runtime,
       route,
       setRoute,
       activeAgentId,
@@ -505,6 +509,7 @@ export function useAppController() {
       locale,
       setLocale,
       appVersion,
+      runtime,
       route,
       setRoute,
       activeAgentId,

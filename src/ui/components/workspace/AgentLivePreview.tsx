@@ -225,7 +225,7 @@ export function AgentLivePreview({
         <div className="grid h-full grid-cols-2 gap-px bg-border">
           {/* Left: current overrides */}
           <div className="flex flex-col bg-surface">
-            <div className="shrink-0 px-2 py-1 text-center text-[11px] tracking-wider text-muted-foreground">
+            <div className="shrink-0 px-2 py-1 text-center text-[11px] font-medium tracking-tight text-muted-foreground">
               {t.workspacePreviewDualA}
             </div>
             <div className="min-h-0 flex-1">
@@ -234,7 +234,7 @@ export function AgentLivePreview({
           </div>
           {/* Right: baseline (no overrides) */}
           <div className="flex flex-col bg-surface">
-            <div className="shrink-0 px-2 py-1 text-center text-[11px] tracking-wider text-muted-foreground">
+            <div className="shrink-0 px-2 py-1 text-center text-[11px] font-medium tracking-tight text-muted-foreground">
               {t.workspacePreviewDualB}
             </div>
             <div className="min-h-0 flex-1">

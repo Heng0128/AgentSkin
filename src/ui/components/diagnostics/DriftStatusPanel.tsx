@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # DriftStatusPanel
@@ -13,8 +13,8 @@
  *
  * Empty state when no drift data has been captured yet.
  *
- * Quiet Workbench design: 11px font, tabular-nums, mono accents,
- * single accent color, no scale/slide animations.
+ * Typography: 11px font, tabular-nums, mono accents,
+ * single accent color.
  */
 
 import { useState } from 'react';
@@ -152,7 +152,7 @@ function DriftAgentCard({
           </span>
           <span
             className={cn(
-              'font-display text-[13px] font-normal tabular-nums',
+              'font-display text-ui font-normal tabular-nums',
               scoreColor.split(' ')[1],
             )}
           >

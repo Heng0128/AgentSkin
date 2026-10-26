@@ -18,8 +18,8 @@
  *
  * A 1s local tick recalculates `operationsPerMinute` from the trace window.
  *
- * Swiss/International design: 11px base font, tabular-nums for all numeric
- * values, mono accents, no scale/slide animations, single accent color.
+ * Typography: 11px base font, tabular-nums for all numeric
+ * values, mono accents, single accent color.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';

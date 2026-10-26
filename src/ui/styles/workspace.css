@@ -14,3 +14,53 @@
 
 @import "./workspace/layout.css";
 @import "./workspace/dock.css";
+
+/* =================================================================
+ * Studio layout tokens
+ *
+ * Scope: this file is imported ONLY by `src/studio.tsx`, so the
+ * tokens below exist in the Studio window and never reach the main
+ * window. `globals.css` is imported before this file, so every
+ * mapping below resolves against the shared design tokens.
+ *
+ * History: these names lived in `styles/workspace/tokens.css` after
+ * the 2026-08-22 six-way split. That file was later dropped while
+ * `layout.css` / `dock.css` kept referencing it — which silently
+ * invalidated the grid tracks, z-index, transition and box-shadow
+ * declarations (a custom property that is not defined makes the
+ * whole declaration invalid at computed-value time). Restoring them
+ * here re-enables the documented 52 / 200 / 240 / 24 rhythm.
+ *
+ * The sizes deliberately match the runtime defaults in
+ * `src/ui/types/workspace.ts` (DRAWER_WIDTH_DEFAULT 200, clamp
+ * 48–360 · INSPECTOR_WIDTH_DEFAULT 240, clamp 4–400 ·
+ * DOCK_HEIGHT_DEFAULT 260, clamp 0–320) so CSS and store agree.
+ * ================================================================= */
+
+:root {
+  /* Region sizes. Inspector width is deliberately NOT a token here: its only
+     owner is workspaceStore (INSPECTOR_WIDTH_DEFAULT 240, clamp 4–400), which
+     StudioInspector applies as an inline width — see the `auto` third track. */
+  --h-topbar: 52px;
+  --h-status: 24px;
+  --w-drawer: 200px;
+  --w-drawer-collapsed: 48px;
+  --w-inspector-collapsed: 4px;
+
+  /* Stacking — alias the Studio scale declared in globals.css */
+  --z-topbar: var(--z-studio-topbar);
+  --z-status: var(--z-studio-status);
+  --z-toolbar: var(--z-studio-toolbar);
+
+  /* Motion — alias the shared duration ladder so the Settings motion
+     multiplier (--duration-multiplier) keeps applying in Studio */
+  --dur-fast: var(--duration-fast);
+  --dur-mid: var(--duration-slow);
+
+  /* Spacing — 4px-grid step used by the topbar/drawer padding */
+  --space-4: 16px;
+
+  /* Elevation — medium level, kept distinct from the global
+     --shadow-float so Studio overlays don't out-rank app dialogs */
+  --ws-shadow-float: var(--shadow-elev3);
+}

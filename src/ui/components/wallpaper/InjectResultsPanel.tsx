@@ -101,14 +101,14 @@ export function InjectResultsPanel({
   t,
 }: InjectResultsPanelProps) {
   return (
-    <aside className="as-slide-up-enter flex w-[300px] shrink-0 flex-col border-l border-border bg-card">
+    <aside className="as-slide-up-enter flex h-full min-h-0 w-[300px] shrink-0 flex-col border-l border-border bg-card">
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
           {typeIcon(selected.type)}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-medium leading-tight">{selected.title}</p>
+          <p className="truncate text-ui font-medium leading-tight">{selected.title}</p>
           <p className="text-[11px] text-muted-foreground">
             {typeLabel(t, selected.type)}
             {selected.sizeBytes ? ` · ${formatSize(selected.sizeBytes)}` : ''}
@@ -125,7 +125,7 @@ export function InjectResultsPanel({
       </div>
 
       {/* Scrollable body */}
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-behavior-contain p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4">
         {/* Preview */}
         <div className="overflow-hidden rounded-lg border border-border">
           <WallpaperPreview
@@ -170,7 +170,7 @@ export function InjectResultsPanel({
         {/* Apply to agents */}
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wide text-muted-foreground/70">
+            <span className="text-[11px] font-medium tracking-tight text-muted-foreground/70">
               {t.weApplyToAgents}
             </span>
             {runningAgentCount > 0 && (

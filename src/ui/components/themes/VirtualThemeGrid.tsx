@@ -23,6 +23,11 @@ import { ThemeCard } from './ThemeCard';
 const GAP = 12; // comfortable grid gap between cards
 const INFO_BUDGET = 88; // px reserved for the card info section (fixed, tight card)
 const OVERSCAN = 2; // extra rows rendered above/below the viewport
+/* Entrance stagger: only the first rows get a cascading delay so the initial
+   paint flows in top-down. Rows mounted later by virtualized scrolling enter
+   with no delay — a stagger there would make scrolling feel laggy. */
+const STAGGER_ROWS = 4;
+const STAGGER_ROW_DELAY_MS = 60;
 
 export interface VirtualThemeGridProps {
   themes: ThemeCenterCardModel[];
@@ -115,7 +120,7 @@ export function VirtualThemeGrid({
     <div
       ref={scrollRef}
       onScroll={handleScroll}
-      className="min-h-0 flex-1 overflow-y-auto overscroll-behavior-contain p-3"
+      className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3"
     >
       {/* Full-height spacer keeps the native scrollbar proportional to the
           entire (virtual) grid; only the visible lanes are actually in the DOM.
@@ -125,6 +130,12 @@ export function VirtualThemeGrid({
         {visibleRows.map(({ r, items }) => (
           <div
             key={r}
+            // Row-level entrance: page-enter (fade + 6px rise) with a capped
+            // per-row delay; animation-fill-mode: backwards on .page-enter
+            // keeps delayed rows hidden until their turn. Lane keys are row
+            // indices, so filter changes swap content in place without
+            // replaying the animation.
+            className="page-enter"
             style={{
               position: 'absolute',
               top: r * rowH,
@@ -135,6 +146,7 @@ export function VirtualThemeGrid({
               gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
               gap: GAP,
               alignItems: 'stretch',
+              animationDelay: r < STAGGER_ROWS ? `${r * STAGGER_ROW_DELAY_MS}ms` : undefined,
             }}
           >
             {items.map((theme) => (

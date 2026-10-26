@@ -322,11 +322,12 @@ describe('ThemesPage inspection fixes', () => {
     mockDynamicCount = 1;
 
     const html = renderPage();
-    // The count string appears exactly once per slot — 1 themes vs 1 dynamic
-    // badge. Because dynamicCount>0, one dynamic badge is emitted.
-    const countMatches = (html.match(/1 themes/g) ?? []).length;
-    expect(countMatches).toBe(1);
-
+    // Single-count contract (v2.7 de-dup): the ONLY place showing "how many
+    // installed" is the PageHeader count pill. No "1 themes" description and
+    // no "1 / 1" ratio while unfiltered — the old stat bar slot was removed.
+    expect(html).not.toContain('1 themes');
+    expect(html).not.toContain('1 / 1');
+    expect(html).toContain('1</span>');
     // And exactly one dynamic badge (not duplicated in a deleted metadata row).
     const dynamicBadgeMatches = (html.match(/1<\/span>[^<]*<span[^>]*>Dynamic/g) ?? []).length;
     expect(dynamicBadgeMatches).toBe(1);

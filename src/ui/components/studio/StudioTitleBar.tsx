@@ -63,7 +63,7 @@ export function StudioTitleBar() {
     >
       {/* Left: brand + active project */}
       <div className="pointer-events-none flex items-center gap-2">
-        <span className="text-[13px] font-normal text-primary">✦</span>
+        <span className="text-ui font-normal text-primary">✦</span>
         <span className="text-[11px] font-normal   text-foreground">{t.studioBrand}</span>
         {projectName && (
           <>

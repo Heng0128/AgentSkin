@@ -218,7 +218,7 @@ function TemplateCard({
   const overrideSummary = summarizeOverrides(detail?.overrides);
 
   return (
-    <div className="flex flex-col gap-2 p-3 rounded-md border border-border bg-surfaceElevated hover:border-primary/50 transition-colors">
+    <div className="flex flex-col gap-2 p-3 rounded-md border border-border bg-surface-raised hover:border-primary/50 transition-colors">
       {/* Swatch row */}
       <div className="flex gap-1 h-6 rounded overflow-hidden">
         {SWATCH_KEYS.map(({ key, label }) => (

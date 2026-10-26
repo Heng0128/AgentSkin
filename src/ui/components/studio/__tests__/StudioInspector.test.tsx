@@ -133,8 +133,8 @@ describe('StudioInspector — rendering', () => {
   // -----------------------------------------------------------------------
   it('renders resolution preset buttons', () => {
     const html = renderInspector();
-    expect(html).toContain('ws-inspector__resolution');
     expect(html).toContain('ws-inspector__res-btn');
+    expect(html).toContain('1920');
   });
 
   // -----------------------------------------------------------------------

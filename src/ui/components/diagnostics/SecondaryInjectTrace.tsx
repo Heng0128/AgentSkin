@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # SecondaryInjectTrace
@@ -11,8 +11,8 @@
  * Shows a per-agent card with step timeline + summary badge. Empty state
  * when no secondary injection has been recorded yet.
  *
- * International design: mono font, tabular-nums, 10px sizing,
- * single accent color, no scale/slide animations.
+ * Typography: mono font, tabular-nums, 10px sizing,
+ * single accent color.
  */
 
 import { useEffect } from 'react';

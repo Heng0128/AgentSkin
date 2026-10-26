@@ -1,6 +1,6 @@
 # 🌌 AI 桌面客户端 / Agent 工具换肤生态全景指南
 
-> 以下分类、项目名称与链接均已逐项联网核验（GitHub API 返回 200 OK），名称与地址准确无误。
+> 以下分类、项目名称与链接均已逐项联网核验（最近一次全量复核 2026-09-26，GitHub API 返回 200 OK），名称与地址准确无误；本次复核未发现失效条目，1 个仓库改名已同步更新。
 
 
 ## 一、OpenAI Codex / ChatGPT Desktop 主题生态（最成熟）
@@ -13,6 +13,10 @@
 - **[waiterxiaoyy/codress](https://github.com/waiterxiaoyy/codress)** ⭐5 — Refresh your AI workspace. Codex / WorkBuddy 桌面外观工具：一键主题、桌面宠物与本地素材管理，Electron 33 + Node 20 + Go 1.24，macOS/Windows。
 - **[Cmochance/agent-theme](https://github.com/Cmochance/agent-theme)** ⭐1 — Codex Desktop / Antigravity 的独立换肤伴侣应用（Tauri v2 + Rust）：通过 Chrome DevTools Protocol 向代理 WebView 运行时注入 CSS，实现「角色壁纸 + 磨砂玻璃面板」视觉主题，内置 11 套二次元配色，安全可逆。
 - **[d100000/CodeX-Skin](https://github.com/d100000/CodeX-Skin)** — Codex 皮肤管理器，附带海量的预制皮肤
+- **[duxweb/ReTheme](https://github.com/duxweb/ReTheme)** ⭐133 — 为 ChatGPT、Codex 桌面端打造的安全、可更新、社区驱动主题换肤软件。Open-source desktop theme manager and runtime for ChatGPT Desktop / Codex.
+- **[JasonSTong/codex-theme-studio](https://github.com/JasonSTong/codex-theme-studio)** ⭐103 — Local-first 的 Codex Desktop（macOS）视觉主题编辑器与热重载主题管理器。
+- **[slovx2/Codex-NN](https://github.com/slovx2/Codex-NN)** ⭐29 — Codex Desktop 跨平台可视化主题管理器，兼容 Codex Dream Skin 主题包。
+- **[u2bo/OpenChatGPTSkin](https://github.com/u2bo/OpenChatGPTSkin)** ⭐14 — 面向 Codex Desktop 的开源主题系统，支持主题包化管理与一键切换。
 
 ### 1.2 独立主题包与视觉风格
 
@@ -23,6 +27,11 @@
 - **[Alhamdulillah-R/cyberpunk-codex-skin](https://github.com/Alhamdulillah-R/cyberpunk-codex-skin)** — codex边缘行者皮肤
 - **[lanmengSakura/diana-codex-theme](https://github.com/lanmengSakura/diana-codex-theme)** — 嘉然 Diana 日间/暗夜 Codex 桌面主题：可恢复本地挂载、模拟展示与宣传母版
 - **[Backtthefuture/qq2007theme](https://github.com/Backtthefuture/qq2007theme)** — 复古 QQ 2007 风格主题，兼容 CodeDrobe 格式。
+- **[LeemanCheung/Codex-QQ2007-Skin](https://github.com/LeemanCheung/Codex-QQ2007-Skin)** ⭐13 — Windows Codex 桌面端的 QQ2007 风格非官方视觉层。
+- **[cyjg1/codex-Arknights-skin](https://github.com/cyjg1/codex-Arknights-skin)** ⭐9 — 基于 Fei-Away/Codex-Dream-Skin 的明日方舟多干员 Codex 桌面主题。
+- **[huangguang1999/paseo-skins](https://github.com/huangguang1999/paseo-skins)** ⭐9 — 开源 Paseo 主题与皮肤：本地主题构建器、一键 Agent Skill 与安全的 macOS CDP 加载器。
+- **[SnakeLil/Codex-Weixin-Skin](https://github.com/SnakeLil/Codex-Weixin-Skin)** ⭐2 — macOS Codex Desktop 的微信式三栏布局主题：聊天气泡与完整页面适配，可逆还原。
+- **[Sin10874/codex-ancient-eclipse-skin](https://github.com/Sin10874/codex-ancient-eclipse-skin)** ⭐2 — Codex Desktop（macOS）的 Ancient Eclipse 动效主题：本地 CDP、保留原生 UI、一键安装与还原。
 
 ### 1.3 导航、集合与自动化
 
@@ -30,6 +39,10 @@
 - **[aithink001/Codex-Dream-Skin-Themes](https://github.com/aithink001/Codex-Dream-Skin-Themes)** — Codex Dream Skin 开源换肤 Skill：支持 macOS/Windows Codex App 主题安装、自定义 Banner、主题切换、实时验证与一键恢复。Open-source Codex desktop theme tool.
 - **[codexskin-cn/codexskin.cn](https://github.com/codexskin-cn/codexskin.cn)** — 免费 Codex 换肤与桌面端美化工具：一键切换 Codex 主题、自定义皮肤与背景，不修改官方安装包。
 - **[Finderchangchang/codex-autoskin](https://github.com/Finderchangchang/codex-autoskin)** — 发一张图给你的 Codex，它自己给自己换肤 | Send one image to your Codex and it reskins itself. Agent-native skin engine for the Codex desktop app.
+- **[Wangnov/awesome-codex-skins](https://github.com/Wangnov/awesome-codex-skins)** ⭐47 — .codexskin 标准、工具链与画廊：面向 OpenAI Codex 桌面端的资源型 UI 主题，含实时 CDP 注入。
+- **[ericsi-lab/codex-theme-studio](https://github.com/ericsi-lab/codex-theme-studio)** ⭐6 — 独立的可逆主题管理器，面向 macOS 上 ChatGPT Desktop 的 Codex 工作区。
+- **[RoperYoung/ChatGPT-CodexSkinSwitcher](https://github.com/RoperYoung/ChatGPT-CodexSkinSwitcher)** ⭐5 — ChatGPT 与 Codex 一键切换皮肤主题的 macOS 原生 App：内置 8 套主题，支持自定义本地图片、双场景配置与自动轮播。
+- **[piratemoo/GPT-Themes](https://github.com/piratemoo/GPT-Themes)** ⭐3 — ChatGPT Desktop 的 Windows 换肤工具：选择主题、调整颜色与透明度。
 
 ### 1.4 衍生 Fork 与变体
 
@@ -44,7 +57,7 @@
 
 > 本轮深挖自 `awesome-codex-themes` 合集清单与社区 Fork，多为**多主题/多皮肤合集型**项目，均已核验（GitHub API 200）。
 
-- **[lafllamme/codex-themes](https://github.com/lafllamme/codex-themes)** ⭐6 — TypeScript 工具包，把 `.itermcolors` 等终端调色板转换成 Codex 兼容的 JSON 预设，含可浏览站点。
+- **[lafllamme/codex-themes](https://github.com/lafllamme/codex-themes)** ⭐7 — TypeScript 工具包，把 `.itermcolors` 等终端调色板转换成 Codex 兼容的 JSON 预设，含可浏览站点。
 - **[chainshieldai/codex-cobalt-gold-theme](https://github.com/chainshieldai/codex-cobalt-gold-theme)** ⭐1 — Cobalt2 风格的 Codex Desktop 主题，带安全的运行时 Markdown 样式。
 - **[zh1665/cobalt-for-codex](https://github.com/zh1665/cobalt-for-codex)** ⭐1 — Windows 版 Codex Desktop 的 Cobalt 主题安装器。
 - **[ziyue67/midnight-purple-2077-codex-theme](https://github.com/ziyue67/midnight-purple-2077-codex-theme)** — 受 VS Code Midnight Purple 2077 启发的高对比暗紫色主题，针对中文 UI 字体优化。
@@ -52,7 +65,7 @@
 - **[hsnovel/codex-theme](https://github.com/hsnovel/codex-theme)** — 简单高对比主题，久看不累（GPL-3.0）。
 - **[LiteraryUniverse/omarchy-codex-theme](https://github.com/LiteraryUniverse/omarchy-codex-theme)** — Omarchy 风格的 Codex 主题。
 - **[xnydl/codex-dream-skin](https://github.com/xnydl/codex-dream-skin)** ⭐54 — macOS & Windows Codex Desktop 梦幻换肤 Skill，引导式安装、切换、验证与还原。
-- **[aiwenjie777/codex-skin-skill](https://github.com/aiwenjie777/codex-skin-skill)** ⭐51 — Codex 皮肤一键安装，Skill 即可完成，随意切换、一键还原（原 `codex-skin-switcher` 重命名）。
+- **[aiwenjie777/codex-skin-skill](https://github.com/aiwenjie777/codex-skin-skill)** ⭐54 — Codex 皮肤一键安装，Skill 即可完成，随意切换、一键还原（原 `codex-skin-switcher` 重命名）。
 - **[fishcold789/Taffy-Codex-Theme-Studio](https://github.com/fishcold789/Taffy-Codex-Theme-Studio)** ⭐6 — 可替换图片的 Taffy 风主题工作室，20 套调色板，亮/暗模式 + 亚克力与液态玻璃风格，Windows。
 - **[ismoshushi/codex-skinkit](https://github.com/ismoshushi/codex-skinkit)** ⭐3 — Codex Windows 桌面端可切换的内置/自定义主题，含验证与还原命令。
 - **[xiongwenhao112/raccoon-dream-skin](https://github.com/xiongwenhao112/raccoon-dream-skin)** — 办公小浣熊换肤技能：6 套内置主题，对 AI 说一句话就换肤，一键还原官方外观。
@@ -61,6 +74,8 @@
 - **[b-nnett/codex-plusplus](https://github.com/b-nnett/codex-plusplus)** ⭐3.7k — Codex Desktop 的大型跨平台改造系统（UI 修改、原生桥、tweak SDK）；⚠️ 与前文运行时注入方案不同，**会修补本地应用安装**，使用前请审阅其备份/还原流程。
 - **[ZhjGo/codex-skin-manager](https://github.com/ZhjGo/codex-skin-manager)** ⭐25 — 跨平台 Codex 主题管理器，提供完整管理界面与零残留清理机制。
 - **[lntomF/codexskin](https://github.com/lntomF/codexskin)** ⭐14 — CodeSkin：为 Codex Desktop 添加动效背景、图层微动、磨砂玻璃、赛博朋克等动态视觉主题，CDP 运行时渲染不修改官方文件。
+- **[jojhaa/Codex-Dream-Skin-Windows](https://github.com/jojhaa/Codex-Dream-Skin-Windows)** ⭐2 — Windows 专属 Codex Desktop 视觉主题工作室：原生 WinUI 3 管理器、分区合成与玻璃材质。
+- **[fuxiworkspace-lgtm/fangyu-codex-dream-skin](https://github.com/fuxiworkspace-lgtm/fangyu-codex-dream-skin)** ⭐3 — 面向 Codex Desktop 的 macOS/Windows 核心 CDP 主题注入器。
 
 ## 二、WorkBuddy（腾讯）主题生态（增长最快）
 
@@ -74,8 +89,10 @@
 - **[huangama666/workbuddy-skin](https://github.com/huangama666/workbuddy-skin)** — 给 workbuddy 换肤
 - **[sutongwuyanzu/WorkBuddy-Skin-](https://github.com/sutongwuyanzu/WorkBuddy-Skin-)** — 通过 Chromium DevTools Protocol 给 WorkBuddy Desktop 注入可逆换肤方案：不改官方安装包、`app.asar` 与代码签名，以 `--remote-debugging-port`（默认 9335）启动 CDP，injector 连接渲染层注入 CSS + DOM 装饰元素，仅存于运行时内存，含 dream-pink / cyber-dark / minimalist 主题。
 - **[shaozhengmao/workbuddy-dream-theme](https://github.com/shaozhengmao/workbuddy-dream-theme)** — macOS 版 WorkBuddy 换肤工具 ，壁纸+主题菜单，不改官方包一行代码。
-- **[leeandrew94/workbuddy-ambient-skin](https://github.com/leeandrew94/workbuddy-ambient-skin)** — WorkBuddy 氛围皮肤 — 让首页留住你喜欢的画面，工作时背景自动安静下来。支持自定义图片主题、智能色彩分析与一键切换。
+- **[kimilee94/workbuddy-ambient-skin](https://github.com/kimilee94/workbuddy-ambient-skin)** — WorkBuddy 氛围皮肤 — 让首页留住你喜欢的画面，工作时背景自动安静下来。支持自定义图片主题、智能色彩分析与一键切换。
 - **[RED523/workbuddy-dream-skin-installer](https://github.com/RED523/workbuddy-dream-skin-installer)** — WorkBuddy 的非官方个性化主题包
+- **[smartcai87/workbuddy-dream-skin](https://github.com/smartcai87/workbuddy-dream-skin)** ⭐7 — 给 WorkBuddy 桌面端换一张会呼吸的脸：Liquid Glass 风格换肤工具，本机回环 CDP 注入，不改官方安装包。
+- **[buzhangsaner/workbuddy-skin](https://github.com/buzhangsaner/workbuddy-skin)** ⭐5 — workbuddy 更换皮肤（社区轻量换肤实现）。
 
 ### 2.2 Agent Skill 与适配器
 
@@ -85,7 +102,7 @@
 
 ### 2.3 【新增】主题管理器与特效皮肤
 
-- **[comeonzhj/WorkBuddy-theme-skill](https://github.com/comeonzhj/WorkBuddy-theme-skill)** ⭐18 — WorkBuddy 主题管理器：创建、校验、预览、切换与安全应用运行时主题，含 9 套内置主题、CLI、校验器与社区发布规范。
+- **[comeonzhj/WorkBuddy-theme-skill](https://github.com/comeonzhj/WorkBuddy-theme-skill)** ⭐19 — WorkBuddy 主题管理器：创建、校验、预览、切换与安全应用运行时主题，含 9 套内置主题、CLI、校验器与社区发布规范。
 - **[Christina121877/pink-crystal-workbuddy-skin](https://github.com/Christina121877/pink-crystal-workbuddy-skin)** ⭐5 — Pink Crystal · 樱花少女 WorkBuddy 桌面端主题：动态（121 帧 / 1280×720 / 24fps 动画 WebP）+ 静态双模式。
 
 ## 三、新兴 AI 客户端「母舰级」收编生态
@@ -101,6 +118,7 @@
 - **[zai-org/feedback](https://github.com/zai-org/feedback/issues/171)** — [Feature] User-customizable UI themes for ZCode agent（Issue #171）
 - **[aqua5230/usage](https://github.com/aqua5230/usage)** — macOS menu bar & Windows tray app pinning Claude Code, Codex & Antigravity quota, burn rate, and cost to your screen. Local-first, no LLM API calls. HTML reports, 10 themes.
 - **[lbjlaq/Antigravity-Manager](https://github.com/lbjlaq/Antigravity-Manager)** — Professional Antigravity Account Manager & Switcher. One-click seamless account switching for Antigravity Tools. Built with Tauri v2 + React (Rust).专业的 Antigravity 账号管理与切换工具。为 Antigravity 提供一键无缝账号切换功能。
+- **[EstarinAzx/VS-Claude](https://github.com/EstarinAzx/VS-Claude)** ⭐128 — Claude.ai 风格的暖色暗色主题，适用于 VSCode 与 Antigravity IDE。
 
 ### 3.3 【新增】通用 Electron 注入框架（不只限于单一客户端）
 
@@ -122,6 +140,7 @@
 
 - **[captainfod/TRAE-Work-Dream-Skin](https://github.com/captainfod/TRAE-Work-Dream-Skin)** — Custom themes and a reusable Codex Skill for TRAE Work on macOS
 - **[Iwsport4674/TRAE-Work-Dream-Skin](https://github.com/Iwsport4674/TRAE-Work-Dream-Skin)** — Customize the macOS TRAE Work interface with custom themes and background images without modifying application files or affecting project data.
+- **[dxiaoqi/TRAE-Skin-Studio](https://github.com/dxiaoqi/TRAE-Skin-Studio)** ⭐7 — TRAE Skin Studio：Trae Work 换肤小助手。
 
 ## 五、CodeDrobe 统一换肤平台（标准化野心）
 
@@ -145,16 +164,23 @@
 
 > 本轮深挖自 DSH 插件生态盘点，多为**单仓库单风格**的皮肤插件，均已核验（GitHub API 200）。
 
-- **[Small-tailqwq/dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale)** ⭐1.7k — 鲸鱼娘皮肤系列（maid-atelier 亮/暗双版），DSH 社区传播度最高的招牌外观插件。
-- **[zhu1090093659/dsh-web](https://github.com/zhu1090093659/dsh-web)** ⭐922 — DSH Web 插件聚合生态包「一切皆插件」，含任务面板、Git 图与皮肤中心（原 `dsh-web-ui` 已重命名至此）。
-- **[vlln/whale-girl](https://github.com/vlln/whale-girl)** ⭐283 — DSH Web GUI 桌面宠物插件（QQ 宠物形态）：右下角悬浮、可拖拽/投喂/玩耍的积累型伙伴。
-- **[kingOfSoySauce/dsh-liang-skin](https://github.com/kingOfSoySauce/dsh-liang-skin)** ⭐140 — 滑动变祖器：把推理强度滑块做成「从梁子到梁祖」的趣味皮肤（作者另有 `dsh-skin-market` 皮肤市场）。
-- **[LaplaceYoung/dsh-qq2006](https://github.com/LaplaceYoung/dsh-qq2006)** ⭐22 — DSH 的 QQ2006 复古皮肤插件：注册 qq2006 主题与镜像 `body[data-ds-skin=...]`。
-- **[renat3u/tonghuashun-webui](https://github.com/renat3u/tonghuashun-webui)** ⭐17 — 仿同花顺风格的 DSH Web UI 插件。
-- **[NoNameLeGo/dsh-catppuccin-theme](https://github.com/NoNameLeGo/dsh-catppuccin-theme)** ⭐20 — DSH Web GUI 的 Catppuccin 主题插件：Latte / Frappé / Macchiato / Mocha 四款色温一键切换。
+- **[Small-tailqwq/dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale)** ⭐2.2k — 鲸鱼娘皮肤系列（maid-atelier 亮/暗双版），DSH 社区传播度最高的招牌外观插件。
+- **[zhu1090093659/dsh-web](https://github.com/zhu1090093659/dsh-web)** ⭐8.0k — DSH Web 插件聚合生态包「一切皆插件」，含任务面板、Git 图与皮肤中心（原 `dsh-web-ui` 已重命名至此）。
+- **[vlln/whale-girl](https://github.com/vlln/whale-girl)** ⭐337 — DSH Web GUI 桌面宠物插件（QQ 宠物形态）：右下角悬浮、可拖拽/投喂/玩耍的积累型伙伴。
+- **[kingOfSoySauce/dsh-liang-skin](https://github.com/kingOfSoySauce/dsh-liang-skin)** ⭐218 — 滑动变祖器：把推理强度滑块做成「从梁子到梁祖」的趣味皮肤（作者另有 `dsh-skin-market` 皮肤市场）。
+- **[LaplaceYoung/dsh-qq2006](https://github.com/LaplaceYoung/dsh-qq2006)** ⭐28 — DSH 的 QQ2006 复古皮肤插件：注册 qq2006 主题与镜像 `body[data-ds-skin=...]`。
+- **[renat3u/tonghuashun-webui](https://github.com/renat3u/tonghuashun-webui)** ⭐22 — 仿同花顺风格的 DSH Web UI 插件。
+- **[NoNameLeGo/dsh-catppuccin-theme](https://github.com/NoNameLeGo/dsh-catppuccin-theme)** ⭐48 — DSH Web GUI 的 Catppuccin 主题插件：Latte / Frappé / Macchiato / Mocha 四款色温一键切换。
 - **[Small-tailqwq/dsh-deepcel](https://github.com/Small-tailqwq/dsh-deepcel)** ⭐14 — 把 DSH 伪装成 Excel 表格界面的皮肤插件。
-- **[Lu-Yu-Zhen/deepseek-harness-custom-skin](https://github.com/Lu-Yu-Zhen/deepseek-harness-custom-skin)** ⭐2 — DSH Web UI 自定义背景皮肤插件：上传背景图、调透明度/对比度、保存多套、随时切换、一键恢复默认。
+- **[Lu-Yu-Zhen/deepseek-harness-custom-skin](https://github.com/Lu-Yu-Zhen/deepseek-harness-custom-skin)** ⭐1 — DSH Web UI 自定义背景皮肤插件：上传背景图、调透明度/对比度、保存多套、随时切换、一键恢复默认。
 - **[Cerrda/dsh-cerrda-theme](https://github.com/Cerrda/dsh-cerrda-theme)** — DSH 液态玻璃丝绸暗色主题：首页绸面背景 + 半透明玻璃侧栏与输入栏，部署级静态 Web 插件，重启不丢失。
+- **[RevolutionLA/dsh-dream-skin](https://github.com/RevolutionLA/dsh-dream-skin)** ⭐187 — DSH 换肤 / 壁纸 / 主题包插件：8 套 Mirage 主题、每用户强调色、壁纸 2.0、主题包导入导出/分享链接、收藏与随机。
+- **[SLin-code/dsh-custom-skin](https://github.com/SLin-code/dsh-custom-skin)** ⭐100 — DeepSeek Harness Web 自定义壁纸与半透明皮肤插件。
+- **[XieRW/dsh-beauty-skins](https://github.com/XieRW/dsh-beauty-skins)** ⭐100 — DeepSeek Harness 美女系列皮肤：从壁纸提取配色、支持动态壁纸与自定义选图。
+- **[Ewnscat-ya/dsh-client-ui-skin-denia](https://github.com/Ewnscat-ya/dsh-client-ui-skin-denia)** ⭐41 — DSH Web GUI 鸣潮·达妮娅（Denia）主题「虚无之泡」：双形态亮/暗、侧边立绘、玻璃卡片与浮动泡泡粒子。
+- **[WZZNNE/DSH-CyberWorkStation](https://github.com/WZZNNE/DSH-CyberWorkStation)** ⭐22 — DSH CyberWorkStation：一键 DeepSeek Harness 赛博朋克桌面启动器与皮肤捆绑包。
+- **[Nwflower/dsh-claude-style](https://github.com/Nwflower/dsh-claude-style)** ⭐19 — 为 DeepSeek Harness 网页 GUI 打造的 Claude Code Desktop 风格主题。
+- **[KinGao294/dsh-skin](https://github.com/KinGao294/dsh-skin)** ⭐19 — DeepSeek Harness 皮肤切换器与自定义壁纸：精选 --dsw-alias-* 调色板。
 
 ## 七、豆包（Doubao）及编辑器风格扩展
 
@@ -168,8 +194,9 @@
 - **[notgabriels-sys/claude-code-50-dark-themes](https://github.com/notgabriels-sys/claude-code-50-dark-themes)** ⭐1 — 50 套手工调校的 Claude Code 暗色主题，继承基础预设、仅覆盖可控界面角色，兼顾语义色可读性。
 - **[talhanoman/TerminalGPT](https://github.com/talhanoman/TerminalGPT)** — 极简 Electron 封装的 ChatGPT 桌面端，复古终端风格 UI（暗色主题、等宽字体、闪烁光标），支持自定义 CSS 覆盖。
 
-> 共收录 **97** 个核心项目（含 1 个官网、1 个 Issue），均已核验。每个项目均附一句话说明（摘自官方 README / description，无文档者据源码提炼）。
+> 共收录 **123** 个核心项目（含 1 个官网、1 个 Issue），均已核验。每个项目均附一句话说明（摘自官方 README / description，无文档者据源码提炼）。
 >
 > - **第二轮新增 34 个**：Codex 合集/调色板/衍生引擎 +17、WorkBuddy +2、通用 Electron 注入框架 +2、DSH 创意皮肤矩阵 +10、编辑器/终端风 +3（另有 `aiwenjie777/codex-skin-switcher` 因已重命名为 `codex-skin-skill` 而去重，`leiniazl229/codex-claude-theme`、`tree0519/Codex-Dream-Skin-Forge` 因仓库已删除而剔除）。
 > - **第三轮（CDP 专项）新增 4 个**：聚焦 CDP 协议本身，补齐通用注入 SDK / REPL / AI-Agent 桥接 / 应用内 CSS 注入四类基础能力（见 §3.4），所有新增项均经 GitHub API 返回 200 并核对 `full_name`、description 与 star 数。
+> - **第四轮（2026-09-26 全量复核 + 新增 26 个）**：新增 Codex 引擎/主题/集合 +15、WorkBuddy +2、Antigravity IDE 主题 +1、TRAE Work +1、DSH 创意皮肤矩阵 +7。全量复核结论：原 97 条目无失效（GitHub API 均 200）；`leeandrew94/workbuddy-ambient-skin` 已改名迁移至 `kimilee94/workbuddy-ambient-skin`（旧链接 301 跳转，已更新为新地址）；star 数较上轮显著增长项已刷新（如 `dsh-web` 922→8.0k、`dsh-deep-whale` 1.7k→2.2k、`dsh-liang-skin` 140→218、`whale-girl` 283→337、`dsh-catppuccin-theme` 20→48、`dsh-qq2006` 22→28 等）。
 > - **说明回填**：补齐 4 个此前无文档项目的说明（`codress`、`agent-theme`、`WorkBuddy-Skins`、`WorkBuddy-Skin-`，均据 README 提炼）。

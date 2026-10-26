@@ -54,7 +54,7 @@ export function ContrastBadge({
     <span className={`inline-flex items-center gap-1 text-[11px] ${colorClass} ${className}`}>
       <span>{ratioText}</span>
       {passesAAA && (
-        <span className="rounded-md bg-cr-success/15 px-1 text-[9px] font-normal leading-none">
+        <span className="rounded-md bg-cr-success/15 px-1 text-micro font-normal leading-none">
           AAA
         </span>
       )}

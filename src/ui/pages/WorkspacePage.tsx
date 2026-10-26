@@ -201,7 +201,7 @@ export function WorkspacePage() {
                   >
                     <AppMark appId={app.appId} size={18} />
                     {active && (
-                      <span className="as-brand-line absolute -left-2 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full shadow-[0_0_8px_rgba(var(--brand-rgb),0.5)]" />
+                      <span className="as-brand-line absolute -left-2 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full shadow-[0_0_8px_rgb(var(--brand-rgb)/0.5)]" />
                     )}
                   </button>
                 );

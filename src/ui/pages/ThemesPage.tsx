@@ -31,10 +31,8 @@ import { useThemePageController } from '@/hooks/useThemePageController';
 import { cn } from '@/lib/utils';
 
 import {
-  CheckCircle2,
   ClipboardCopy,
   ClipboardPaste,
-  Layers,
   Package,
   PaintBucket,
   Palette,
@@ -63,13 +61,16 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             onDragLeave={page.handleDragLeave}
             onDrop={page.handleDrop}
           >
-            {/* Toolbar — title integrated inline */}
+            {/* PageHeader — count pill is THE single place showing "how many
+                themes are installed". The description only adds information
+                when a filter narrows the visible set (n / N); the old stats
+                bar repeated allCount a third time and was removed. */}
             <PageHeader
               title={t.navThemes}
               count={tc.allCount}
               description={
                 tc.themes.length === tc.allCount
-                  ? t.themeCount(tc.allCount)
+                  ? undefined
                   : `${tc.themes.length} / ${tc.allCount}`
               }
             >
@@ -136,44 +137,10 @@ export function ThemesPage({ controller }: { controller: AppController }) {
               />
             </PageHeader>
 
-            {/* Stats overview bar */}
-            <div className="as-stat-bar">
-              <div className="flex items-center gap-2.5">
-                <div className="flex size-7 items-center justify-center rounded-lg bg-muted">
-                  <Layers className="size-3.5 text-muted-foreground" />
-                </div>
-                <span className="text-base font-semibold tabular-nums text-foreground">
-                  {tc.allCount}
-                </span>
-                <span className="text-[11px] text-muted-foreground">{t.installedTitle}</span>
-              </div>
-              <span className="as-hairline-v h-5" />
-              <div className="flex items-center gap-2.5">
-                <div className="flex size-7 items-center justify-center rounded-lg bg-muted">
-                  <CheckCircle2 className="size-3.5 text-cr-success" />
-                </div>
-                <span className="text-base font-semibold tabular-nums text-foreground">
-                  {page.activeThemeCount}
-                </span>
-                <span className="text-[11px] text-muted-foreground">{t.themeActive}</span>
-              </div>
-              {page.dynamicCount > 0 && (
-                <>
-                  <span className="as-hairline-v h-5" />
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex size-7 items-center justify-center rounded-lg bg-muted">
-                      <UploadCloud className="size-3.5 text-primary" />
-                    </div>
-                    <span className="text-base font-semibold tabular-nums text-foreground">
-                      {page.dynamicCount}
-                    </span>
-                    <span className="text-[11px] text-muted-foreground">{t.themeDynamic}</span>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Filter row — chip pills */}
+            {/* Filter row — chip pills. The old stat bar (bordered banner
+                with 28px icon tiles) outweighed the two numbers it carried;
+                active/dynamic now render as inline dot+count text at the row's
+                right end. Installed count stays in the PageHeader pill. */}
             <div className="flex flex-wrap items-center gap-2">
               {/* Category filter */}
               {tc.categories.length > 0 && (
@@ -224,6 +191,26 @@ export function ThemesPage({ controller }: { controller: AppController }) {
                   {t.themeDynamicFilter}
                 </button>
               )}
+
+              {/* Inline stats — right end of the filter row */}
+              <div className="ml-auto flex items-center gap-4">
+                <span className="flex h-7 items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <span className="status-dot good" aria-hidden="true" />
+                  <span className="font-medium tabular-nums text-foreground">
+                    {page.activeThemeCount}
+                  </span>
+                  <span>{t.themeActive}</span>
+                </span>
+                {page.dynamicCount > 0 && (
+                  <span className="flex h-7 items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <span className="status-dot brand" aria-hidden="true" />
+                    <span className="font-medium tabular-nums text-foreground">
+                      {page.dynamicCount}
+                    </span>
+                    <span>{t.themeDynamic}</span>
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Grid — virtualized for large libraries, with crossfade transition */}

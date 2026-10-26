@@ -1,4 +1,4 @@
-﻿/* =================================================================
+/* =================================================================
  * AgentSkin Workspace — Layout System
  *
  * Grid layout on .ws-root plus all structural regions:
@@ -25,8 +25,15 @@
     "drawer    stage    inspector"
     "status    status   status";
 
-  grid-template-rows: var(--h-topbar) 1fr var(--h-status);
-  grid-template-columns: var(--w-drawer) 1fr var(--w-inspector);
+  grid-template-rows: var(--h-topbar) minmax(0, 1fr) var(--h-status);
+  /* The inspector column is `auto`: StudioInspector drives its width inline
+     from workspaceStore (clamped 4–400px), so the track must follow the item
+     rather than pin to a fixed CSS size. */
+  grid-template-columns: var(--w-drawer) minmax(0, 1fr) auto;
+
+  /* Track changes (drawer collapse, inspector resize) animate here —
+     grid-template-columns belongs to the container, not to the items. */
+  transition: grid-template-columns var(--dur-mid) var(--ease-out);
 }
 
 /* -------------------------------------------------------------------
@@ -92,11 +99,13 @@
   background: var(--card);
   border-right: 1px solid var(--border);
   overflow: hidden;
-  transition: grid-template-columns var(--dur-mid) var(--ease-out);
 }
 
-.ws-root[data-drawer-collapsed="true"] {
-  grid-template-columns: var(--w-drawer-collapsed) 1fr var(--w-inspector);
+/* Collapse state lives on the <aside> (StudioDrawer renders
+   `data-collapsed="true"`), not on `.ws-root` — match both hosts. */
+.ws-root[data-drawer-collapsed="true"],
+.ws-root:has(> .ws-drawer[data-collapsed="true"]) {
+  grid-template-columns: var(--w-drawer-collapsed) minmax(0, 1fr) auto;
 }
 
 .ws-drawer__scroll {
@@ -325,6 +334,28 @@
   flex: 1;
 }
 
+/* Title select button — BEM hook documented in docs/design-tokens.md §13.4.
+   Without `display:flex` the inner 14×14 app mark and the title ellipsis
+   both fail (bare <button> is inline-block); min-width:0 keeps a long title
+   from pushing the fullscreen/close buttons out of the header. */
+.pw__title-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 4px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.pw__title-btn:hover {
+  background: var(--card2);
+}
+
 .pw__icon-btn {
   width: 18px;
   height: 18px;
@@ -406,11 +437,16 @@
   background: var(--card);
   border-left: 1px solid var(--border);
   overflow: hidden;
-  transition: grid-template-columns var(--dur-mid) var(--ease-out);
+  /* Width is set inline by StudioInspector from workspaceStore, so the item
+     animates `width`; the container's track transition covers collapse. */
+  transition: width var(--dur-mid) var(--ease-out);
 }
 
-.ws-root[data-inspector-collapsed="true"] {
-  grid-template-columns: var(--w-drawer) 1fr var(--w-inspector-collapsed);
+/* Collapse state lives on the <aside> (`data-collapsed="true"`), not on
+   `.ws-root` — match both hosts. */
+.ws-root[data-inspector-collapsed="true"],
+.ws-root:has(> .ws-inspector[data-collapsed="true"]) {
+  grid-template-columns: var(--w-drawer) minmax(0, 1fr) var(--w-inspector-collapsed);
 }
 
 .ws-inspector__scroll {
@@ -467,6 +503,66 @@
   right: 0;
   height: 2px;
   background: var(--primary);
+}
+
+/* Resolution preset segmented buttons — BEM hook documented in
+   docs/design-tokens.md §13.4. data-active styling follows the segmented
+   control convention: --primary fill marks the current item. Padding and
+   radius stay with the already-compiled Tailwind classes (rounded-md px-1
+   py-0); font-size comes from the JSX `text-micro` utility (wired in
+   globals.css v2.5, §13.2 #11) rather than duplicated here. */
+.ws-inspector__res-btn {
+  height: 18px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast),
+    color var(--dur-fast);
+}
+
+.ws-inspector__res-btn:hover {
+  background: var(--card2);
+  color: var(--foreground);
+}
+
+.ws-inspector__res-btn[data-active="true"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Device-frame toggle — BEM hook documented in docs/design-tokens.md
+   §13.4. data-active follows the icon-toggle convention: --primary colors
+   the glyph when the frame is on. */
+.ws-inspector__frame-toggle {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast),
+    color var(--dur-fast);
+}
+
+.ws-inspector__frame-toggle:hover {
+  background: var(--card2);
+  color: var(--foreground);
+}
+
+.ws-inspector__frame-toggle[data-active="true"] {
+  color: var(--primary);
 }
 
 /* -------------------------------------------------------------------

@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # StudioImageToThemePanel
@@ -12,8 +12,8 @@
  *   ready → 14-token palette rendered by group + tonal-scale accent picker
  *   error → user can retry or clear
  *
- * Visual style follows Quiet Workbench design tokens:
- *   · rounded-md corners, no radius inflation
+ * Visual style follows the project design tokens:
+ *   · rounded-md corners
  *   · spacing from the 4/8/16/24/32/48 Tailwind scale only
  *   · typography: text-[11px] mono for token names, tabular-nums
  *   · all colors via CSS custom properties (no bare hex/rgba)
@@ -292,7 +292,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
     return (
       <div className="space-y-4">
         {/* Generated palette title */}
-        <h3 className="text-[13px] font-normal text-foreground">
+        <h3 className="text-ui font-normal text-foreground">
           {t.studioImageToThemeGeneratedPalette}
         </h3>
 

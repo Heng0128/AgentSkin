@@ -161,7 +161,7 @@ export function DialogsHost({ controller }: { controller: AppController }) {
                 : t.restartDescription('')}
             </DialogDescription>
             {launchRestartPrompt?.message ? (
-              <p className="text-[13px] text-muted-foreground/80">{launchRestartPrompt.message}</p>
+              <p className="text-ui text-muted-foreground/80">{launchRestartPrompt.message}</p>
             ) : null}
           </DialogHeader>
           <DialogFooter>

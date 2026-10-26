@@ -176,7 +176,7 @@ export function ThemeDetailPanel({
           {/* Color swatches */}
           {Object.keys(colors).length > 0 && (
             <div>
-              <p className="mb-1.5 flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground/70">
+              <p className="mb-1.5 flex items-center gap-1 text-[11px] font-medium tracking-tight text-muted-foreground/70">
                 <Palette size={12} />
                 {t.colors}
               </p>
@@ -192,7 +192,7 @@ export function ThemeDetailPanel({
           {/* Tags */}
           {theme.tags?.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              <p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Tags</p>
+              <p className="text-[11px] font-medium tracking-tight text-muted-foreground/70">Tags</p>
               <div className="flex flex-wrap gap-1.5">
               {theme.tags.map((tag) => (
                 <span

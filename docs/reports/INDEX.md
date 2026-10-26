@@ -45,6 +45,9 @@
 | `2026-09-02-v3-theme-upgrade.md` | 2026-09-02 | V3 主题机械升级执行报告（16 主题 assets/css → overrides/） |
 | `2026-09-02-v3-theme-upgrade-dryrun.md` | 2026-09-02 | V3 升级 dry-run 预览 |
 | `2026-09-03-wallpaper-scope-audit.md` | 2026-09-03 | 壁纸库范围审计：纯替换定位 vs 主题生成越界（待老板裁决拆除边界） |
+| `dsh-wallpaper-engine-analysis-2026-09-07.md` | 2026-09-07 | dsh-wallpaper-engine 源码级分析：完整 Scene 渲染器/场景动画管线/视频抽帧转码三大可移植能力 + P0/P1/P2 借鉴分级 |
+| `doubao-skin-main-analysis-2026-09-08.md` | 2026-09-08 | 豆皮 doubao-skin-main 源码级学习报告：v3 主题包/CSS 沙箱/所有权仲裁/图标管线/devflow 全机制拆解 + 方法论借鉴清单（学做法不并生态） |
+| `engine-staleness-audit-2026-09-08.md` | 2026-09-08 | 注入引擎时效性审计：以豆皮实窗证据为镜像，doubao 死锚点/写死色/缺失 token 家族 + workbuddy 证据悬空 + semantic-selectors 硬伤，P0-P2 修复清单 |
 
 ---
 
@@ -84,6 +87,7 @@
 | `p0-integration-test-refactor-2026-08-25.md` | 2026-08-25 | P0 AgentEngineService 集成测试重构（34 测试新增 + 1 P0 修复） |
 | `scene-feature-support-matrix.md` | 2026-08-28 | Scene 特性支持矩阵（壁纸引擎动态子集渲染技术决策依据，WebGL 可行性边界） |
 | `static-frame-extraction-plan.md` | 2026-08-28 | 静态帧提取方案实施计划（PKG/TEX 解析管线 + 静态帧降级链，壁纸预览/缩略图） |
+| `sidebar-visual-polish-2026-09-08.md` | 2026-09-08 | 侧边栏视觉优化（`--ag-sidebar-*` 子 token 桥 + hover 3px Spring 位移 + 渐变 hairline + 滚动渐隐 + 品牌滚动条，npm run check 21/21 全绿） |
 
 ---
 

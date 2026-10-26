@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # CenterTabBundle
@@ -9,7 +9,7 @@
  * Data source: studioStore (bundles, bundlesLoading, refreshBundles,
  * importAndInstallBundle, deleteBundle).
  *
- * Visual style follows Quiet Workbench design tokens:
+ * Visual style follows the project design tokens:
  *   · rounded-md corners
  *   · spacing from the 4/8/16/24/32/48 Tailwind scale only
  *   · typography: text-[11px] mono for body, text-xs for headings

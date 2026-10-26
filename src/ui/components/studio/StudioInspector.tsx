@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # StudioInspector
@@ -100,7 +100,7 @@ export function StudioInspector({
       )}
 
       {/* Resolution preset control bar */}
-      <div className="ws-inspector__resolution flex items-center gap-1 border-b border-border p-1">
+      <div className="flex items-center gap-1 border-b border-border p-1">
         <div className="flex items-center gap-1">
           {
             /* TODO: type-guard — 待渐进式加固 */ (

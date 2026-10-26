@@ -7,7 +7,7 @@
  * Subscribes to `analysisProgress` from studioStore (pushed by main process
  * via `visual-analysis:status` IPC) and renders a step timeline + progress bar.
  *
- * Empty state when no analysis is running. International design:
+ * Empty state when no analysis is running. Typography:
  * mono font, tabular-nums, 10px sizing, single accent color.
  */
 

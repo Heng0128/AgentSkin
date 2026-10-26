@@ -118,7 +118,13 @@ export function InjectDock({ controller }: { controller: AppController }) {
     <div
       className={cn(
         'fixed bottom-12 left-1/2 z-[var(--z-dock)] -translate-x-1/2',
-        'flex items-center gap-3 rounded-lg border border-border bg-popover px-4 py-2.5 shadow-sm',
+        // Glass capsule — the dock floats over the page content / wallpaper,
+        // so it always renders as a frosted surface (as-glass). When themes
+        // are actively injected the capsule lights up with the brand glow;
+        // idle it keeps a plain elevation shadow. as-glow and shadow-sm both
+        // set box-shadow, hence the exclusive branches.
+        'flex items-center gap-3 rounded-lg border px-4 py-2.5 as-glass',
+        activeApps.length > 0 ? 'as-glow border-border/60' : 'border-border/60 shadow-sm',
         'transition-[opacity,filter] duration-slow',
         dimmed && 'opacity-40 saturate-50',
       )}

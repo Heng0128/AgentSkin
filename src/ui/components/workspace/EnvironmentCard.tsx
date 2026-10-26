@@ -121,7 +121,7 @@ export function EnvironmentCard({
         'group/card relative flex flex-col overflow-hidden rounded-md border text-card-foreground',
         'transition-[transform,border-color,box-shadow] duration-base ease-spring',
         isActive
-          ? 'as-active-tint ring-1 ring-primary'
+          ? 'as-active-tint as-glow'
           : 'border-transparent bg-card hover:-translate-y-[2px] hover:border-border-strong hover:shadow-elev2',
         onClick && 'cursor-pointer',
       )}
@@ -169,7 +169,7 @@ export function EnvironmentCard({
               alt={env.agent.displayName}
               className="object-contain"
             />
-            <AvatarFallback className="bg-card2 rounded-md text-[13px] font-normal text-muted-foreground">
+            <AvatarFallback className="bg-card2 rounded-md text-ui font-normal text-muted-foreground">
               {(env.agent.displayName || env.agent.id).charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>

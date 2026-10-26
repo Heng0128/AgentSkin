@@ -1,13 +1,28 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { DialogsHost } from '@/components/DialogsHost';
 import { DynamicBackground } from '@/components/DynamicBackground';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { InjectDock } from '@/components/InjectDock';
 import { InstallWizard } from '@/components/InstallProgress';
 import { PageSkeleton } from '@/components/PageSkeleton';
-import { SidebarContent, SidebarProvider, SidebarRail } from '@/components/sidebar';
+import {
+  SIDEBAR_COLLAPSED_WIDTH,
+  SIDEBAR_EXPANDED_WIDTH,
+  SidebarContent,
+  SidebarProvider,
+  SidebarRail,
+} from '@/components/sidebar';
 import { TitleBar } from '@/components/TitleBar';
 import { SkeletonProvider } from '@/components/ui/SkeletonProvider';
 import { useAppController } from '@/hooks/useAppController';
@@ -211,6 +226,44 @@ export default function App() {
   const motion = useSettingsStore((s) => s.motion);
   const sidebarCollapsed = useShellStore((s) => s.sidebarCollapsed);
 
+  /**
+   * Two-phase sidebar collapse hand-off (the fix for the broken animation):
+   *
+   * The grid column (`--sidebar-width`) tweens on the Spring curve, but the
+   * branch swap is NOT synchronous with the store flip — swapping instantly
+   * squeezed the wide content into 56px (expand) or showed a wide empty
+   * panel (collapse) because the branch reflowed while the column moved.
+   *
+   * Now: the STORE flips instantly, but the branch lags:
+   *   - collapse: keep `SidebarContent` mounted (rendered at its fixed
+   *     192px) while the column shrinks and clips it — swap to the Rail only
+   *     after the tween settles;
+   *   - expand: mount `SidebarContent` immediately at its fixed 192px
+   *     (clipped by the still-narrow column) and let the tween reveal it.
+   *
+   * `sidebarPresented` is that staged branch state; `SidebarProvider` gets
+   * it via `presentation` so the mounted branch renders with coherent
+   * (expanded) styling throughout the hand-off.
+   */
+  const [sidebarPresented, setSidebarPresented] = useState(sidebarCollapsed);
+  // useLayoutEffect (not passive): on EXPAND the branch swap must commit
+  // before paint — the store flip already widened the column, so a passive
+  // effect would paint one frame of 192px column with the 56px rail in it.
+  useLayoutEffect(() => {
+    if (sidebarCollapsed) {
+      // Collapse: delay the branch swap until the column tween finishes.
+      // The delay MUST equal the grid's transition duration — same formula as
+      // `--duration-base` (150ms × motion multiplier; MOTION_MULTIPLIER map
+      // below). prefers-reduced-motion zeroes it like the CSS animations do.
+      const prefersReduce =
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+      const ms = motion === 'none' || prefersReduce ? 0 : motion === 'reduced' ? 75 : 150;
+      const t = window.setTimeout(() => setSidebarPresented(true), ms);
+      return () => clearTimeout(t);
+    }
+    setSidebarPresented(false);
+  }, [sidebarCollapsed, motion]);
+
   // Sync the user-selected corner-radius scale to the CSS variable on
   // :root so every component using radius-aware tokens reacts.
   useEffect(() => {
@@ -253,7 +306,11 @@ export default function App() {
           event.preventDefault();
           controller.dropThemeFiles(Array.from(event.dataTransfer.files));
         }}
-        style={{ '--sidebar-width': sidebarCollapsed ? '56px' : '192px' } as React.CSSProperties}
+        style={
+          {
+            '--sidebar-width': sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH,
+          } as React.CSSProperties
+        }
       >
         <div
           className={cn(
@@ -261,18 +318,23 @@ export default function App() {
             'grid-cols-[var(--sidebar-width)_1fr]',
           )}
         >
-          {/* Left column: collapsible sidebar */}
-          <div className="flex h-full min-h-0 flex-col">
-            <SidebarProvider>
-              {sidebarCollapsed ? <SidebarRail /> : <SidebarContent />}
+          {/* Left column: collapsible sidebar. overflow-hidden + the fixed
+              branch widths (SIDEBAR_EXPANDED/COLLAPSED_WIDTH) make the tween
+              clip/reveal the fixed-size body instead of reflowing it, and the
+              border-r here owns the full-height divider so it rides the
+              animated column edge continuously (a branch border would be
+              clipped away mid-tween). */}
+          <div className="flex h-full min-h-0 flex-col overflow-hidden border-r border-sidebar-border">
+            <SidebarProvider hasWallpaper={!!activeWallpaper} presentation={sidebarPresented}>
+              {sidebarPresented ? <SidebarRail /> : <SidebarContent />}
             </SidebarProvider>
           </div>
 
-          {/* Main column: title bar + scrollable content */}
+          {/* Main column: title bar (transparent chrome) + scrollable content */}
           <main className="flex min-h-0 flex-col overflow-hidden">
-            <TitleBar hasWallpaper={!!activeWallpaper} />
+            <TitleBar />
 
-            <div className="scroll-fade-y min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-behavior-contain">
+            <div className="scroll-fade-y min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
               <div
                 key={controller.route}
                 className={cn('page-enter flex flex-col h-full')}

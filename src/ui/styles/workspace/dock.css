@@ -1,4 +1,4 @@
-﻿/* =================================================================
+/* =================================================================
  * AgentSkin Workspace — Bottom Dock
  *
  * Fixed overlay dock with draggable height and tabs.
@@ -17,7 +17,7 @@
   flex-direction: column;
   background: var(--card);
   border-top: 1px solid var(--border);
-  z-index: var(--z-dock);
+  z-index: var(--z-studio-dock);
   height: 0;
   transition: height var(--dur-mid) var(--ease-out);
   box-shadow: var(--ws-shadow-float);

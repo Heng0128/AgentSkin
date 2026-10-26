@@ -2,6 +2,12 @@
 
 > 生成日期：2026-08-14
 > 更新日期：2026-08-20（Swiss 风格已完全移除，文档更新为完成状态）
+> 复审日期：2026-09-09 — **原「已完全移除」结论偏乐观，本次复查发现并清除以下残留**：
+> 1. `globals.css` 仍有 2 个 Swiss 排印原语：`.as-label`（uppercase + `letter-spacing:.04em`）、`.as-section-title`（同族，1 处消费）；以及零消费者的 `.as-kv` / `.as-kv-key` / `.as-kv-val` hairline 行表格 → 已全部删除或改写为 sentence case + `tracking-tight`。
+> 2. 13 处内联 `text-[11px] uppercase tracking-wide` 区块标签（DetailPanel / ThemeDetailPanel / ThemePreview / CommunityThemePreview / SourceRail / InjectResultsPanel / AgentLivePreview）→ 收敛到与 `SectionLabel` 一致的规格。
+> 3. i18n 侧的装饰性全大写与「中文 · LATIN」叠字 kicker（`LANDMARKS` / `EXPORT` / `BETA` / `BASELINE` / `CASCADE` / `LIVE` / `预设主题 · PRESETS` / `CORE · 核心` 等 40+ 条）→ 改 sentence case、去叠字；其中 `「SNAP」`/`「NEW」`/`「IMPORT」`/`「SNAPSHOT」` 属于**指向不存在按钮名**的错误引用，已按真实按钮文案（`抓取并预览` / `新建` / `导入`）修正。
+> 4. `text-[9px]` 6 处（低于自订 10px 字号底线）→ `text-micro`；shadcn `CommandShortcut` / `DropdownMenuShortcut` 的 `tracking-widest` → `tracking-normal`。
+> **有意保留**（非 Swiss 装饰）：合法缩写术语 `CDP`/`DOM`/`CSS`/`MCP`/`IPC`/`PID`/`RSS`/`CSP`/`OKLCH`/`MIT`/`PNG·JPG·WebP·BMP·AVIF`/`FX`/`SM·MD·LG`；`InspectorProfile` 3px 状态点的 `rounded-[1px]/[2px]`（形状区分是无障碍提示，非方角美学）；`Logo` SVG 的 `rx="2"`（品牌标记几何）。
 > 审计范围：`src/ui/` 全部页面、共享组件、Studio 组件、设计 token（globals.css / workspace-tokens.css / workspace.css / shadcn-tailwind.css）
 > 当前状态：**原 Swiss 风格已清理，当前统一为 Quiet Workbench 设计语言**——Notion 系（主导骨架，去名留形）、Quiet Workbench token 体系（修复生效）、Tailwind/shadcn 默认（兜底收敛中）。
 

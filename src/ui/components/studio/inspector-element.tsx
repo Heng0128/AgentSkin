@@ -214,7 +214,7 @@ export function InspectorElement({ iframeRef, pickedPath, onClose }: InspectorEl
             <div className="mb-1">Box Model</div>
             <div className="flex items-center justify-center">
               <div className="relative inline-flex flex-col items-center">
-                <span className="text-[9px]">margin</span>
+                <span className="text-micro">margin</span>
                 <div
                   className="border border-dashed p-2"
                   style={{
@@ -223,11 +223,11 @@ export function InspectorElement({ iframeRef, pickedPath, onClose }: InspectorEl
                     backgroundColor: `color-mix(in srgb, var(--primary) ${BOX_MODEL_MARGIN_BG_OPACITY}%, transparent)`,
                   }}
                 >
-                  <span className="text-[9px]">{details.computedStyles.margin || '0'}</span>
+                  <span className="text-micro">{details.computedStyles.margin || '0'}</span>
                   <div className="mt-1 border border-border bg-background p-2">
-                    <span className="text-[9px]">padding</span>
+                    <span className="text-micro">padding</span>
                     <div
-                      className="mt-1 border border-dashed p-2 text-center text-[9px]"
+                      className="mt-1 border border-dashed p-2 text-center text-micro"
                       style={{
                         minWidth: BOX_MODEL_PADDING_MIN_WIDTH,
                         borderColor: `color-mix(in srgb, var(--cr-info) ${BOX_MODEL_PADDING_BORDER_OPACITY}%, transparent)`,
@@ -377,7 +377,7 @@ function TransformSection({ pickedPath }: { pickedPath: string }) {
               </span>
               <span className="truncate text-[10px] text-muted-foreground">{entry.targetRef}</span>
             </label>
-            <span className="shrink-0 text-[9px] text-muted-foreground">{entry.source}</span>
+            <span className="shrink-0 text-micro text-muted-foreground">{entry.source}</span>
           </div>
         ) : (
           <span className="text-[10px] text-muted-foreground">No ledger entry</span>

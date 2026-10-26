@@ -53,7 +53,7 @@ function PageToolbar({ search, sort, sortOrder, actions, left, className }: Page
       {sort && (
         <Select value={sort.value} onValueChange={sort.onChange}>
           <SelectTrigger
-            className="h-8 w-[140px] rounded-md border-border bg-muted text-[11px] focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--brand-rgb),0.13)]"
+            className="h-8 w-[140px] rounded-md border-border bg-muted text-[11px] focus:border-primary focus:shadow-[0_0_0_3px_rgb(var(--brand-rgb)/0.13)]"
             aria-label={sort.options.find((o) => o.value === sort.value)?.label}
           >
             <SelectValue />

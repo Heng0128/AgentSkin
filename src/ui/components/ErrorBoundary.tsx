@@ -94,7 +94,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             <div>
               <h1 className="text-lg font-medium tracking-tight">{title}</h1>
-              <p className="mt-1 text-[13px] text-muted-foreground">
+              <p className="mt-1 text-ui text-muted-foreground">
                 {this.state.error?.message ?? desc}
               </p>
             </div>

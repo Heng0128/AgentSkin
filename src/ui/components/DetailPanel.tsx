@@ -186,7 +186,9 @@ function AppActionList({
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0">
-      <span className="text-[11px] uppercase tracking-wide text-muted-foreground/70">{label}</span>
+      <span className="text-[11px] font-medium tracking-tight text-muted-foreground/70">
+        {label}
+      </span>
       <span className="text-sm font-medium">{value}</span>
     </div>
   );
@@ -205,7 +207,7 @@ function ColorSchemePicker({
 }) {
   return (
     <div>
-      <p className="mb-1.5 text-[11px] uppercase tracking-wide text-muted-foreground/70">
+      <p className="mb-1.5 text-[11px] font-medium tracking-tight text-muted-foreground/70">
         {t.colorSchemesLabel}
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -322,7 +324,7 @@ export function DetailPanel({
       </div>
 
       {/* Scrollable body */}
-      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-behavior-contain p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain p-4">
         {/* Title */}
         <div>
           <div className="flex items-center gap-2">
@@ -362,7 +364,7 @@ export function DetailPanel({
         {/* Tags */}
         {theme.tags.length > 0 && (
           <div className="flex flex-col gap-1.5">
-            <p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Tags</p>
+            <p className="text-[11px] font-medium tracking-tight text-muted-foreground/70">Tags</p>
             <div className="flex flex-wrap gap-1.5">
               {theme.tags.map((tag) => (
                 <Badge key={tag} variant="secondary" className="rounded-md text-[11px] font-normal">
@@ -385,7 +387,7 @@ export function DetailPanel({
 
         {/* Apply section */}
         <div>
-          <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground/70">
+          <p className="mb-2 text-[11px] font-medium tracking-tight text-muted-foreground/70">
             {t.appPickerTitle}
           </p>
           <AppActionList

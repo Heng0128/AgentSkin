@@ -55,7 +55,7 @@ export function SourceRail() {
 
   return (
     <aside className="flex h-full w-full flex-col gap-1 border-r border-border bg-surface/50 p-2">
-      <h3 className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted">
+      <h3 className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium tracking-tight text-muted">
         <Globe className="size-3" />
         {t.communitySourceTitle}
       </h3>

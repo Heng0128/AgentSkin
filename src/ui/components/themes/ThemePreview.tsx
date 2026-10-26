@@ -219,7 +219,7 @@ export function ThemePreview({
     <div className="flex flex-col gap-4">
       {/* Palette section */}
       <section>
-        <h3 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <h3 className="mb-2 text-[11px] font-medium tracking-tight text-muted-foreground">
           {t.themePreviewPalette}
         </h3>
         {hasColors ? (
@@ -233,7 +233,7 @@ export function ThemePreview({
 
       {/* Mock UI section */}
       <section>
-        <h3 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <h3 className="mb-2 text-[11px] font-medium tracking-tight text-muted-foreground">
           {t.themePreviewMockUI}
         </h3>
         <MockUI colors={colors} />

@@ -12,8 +12,8 @@
  *   done     → result shown with undo button
  *   error    → error message with retry
  *
- * Visual style follows Quiet Workbench design tokens:
- *   · rounded-md corners, no radius inflation
+ * Visual style follows the project design tokens:
+ *   · rounded-md corners
  *   · spacing from the 4/8/16/24/32 Tailwind scale only
  *   · typography: text-[11px] mono for token names, tabular-nums
  *   · all colors via CSS custom properties (no bare hex/rgba)
@@ -281,7 +281,7 @@ export function QuickApplyPanel({ t, selectedAgent }: QuickApplyPanelProps) {
       <div className="space-y-4 rounded-md border border-border bg-card p-4">
         <div className="flex items-center gap-2">
           <X className="size-4 text-destructive" />
-          <span className="text-[13px] text-foreground">{t.quickApplyError}</span>
+          <span className="text-ui text-foreground">{t.quickApplyError}</span>
         </div>
         <p className="text-[11px] text-foreground/60">{result.error}</p>
         <div className="flex gap-2">
@@ -304,7 +304,7 @@ export function QuickApplyPanel({ t, selectedAgent }: QuickApplyPanelProps) {
     return (
       <div className="space-y-4 rounded-md border border-border bg-card p-4">
         <div className="flex items-center justify-between">
-          <span className="text-[13px] text-foreground">{t.quickApplyDone}</span>
+          <span className="text-ui text-foreground">{t.quickApplyDone}</span>
           <span className="text-[11px] text-muted-foreground">
             {AGENT_META[selectedAgent]?.displayName}
           </span>

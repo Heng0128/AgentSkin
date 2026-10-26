@@ -106,8 +106,8 @@ describe('ThemeDetailPanel', () => {
     const theme = createTheme();
     render(<ThemeDetailPanel theme={theme} onClose={() => {}} />);
 
-    // Downloads: "12800"
-    expect(screen.getByText('12800')).toBeTruthy();
+    // Downloads: locale-formatted number ("12,800" in zh-CN / en-US)
+    expect(screen.getByText('12,800')).toBeTruthy();
     // Rating: "4.7"
     expect(screen.getByText('4.7')).toBeTruthy();
     // Package size: 204800 bytes = 200.0 KB

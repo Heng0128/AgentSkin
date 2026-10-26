@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # PreviewWindow
@@ -207,7 +207,6 @@ export function PreviewWindow({
                 pushOverrides();
                 if (iframeRef.current) onIframeReady?.(iframeRef.current);
               }}
-              className="pw__iframe"
               style={{ transform: `scale(${win.scale})`, transformOrigin: 'top left' }}
               title={`${meta.displayName} · ${t.studioPreviewStatus}`}
               tabIndex={-1}
