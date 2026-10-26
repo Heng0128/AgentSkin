@@ -16,10 +16,12 @@ export interface LaunchRequest {
   /**
    * When `true` and `preferredPort` is not explicitly given, the launcher
    * uses the adapter's configured preferred port instead of a random port.
-   * Defaults to `false` (backward compatible — random port behavior).
+   * Defaults to `false` (random port behavior).
    *
-   * Set via user preference (e.g. settings toggle "Use fixed ports per
-   * adapter") or by the apply flow for known adapters.
+   * 2026-09-07: since the no-fixed-port policy every built-in adapter's
+   * preferred port is `0`, so this flag currently resolves to random for all
+   * built-ins; only a future non-zero adapter config or user setting would
+   * produce a fixed port.
    */
   readonly useAdapterPreferredPort?: boolean;
   /** Kill any running instances before spawning a new one. */

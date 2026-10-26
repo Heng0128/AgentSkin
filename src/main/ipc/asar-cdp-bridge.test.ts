@@ -51,8 +51,10 @@ describe('createDefaultCdpBridge — port resolution', () => {
     await expect(bridge.resolvePort('workbuddy')).resolves.toBeNull();
   });
 
-  it('returns the adapter preferred port when it serves CDP targets', async () => {
-    // workbuddy's home port is 9224 (port-config DEFAULT_PORT_CONFIGS).
+  it('returns a live band port when it serves CDP targets', async () => {
+    // 2026-09-07 random-port policy: there is no per-adapter "home" port to
+    // probe first — the bridge walks the shared 9222+ band and settles on the
+    // first port that answers with CDP targets.
     onlyLive([9224]);
     listTargets.mockResolvedValue([{ id: 'target-1', type: 'page' }]);
 
@@ -61,12 +63,12 @@ describe('createDefaultCdpBridge — port resolution', () => {
     expect(listTargets).toHaveBeenCalledWith(9224);
   });
 
-  it('probes the adapter preferred port first', async () => {
+  it('starts probing at the band start (9222) for every adapter', async () => {
     onlyLive([]);
     const bridge = createDefaultCdpBridge();
 
     await bridge.resolvePort('workbuddy');
-    expect(probePortLive.mock.calls[0]?.[0]).toBe(9224);
+    expect(probePortLive.mock.calls[0]?.[0]).toBe(9222);
 
     probePortLive.mockClear();
     await bridge.resolvePort('traework');
@@ -83,7 +85,7 @@ describe('createDefaultCdpBridge — port resolution', () => {
     await expect(bridge.resolvePort('workbuddy')).resolves.toBeNull();
   });
 
-  it('walks the fallback band when the preferred port is dead', async () => {
+  it('walks the band to the first live port serving CDP targets', async () => {
     onlyLive([9230]);
     listTargets.mockResolvedValue([{ id: 'target-2', type: 'page' }]);
 

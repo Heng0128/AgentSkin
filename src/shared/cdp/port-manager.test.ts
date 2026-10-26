@@ -272,9 +272,12 @@ describe('port conflict auto-selection (integration)', () => {
   });
 
   it('automatically selects a free port when preferred is occupied', async () => {
-    // Simulate the real-world scenario: preferred port 9335 is taken.
-    const preferred = 9335;
-    const config: PortConfig = { preferred, fallbackRange: [9335, 9350] };
+    // Simulate the real-world scenario: the preferred port is taken. Use an
+    // ephemeral port instead of a hardcoded 9335 — the real Doubao process
+    // (or any app) may legitimately occupy 9335 during a dev run, and binding
+    // it here would fail with EADDRINUSE (environment-dependent flake).
+    const preferred = await getEphemeralPort();
+    const config: PortConfig = { preferred, fallbackRange: [preferred, preferred + 15] };
 
     // Occupy the preferred port.
     const cleanup = await occupyPort(preferred);
@@ -282,16 +285,17 @@ describe('port conflict auto-selection (integration)', () => {
       const result = await allocatePort('traework', config);
       expect(result).not.toBeNull();
       expect(result).not.toBe(preferred);
-      expect(result).toBeGreaterThanOrEqual(9335);
-      expect(result).toBeLessThanOrEqual(9350);
+      expect(result).toBeGreaterThanOrEqual(preferred);
+      expect(result).toBeLessThanOrEqual(preferred + 15);
     } finally {
       cleanup();
     }
   });
 
   it('assigns sequential ports to multiple agents when preferred is occupied', async () => {
-    const preferred = 9335;
-    const config: PortConfig = { preferred, fallbackRange: [9335, 9350] };
+    // Ephemeral preferred port — see the comment in the test above.
+    const preferred = await getEphemeralPort();
+    const config: PortConfig = { preferred, fallbackRange: [preferred, preferred + 15] };
 
     // Occupy the preferred port.
     const cleanup = await occupyPort(preferred);

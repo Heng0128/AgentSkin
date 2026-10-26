@@ -23,7 +23,10 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await rm(tmpDir, { recursive: true, force: true });
+  // maxRetries: renew() writes lease.json right before teardown; on Windows
+  // the indexer/AV transiently holds a handle on the fresh file and a bare
+  // rmdir fails with EPERM (force:true ignores ENOENT only — no retry).
+  await rm(tmpDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 });
 
 /** Create a pool backed by the test's isolated tmpDir. */

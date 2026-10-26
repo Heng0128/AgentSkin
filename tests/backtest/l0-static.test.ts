@@ -51,16 +51,17 @@ describe('L0 — port-config: resolveStartPort', () => {
     expect(resolveStartPort('traework', null)).toBe(0);
   });
 
-  it('returns AGENT_PORT_FALLBACK_MIN for invalid explicit ports', () => {
-    expect(resolveStartPort('traework', -1)).toBe(9222);
-    expect(resolveStartPort('traework', 70000)).toBe(9222);
-    expect(resolveStartPort('traework', 3.14)).toBe(9222);
+  it('returns 0 (random) for invalid explicit ports — no fixed fallback exists', () => {
+    // 2026-09-07 no-fixed-port policy: invalid overrides resolve to random.
+    expect(resolveStartPort('traework', -1)).toBe(0);
+    expect(resolveStartPort('traework', 70000)).toBe(0);
+    expect(resolveStartPort('traework', 3.14)).toBe(0);
   });
 
-  it('returns adapter preferred port when useAdapterPreferredPort=true', () => {
-    expect(resolveStartPort('traework', undefined, true)).toBe(9222);
-    expect(resolveStartPort('qoderwork', null, true)).toBe(9223);
-    expect(resolveStartPort('zcode', undefined, true)).toBe(9227);
+  it('returns 0 (random) for every adapter preferred port — never fixed', () => {
+    expect(resolveStartPort('traework', undefined, true)).toBe(0);
+    expect(resolveStartPort('qoderwork', null, true)).toBe(0);
+    expect(resolveStartPort('zcode', undefined, true)).toBe(0);
   });
 });
 
@@ -117,7 +118,7 @@ describe('L0 — port-config: getAdapterPortConfig', () => {
   it('returns config for known adapters', () => {
     const cfg = getAdapterPortConfig('traework');
     expect(cfg).toBeDefined();
-    expect(cfg?.preferredPort).toBe(9222);
+    expect(cfg?.preferredPort).toBe(0);
   });
 
   it('returns undefined for unknown adapter', () => {
@@ -134,9 +135,11 @@ describe('L0 — port-config: DEFAULT_PORT_CONFIGS integrity', () => {
     expect(DEFAULT_PORT_CONFIGS).toHaveLength(6);
   });
 
-  it('assigns unique sequential preferred ports 9222-9227', () => {
-    const ports = DEFAULT_PORT_CONFIGS.map((c) => c.preferredPort).sort((a, b) => a - b);
-    expect(ports).toEqual([9222, 9223, 9224, 9225, 9226, 9227]);
+  it('sets every preferred port to 0 (random, never fixed)', () => {
+    // 2026-09-07 no-fixed-port policy: Chromium assigns random free ports at
+    // launch; uniqueness comes from the OS bind, not static reservation.
+    const ports = DEFAULT_PORT_CONFIGS.map((c) => c.preferredPort);
+    expect(ports.every((p) => p === 0)).toBe(true);
   });
 
   it('covers all built-in adapters', () => {

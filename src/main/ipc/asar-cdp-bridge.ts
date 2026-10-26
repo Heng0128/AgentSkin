@@ -16,21 +16,17 @@
  *
  * An Electron app only listens on the port it was launched with
  * (`--remote-debugging-port=N`, or `0` → Chromium picks one and writes it to
- * `DevToolsActivePort`). WorkBuddy randomises its port per launch, and Doubao
- * needs the flag passed at all. So the bridge probes rather than trusting
- * config: preferred port first, then a bounded walk of the shared
- * 9222–9357 agent band, stopping at the first port that answers `/json/list`.
+ * `DevToolsActivePort`). All adapters now launch with port `0` (random) per
+ * the no-fixed-port policy, so there is no per-adapter "home" port to probe
+ * first — the bridge scans the shared 9222–9357 agent band, stopping at the
+ * first port that answers `/json/list`.
  */
 
 import { probePortLive } from '../../shared/cdp-discovery';
 import type { AgentId } from '../../shared/types/agent';
 import { connectWithRetry } from '../cdp/cdp-fanout';
 import { listTargets } from '../cdp/cdp-targets';
-import {
-  AGENT_PORT_FALLBACK_MAX,
-  AGENT_PORT_FALLBACK_MIN,
-  getAdapterPortConfig,
-} from '../cdp/port-manager';
+import { AGENT_PORT_FALLBACK_MAX, AGENT_PORT_FALLBACK_MIN } from '../cdp/port-manager';
 import type { JointCdpBridge, JointTargetInfo } from './asar-joint-analysis';
 
 /**
@@ -47,13 +43,16 @@ const MAX_PORT_PROBES = 24;
 const PORT_PROBE_TIMEOUT_MS = 200;
 
 /**
- * Build the port candidate list: the adapter's preferred port first, then the
- * shared fallback band.
+ * Build the port candidate list: the shared 9222–9357 agent band.
+ *
+ * Since the 2026-09-07 random-port policy the adapter preferred port is `0`
+ * (Chromium picks the real port at launch), which cannot be probed — the
+ * adapter no longer contributes a fixed "home" candidate. Discovery relies on
+ * the band scan plus DevToolsActivePort files handled by `resolveLivePort`.
  */
 function portCandidates(agentId: AgentId): number[] {
+  void agentId; // preferred-port hook kept for explicit user overrides
   const candidates: number[] = [];
-  const cfg = getAdapterPortConfig(agentId);
-  if (cfg) candidates.push(cfg.preferredPort);
   for (
     let port = AGENT_PORT_FALLBACK_MIN;
     port <= AGENT_PORT_FALLBACK_MAX && candidates.length < MAX_PORT_PROBES;

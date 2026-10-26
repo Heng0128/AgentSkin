@@ -31,7 +31,7 @@ vi.mock('node:fs/promises', () => ({
   rm: mockFs.rm,
 }));
 
-const { PortLeasePool } = await import('../../../src/main/cdp/port-manager');
+const { PortLeasePool } = await import('../../src/main/cdp/port-manager');
 
 // ---------------------------------------------------------------------------
 // Helpers

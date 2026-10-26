@@ -43,40 +43,50 @@ export interface AdapterPortConfig {
 /**
  * Default port configuration for each built-in adapter.
  *
- * Preferred ports are sequential starting at 9222, giving each adapter a
- * stable "home" port that is easy to recognize in logs. The fallback range
- * is shared across all adapters so that any adapter can claim any free port
- * within [9222, 9357] when its preferred slot is taken.
+ * 2026-09-07 port policy change (user decision): every adapter's preferred
+ * port is `0` — Chromium picks a random free port at launch and publishes it
+ * through the DevToolsActivePort file (discovered via `resolveDebugPorts` /
+ * `resolveLivePort`). Fixed per-adapter ports (9222-9227) are GONE: they were
+ * neither guaranteed free nor unique across restarts, and a stale live-port
+ * cache pointing a foreign adapter at an occupied "home" port caused real
+ * cross-adapter mis-injection (see adapter-match-target.test.ts). Uniqueness
+ * is guaranteed by the OS (Chromium never binds an occupied random port) plus
+ * the identity-verified discovery chain — NOT by static reservation.
+ *
+ * The `fallbackRange` remains as the shared validation band [9222, 9357] for
+ * `isWithinFallbackRange` / `validatePortOverride` and for explicit
+ * user-chosen port overrides; it is no longer used as a launch walk range
+ * because launches start from 0 (random).
  */
 export const DEFAULT_PORT_CONFIGS: readonly AdapterPortConfig[] = Object.freeze([
   {
     adapterId: 'traework',
-    preferredPort: 9222,
+    preferredPort: 0,
     fallbackRange: [AGENT_PORT_FALLBACK_MIN, AGENT_PORT_FALLBACK_MAX],
   },
   {
     adapterId: 'qoderwork',
-    preferredPort: 9223,
+    preferredPort: 0,
     fallbackRange: [AGENT_PORT_FALLBACK_MIN, AGENT_PORT_FALLBACK_MAX],
   },
   {
     adapterId: 'workbuddy',
-    preferredPort: 9224,
+    preferredPort: 0,
     fallbackRange: [AGENT_PORT_FALLBACK_MIN, AGENT_PORT_FALLBACK_MAX],
   },
   {
     adapterId: 'doubao',
-    preferredPort: 9225,
+    preferredPort: 0,
     fallbackRange: [AGENT_PORT_FALLBACK_MIN, AGENT_PORT_FALLBACK_MAX],
   },
   {
     adapterId: 'codex',
-    preferredPort: 9226,
+    preferredPort: 0,
     fallbackRange: [AGENT_PORT_FALLBACK_MIN, AGENT_PORT_FALLBACK_MAX],
   },
   {
     adapterId: 'zcode',
-    preferredPort: 9227,
+    preferredPort: 0,
     fallbackRange: [AGENT_PORT_FALLBACK_MIN, AGENT_PORT_FALLBACK_MAX],
   },
 ]);
@@ -105,8 +115,11 @@ export function getAdapterPortConfig(adapterId: string): AdapterPortConfig | und
  *      — highest priority.
  *   2. `preferredPort === 0` — let Chromium pick a random port (returns 0).
  *   3. When `useAdapterPreferredPort` is true AND the adapter has a config
- *      entry — use the adapter's preferred port as the starting point.
- *   4. `AGENT_PORT_FALLBACK_MIN` (9222) as the last-resort default.
+ *      entry — use the adapter's preferred port. Since the 2026-09-07 random-
+ *      port policy, every built-in adapter's preferred port is `0`, so this
+ *      branch also resolves to random for built-ins; only user-configured
+ *      non-zero ports would walk the fallback band.
+ *   4. `preferredPort == null` (no opt-in) — random port (0).
  */
 export function resolveStartPort(
   adapterId: string | undefined | null,
@@ -137,9 +150,12 @@ export function resolveStartPort(
   // means "random port" (0) — preserves the existing dynamic discovery path.
   if (preferredPort == null) return 0;
 
-  // An explicit but invalid port (non-integer, out of range) still needs a
-  // concrete starting point so callers can walk from the fallback band.
-  return AGENT_PORT_FALLBACK_MIN;
+  // An explicit but invalid port (non-integer, out of range): under the
+  // random-port policy there is no fixed home port to fall back to, so treat
+  // it like "no usable override" → random port (0). The electron-launcher
+  // resolvePort layer rejects invalid explicit ports before calling here;
+  // this branch stays defensive for direct callers.
+  return 0;
 }
 
 /**
@@ -813,7 +829,10 @@ export class PortLeasePool {
   /** Remove a lock directory and its contents (best-effort). */
   private async removeLockDir(lockDir: string): Promise<void> {
     try {
-      await fs.rm(lockDir, { recursive: true, force: true });
+      // maxRetries: Windows transiently holds handles on freshly-written files
+      // (indexer/AV), making rmdir fail with EPERM — force:true only silences
+      // ENOENT, it does NOT retry. Node's built-in retry covers that window.
+      await fs.rm(lockDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
     } catch {
       /* best-effort — ignore */
     }

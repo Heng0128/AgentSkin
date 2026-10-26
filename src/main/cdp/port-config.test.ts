@@ -108,10 +108,12 @@ describe('port-config constants', () => {
     expect(ids).toEqual(['codex', 'doubao', 'qoderwork', 'traework', 'workbuddy', 'zcode']);
   });
 
-  it('assigns unique preferred ports (9222-9227)', () => {
+  it('sets every adapter preferred port to 0 (random, never fixed)', () => {
+    // 2026-09-07 policy: adapters must NOT reserve fixed ports — each launch
+    // asks Chromium for a random free port; uniqueness comes from the OS bind
+    // plus identity-verified discovery, not from static reservation.
     const ports = DEFAULT_PORT_CONFIGS.map((c) => c.preferredPort);
-    expect(new Set(ports).size).toBe(ports.length);
-    expect(ports.sort((a, b) => a - b)).toEqual([9222, 9223, 9224, 9225, 9226, 9227]);
+    expect(ports.every((p) => p === 0)).toBe(true);
   });
 
   it('sets the shared fallback range on every config', () => {
@@ -127,7 +129,7 @@ describe('getAdapterPortConfig', () => {
     const cfg = getAdapterPortConfig('traework');
     expect(cfg).toBeDefined();
     expect(cfg?.adapterId).toBe('traework');
-    expect(cfg?.preferredPort).toBe(9222);
+    expect(cfg?.preferredPort).toBe(0);
   });
 
   it('returns undefined for an unknown adapter', () => {
@@ -161,15 +163,13 @@ describe('resolveStartPort', () => {
     expect(resolveStartPort('zcode', null)).toBe(0);
   });
 
-  it('returns AGENT_PORT_FALLBACK_MIN for explicit but invalid ports', () => {
-    // Out-of-range or non-integer explicit ports still return a concrete
-    // starting point (fallback band) so the caller can walk from there.
-    // (Note: the electron-launcher resolvePort layer will reject these
-    // before calling resolveStartPort, but resolveStartPort itself stays
-    // defensive.)
-    expect(resolveStartPort('traework', -1)).toBe(AGENT_PORT_FALLBACK_MIN);
-    expect(resolveStartPort('traework', 70000)).toBe(AGENT_PORT_FALLBACK_MIN);
-    expect(resolveStartPort('traework', 3.14)).toBe(AGENT_PORT_FALLBACK_MIN);
+  it('returns 0 (random) for explicit but invalid ports — no fixed fallback exists', () => {
+    // Out-of-range or non-integer explicit ports resolve to random under the
+    // no-fixed-port policy. (Note: the electron-launcher resolvePort layer
+    // rejects these before calling resolveStartPort; this stays defensive.)
+    expect(resolveStartPort('traework', -1)).toBe(0);
+    expect(resolveStartPort('traework', 70000)).toBe(0);
+    expect(resolveStartPort('traework', 3.14)).toBe(0);
   });
 
   it('returns 0 (random) for null/undefined when adapter is unknown — backward compatibility', () => {
@@ -180,22 +180,24 @@ describe('resolveStartPort', () => {
     expect(resolveStartPort(null, undefined)).toBe(0);
   });
 
-  it('returns adapter preferred port when useAdapterPreferredPort is set', () => {
-    expect(resolveStartPort('traework', undefined, true)).toBe(9222);
-    expect(resolveStartPort('qoderwork', null, true)).toBe(9223);
-    expect(resolveStartPort('zcode', undefined, true)).toBe(9227);
+  it('returns 0 (random) for adapter preferred port — ports are never fixed', () => {
+    // useAdapterPreferredPort still exists for user-configured overrides, but
+    // every built-in adapter's preferred port is 0 → random.
+    expect(resolveStartPort('traework', undefined, true)).toBe(0);
+    expect(resolveStartPort('qoderwork', null, true)).toBe(0);
+    expect(resolveStartPort('zcode', undefined, true)).toBe(0);
   });
 
-  it('ignores negative preferredPort values (falls through to config)', () => {
-    expect(resolveStartPort('traework', -1)).toBe(9222);
+  it('ignores negative preferredPort values (falls through to config → random)', () => {
+    expect(resolveStartPort('traework', -1)).toBe(0);
   });
 
-  it('ignores out-of-range preferredPort (> 65535)', () => {
-    expect(resolveStartPort('traework', 70000)).toBe(9222);
+  it('ignores out-of-range preferredPort (> 65535, falls through to config → random)', () => {
+    expect(resolveStartPort('traework', 70000)).toBe(0);
   });
 
-  it('validates integer-only preferredPort (non-integer falls through)', () => {
-    expect(resolveStartPort('traework', 3.14)).toBe(9222);
+  it('validates integer-only preferredPort (non-integer falls through → random)', () => {
+    expect(resolveStartPort('traework', 3.14)).toBe(0);
   });
 });
 
