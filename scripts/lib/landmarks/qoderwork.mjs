@@ -4,8 +4,10 @@
  * # qoderwork landmarks — stable DOM anchors for QoderWork.
  *
  * PROBE-VERIFIED selectors from the CSS generators and THEME_SPEC.md.
- * QoderWork uses an antd-based layout with .agents-layout-root as the
- * primary structural container.
+ * 2026-09-08 probe correction: NOT antd-based — .ant-* selectors hit zero on
+ * the live build; QoderWork ships its own agents-* class system on a
+ * Tailwind v4 --color-* token base (tokens layer 108/108 verified).
+ * QoderWork uses .agents-layout-root as the primary structural container.
  */
 
 /** @type {{ required: { name: string, selectors: string[] }[], recommended: { name: string, selectors: string[] }[] }} */

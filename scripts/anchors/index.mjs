@@ -53,10 +53,12 @@ const codex = {
   sidebar: 'aside.app-shell-left-panel',
   /** Sidebar scroll region. PROBE: data-app-action-sidebar-scroll. */
   sidebarScroll: '[data-app-action-sidebar-scroll]',
-  /** Top toolbar (fixed header over art). PROBE: header.pointer-events-none.fixed.z-30. */
-  header: 'header.pointer-events-none.fixed',
-  /** Main surface. PROBE: main._MainContentSurface_<hash> (stable prefix, 1202x878). */
-  main: 'main[class*="_MainContentSurface_"]',
+  /** Top toolbar (fixed header over art). PROBE + upstream contract 26.715→26.818. */
+  header:
+    'header:is(.app-header-tint, [data-app-shell-header-edge-scroll], [class*="_Header_"]), header.pointer-events-none.fixed',
+  /** Main surface. PROBE: main._MainContentSurface_<hash> (stable prefix, 1202x878);
+   *  upstream contract adds .main-surface legacy class + data-app-shell-main-surface. */
+  main: 'main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"])',
   /** Sidebar item rows are exact button.sidebar-item. */
   navItem: 'button.sidebar-item',
   /** Thread rows. PROBE: data-app-action-sidebar-thread-row. */

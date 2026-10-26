@@ -5,7 +5,7 @@
 // Covers: argument parsing, static syntax validation, JSON output format,
 // threshold logic, and agent validation.
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { runPreflight } from './selector-preflight.mjs';
 
 // ---------------------------------------------------------------------------

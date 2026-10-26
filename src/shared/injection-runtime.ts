@@ -260,6 +260,12 @@ export const CLEAR_ADAPTERS_BODY = [
   '    if (window[m].progressiveInterval) clearInterval(window[m].progressiveInterval);',
   '    if (window[m].sheetGuardInterval) clearInterval(window[m].sheetGuardInterval);',
   '    if (window[m].sheetPoll) clearInterval(window[m].sheetPoll);',
+  // 2026-09-08 (audit W4/W5): adapters may monkey-patch host prototypes
+  // (workbuddy localStorage / serviceWorker.register) and start a page-scope
+  // patrol. Both expose inverse handles on the marker; call them before
+  // deleting it so restore leaves the page exactly as it was found.
+  '    if (window[m].storageRestore) { try { window[m].storageRestore(); } catch (e) {} }',
+  '    if (window[m].patrolStop) { try { window[m].patrolStop(); } catch (e) {} }',
   '    delete window[m];',
   '  }',
   '}',
@@ -481,6 +487,9 @@ export function buildAtomicClearExpression(): string {
           try { if (window[_m].bgObserver) window[_m].bgObserver.disconnect(); } catch (e) {}
           try { if (window[_m].interval) clearInterval(window[_m].interval); } catch (e) {}
           try { if (window[_m].selfHeal && window[_m].selfHeal.stop) window[_m].selfHeal.stop(); } catch (e) {}
+          // 2026-09-08 (audit W4/W5) — mirror of CLEAR_ADAPTERS_BODY hooks.
+          try { if (window[_m].storageRestore) window[_m].storageRestore(); } catch (e) {}
+          try { if (window[_m].patrolStop) window[_m].patrolStop(); } catch (e) {}
           delete window[_m];
         }
       }

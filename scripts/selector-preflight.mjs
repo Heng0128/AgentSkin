@@ -56,6 +56,33 @@ function loadContract() {
  * @param {string} agentId
  * @returns {string[]} Individual CSS selector strings
  */
+/**
+ * Split a selector string on TOP-LEVEL commas only. Commas inside `:is(...)`,
+ * `:not(...)` or `[...]` attribute groups belong to the selector, not to the
+ * fallback-chain separator. A naive `split(',')` mangles `:is(a, b)` into
+ * invalid fragments (unbalanced parens) that the syntax check then counts as
+ * "invalid", dragging an agent's hit rate below its threshold.
+ * @param {string} str
+ * @returns {string[]}
+ */
+function splitTopLevelCommas(str) {
+  const out = [];
+  let depth = 0;
+  let cur = '';
+  for (const ch of str) {
+    if (ch === '(' || ch === '[') depth++;
+    else if (ch === ')' || ch === ']') depth--;
+    if (ch === ',' && depth === 0) {
+      out.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
 function extractSelectors(contract, agentId) {
   const agentSelectors = contract.selectors?.[agentId];
   if (!agentSelectors) return [];
@@ -63,7 +90,7 @@ function extractSelectors(contract, agentId) {
   const result = [];
   for (const entry of Object.values(agentSelectors)) {
     if (!entry.selector) continue;
-    for (const sel of entry.selector.split(',')) {
+    for (const sel of splitTopLevelCommas(entry.selector)) {
       const trimmed = sel.trim();
       if (trimmed) result.push(trimmed);
     }
@@ -156,7 +183,7 @@ async function tryLoadRegistryAnalysis() {
   try {
     // Use file:// URL import path resolution to the registry module
     const registryUrl = resolve(__dirname, '../src/engine/src/runtime/selectivity-registry.mjs');
-    const mod = await import('file://' + registryUrl);
+    const mod = await import(`file://${registryUrl}`);
     if (mod.listRegisteredAgents && mod.listSemanticNames) {
       const registryAgentIds = mod.listRegisteredAgents();
       const registryKeys = {};

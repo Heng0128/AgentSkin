@@ -662,9 +662,11 @@ export function shellStructureCss(host, t, agent = 'generic') {
   const sidebarMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 22%, transparent)`;
   const popoverBg = `color-mix(in srgb, ${c.surfaceElevated} 94%, transparent)`;
 
-  // PROBE-VERIFIED sidebar anchors per agent (2026-08-23).
+  // PROBE-VERIFIED sidebar anchors per agent (2026-08-23). Codex selector
+  // contract additionally synced with upstream Codex-Dream-Skin selectors.json
+  // (26.715 → 26.818, dual-platform).
   const SIDEBAR_ROOT = {
-    codex: '.app-shell-left-panel',
+    codex: 'aside.app-shell-left-panel',
     zcode: '[data-workspace-sidebar-panel="true"]',
   };
   // PROBE-VERIFIED sidebar item hover + active anchors per agent.
@@ -695,9 +697,11 @@ export function shellStructureCss(host, t, agent = 'generic') {
   const activeScoped = itemActive ? scopeAll(itemActive) : '';
 
   // Composer / input anchor (kept generic — contenteditable is a standard role).
+  // Codex: 26.814+ migrated the shell to the _ComposerLayoutRoot_ CSS Module
+  // with stable data-composer-* attributes (upstream contract, 26.715→26.818).
   const composerSel =
     agent === 'codex'
-      ? '.composer-surface-chrome, [class*="_multilineSurface_"]'
+      ? ':is(.composer-surface-chrome, [class*="_ComposerLayoutRoot_"], [data-composer-surface-variant][data-composer-radius-variant]), [class*="_multilineSurface_"]'
       : '[contenteditable="true"], textarea';
   const composerScoped = scopeAll(composerSel);
 

@@ -79,6 +79,14 @@ const STEPS = [
     args: [path.join(SCRIPTS_DIR, 'check-css-scope.mjs')],
   },
   {
+    // Compares source class references against the BUILT stylesheet, so it
+    // can only bite when out/ is fresh. It SKIPs (exit 0) without an artifact;
+    // run `npm run check:css-classes` to force a build-then-verify pass.
+    name: 'css-classes',
+    cmd: 'node',
+    args: [path.join(SCRIPTS_DIR, 'check-css-classes.mjs')],
+  },
+  {
     name: 'defect-doc',
     cmd: 'node',
     args: [path.join(SCRIPTS_DIR, 'generate-defect-fixes-doc.mjs'), '--verify'],
@@ -87,6 +95,20 @@ const STEPS = [
     name: 'orphan-tests',
     cmd: 'node',
     args: [path.join(SCRIPTS_DIR, 'check-orphan-tests.mjs')],
+  },
+  {
+    // C14 — codex 引擎选择器必须溯源到 engines/codex/selectors.contract.json
+    // （双向：扫描锚点 ⊄ 合同 → FAIL；合同条目 0 消费 → FAIL）。
+    name: 'selector-provenance',
+    cmd: 'node',
+    args: [path.join(SCRIPTS_DIR, 'check-selector-provenance.mjs')],
+  },
+  {
+    // C15 — semantic-selectors.json 每条候选选择器必须结构可解析
+    // （括号/引号平衡 + 逗号卫生；2026-09-08 审计 S1 缺括号 bug 的自动化防线）。
+    name: 'selector-parsability',
+    cmd: 'node',
+    args: [path.join(SCRIPTS_DIR, 'check-selector-parsability.mjs')],
   },
 ];
 

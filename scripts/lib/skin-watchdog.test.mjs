@@ -258,14 +258,18 @@ describe('isAppRunning', () => {
     expect(result).toBe(false);
   });
 
-  it('delegates to isProcessRunning with the mapped process name', async () => {
+  it('delegates to isProcessRunning with the mapped process name', { timeout: 30000 }, async () => {
     // This test verifies the mapping logic without requiring actual process.
     // On CI the process is almost certainly not running, so we expect false.
+    // 2026-09-08: explicit 30s timeout — this shells out to the real OS and
+    // took 4.9s standalone with the six target apps running, blowing the
+    // 5s default under full-suite parallel load (flaky FAIL in npm test).
     const result = await isAppRunning('traework');
     expect(typeof result).toBe('boolean');
   });
 
-  it('does not throw for any built-in agent', async () => {
+  it('does not throw for any built-in agent', { timeout: 30000 }, async () => {
+    // Six sequential real-OS process probes — same load-sensitivity note as above.
     const agents = ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'];
     for (const id of agents) {
       await expect(isAppRunning(id)).resolves.toBeTypeOf('boolean');

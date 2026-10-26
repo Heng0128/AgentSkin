@@ -295,6 +295,37 @@ function escapeRegExp(s) {
 }
 
 /**
+ * 全局替换函数体内的重命名标识符引用。
+ *
+ * 不能用 `\b` 词边界：`\b` 只在 \w 与非 \w 之间成立，而 `$` 不属于 \w，
+ * 因此 `\bcolorDistance$1\b` 中的尾锚要求 `$1` 后面紧跟非词字符——当
+ * bundler 又叠加了一层重命名（如 `$1` → `$12`，vitest/esbuild 链上真实
+ * 发生过）时，`colorDistance$1` 作为 `colorDistance$12` 的前缀依然能被
+ * 匹配，但其后的 `2` 不构成边界，替换静默失败 → 浏览器端 ReferenceError。
+ *
+ * 这里改为要求匹配后必须紧跟「非标识符续字符」（非 [A-Za-z0-9_$]），
+ * 即标识符的真正结尾；同时用已消费的匹配文本回填，避免回溯改写。
+ *
+ * @param {string} src
+ * @param {string} actualName
+ * @param {string} desiredName
+ * @returns {string}
+ */
+function replaceRenamedRefs(src, actualName, desiredName) {
+  // 1) 精确替换实际名（要求其后不是标识符续字符，即名字真正结束）。
+  const exact = new RegExp(`${escapeRegExp(actualName)}(?![A-Za-z0-9_$])`, 'g');
+  let out = src.replace(exact, desiredName);
+  // 2) 折叠期望名的所有 `$` 后缀变体（colorDistance$1 / $12 / $foo）。
+  //    场景：bundler 对「函数表达式自身名」与「模块级绑定」分别重命名——
+  //    定义处变成 colorDistance$12，而引用处仍是旧名 colorDistance$1。
+  //    renameMap 只记录定义处的实际名，无法覆盖引用处的旧后缀名；
+  //    统一按「期望名+$后缀」折叠才能全部命中。后缀后同样要求标识符结束，
+  //    避免误伤 colorDistanceFoo 这类无关标识符。
+  const suffixed = new RegExp(`${escapeRegExp(desiredName)}\\$[A-Za-z0-9_$]+(?![A-Za-z0-9_$])`, 'g');
+  return out.replace(suffixed, desiredName);
+}
+
+/**
  * 序列化纯函数，供浏览器端表达式内嵌（与 Node 侧逻辑同源，避免漂移）。
  *
  * 显式命名赋值，避免 bundler 重命名（如 colorDistance → colorDistance$1）导致
@@ -319,9 +350,9 @@ export function buildSerializedFns(entries) {
     let src = fn.toString();
     for (const [actual, desired] of renameMap) {
       if (actual !== desired) {
-        // 全局替换函数体内的 renamed 引用；actual 经 escapeRegExp 避免
-        // bundler 后缀（如 $1）被当作正则元字符。
-        src = src.replace(new RegExp(`\\b${escapeRegExp(actual)}\\b`, 'g'), desired);
+        // 全局替换函数体内的 renamed 引用；actual 经 escapeRegExp，尾随
+        // 用负向预查要求标识符真正结束（见 replaceRenamedRefs 注释）。
+        src = replaceRenamedRefs(src, actual, desired);
       }
     }
     return `const ${desiredName} = ${src};`;

@@ -17,7 +17,9 @@ export const traeworkLandmarks = {
   required: [
     {
       name: 'solo-shell',
-      selectors: ['.panel-container', '.solo-lite-layout', '.solo-lite'],
+      // 2026-09-08 probe: .solo-lite-layout 零命中（anchors 注册表 2026-08-23 亦判死）；
+      // 承载为 .panel-container + .solo-lite。
+      selectors: ['.panel-container', '.solo-lite'],
     },
     {
       name: 'host-root',
@@ -38,7 +40,8 @@ export const traeworkLandmarks = {
     },
     {
       name: 'panel-content',
-      selectors: ['.panel-content', '.solo-lite-panel-container'],
+      // 2026-09-08 probe: .solo-lite-panel-container 零命中（注册表同判 dead）。
+      selectors: ['.panel-content'],
     },
   ],
 };

@@ -48,7 +48,9 @@ function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl
     root.style.setProperty("--dream-project-prefix", cssString(copy.projectPrefix));
     root.style.setProperty("--dream-project-label", cssString(copy.projectLabel));
 
-    const shellMain = document.querySelector("main[class*='MainContentSurface']");
+    const shellMain = document.querySelector(
+      "main:is(.main-surface, [data-app-shell-main-surface], [class*='_MainContentSurface_'])",
+    );
     const home = document.querySelector('[role="main"]:has([data-testid="home-icon"])');
     for (const candidate of document.querySelectorAll('[role="main"].dream-home')) {
       if (candidate !== home) candidate.classList.remove("dream-home");

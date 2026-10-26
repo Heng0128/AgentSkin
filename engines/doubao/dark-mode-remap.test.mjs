@@ -99,9 +99,11 @@ describe('getDarkModeTokenOverrides', () => {
     // semantic variable" — which is guaranteed light in dark themes by the
     // agentskin theme engine. --agentskin-text is the primary light-bg text
     // token and IS high-luminance in any dark theme (WCAG AA compliant).
+    // 2026-09-08 (audit): --agentskin-text-muted was a broken reference — the
+    // canonical 14-token name is --agentskin-muted (see themes/*/palette.css).
     const tokens = getDarkModeTokenOverrides();
     expect(tokens['--dbx-text-primary']).toBe('var(--agentskin-text)');
-    expect(tokens['--dbx-text-secondary']).toBe('var(--agentskin-text-muted)');
+    expect(tokens['--dbx-text-secondary']).toBe('var(--agentskin-muted)');
   });
 
   it('dark background tokens reference dark theme variables (low luminance source)', () => {
@@ -127,9 +129,16 @@ describe('getDarkModeElementOverrides', () => {
   });
 
   it('contains sidebar account selector coverage', () => {
+    // 2026-09-08 (audit D3): the fabricated exact class `.dbx-account-info`
+    // was removed (zero occurrences in verified Doubao DOM evidence);
+    // substring candidates remain as unverified fallbacks.
     const css = getDarkModeElementOverrides();
-    expect(css).toContain('.dbx-account-info');
-    expect(css).toContain('account');
+    expect(css).toContain('[class*="account"]');
+    expect(css).not.toContain('.dbx-account-info');
+    expect(css).not.toContain('.dbx-history-item');
+    expect(css).not.toContain('.dbx-titlebar');
+    expect(css).not.toContain('.dbx-suggestion-card');
+    expect(css).not.toContain('.dbx-composer-actions');
   });
 
   it('contains search input selectors', () => {
@@ -235,6 +244,40 @@ describe('isDarkModePreferred', () => {
     isDarkModePreferred();
     expect(mockMatchMedia).toHaveBeenCalledWith('(prefers-color-scheme: dark)');
   });
+
+  // 2026-09-08 (audit D5): host-declared appearance must beat the system
+  // media query — the app can be pinned light while the OS is dark (and
+  // vice versa). doubao-skin's verified appMode() reads html[data-theme] /
+  // body[theme-mode] first; we mirror that priority.
+  it('prefers host data-theme=light over a dark system media query', () => {
+    globalThis.window = { matchMedia: vi.fn().mockReturnValue({ matches: true }) };
+    vi.stubGlobal('document', {
+      documentElement: { getAttribute: (a) => (a === 'data-theme' ? 'light' : null) },
+      body: null,
+    });
+    expect(isDarkModePreferred()).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it('prefers host data-theme=dark over a light system media query', () => {
+    globalThis.window = { matchMedia: vi.fn().mockReturnValue({ matches: false }) };
+    vi.stubGlobal('document', {
+      documentElement: { getAttribute: (a) => (a === 'data-theme' ? 'dark' : null) },
+      body: null,
+    });
+    expect(isDarkModePreferred()).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+  it('reads body theme-mode when html carries no appearance attribute', () => {
+    globalThis.window = { matchMedia: vi.fn().mockReturnValue({ matches: false }) };
+    vi.stubGlobal('document', {
+      documentElement: { getAttribute: () => null },
+      body: { getAttribute: (a) => (a === 'theme-mode' ? 'dark' : null) },
+    });
+    expect(isDarkModePreferred()).toBe(true);
+    vi.unstubAllGlobals();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -289,7 +332,7 @@ describe('getFullDarkModeCss', () => {
   it('returns combined token + element CSS', () => {
     const css = getFullDarkModeCss();
     expect(css).toContain('--dbx-text-primary');
-    expect(css).toContain('.dbx-account-info');
+    expect(css).toContain('[class*="account"]');
     expect(css).toContain('history-item');
   });
 

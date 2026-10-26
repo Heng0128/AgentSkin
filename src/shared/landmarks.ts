@@ -26,13 +26,25 @@ export const DEFAULT_LANDMARKS: Record<AgentId, LandmarkDefinition[]> = {
   codex: [
     {
       name: 'main-content',
-      selectors: ["main[class*='MainContentSurface']", '#root', 'main', "[role='main']"],
+      // Selector contract synced with upstream Codex-Dream-Skin selectors.json
+      // (verified 26.715 → 26.818): keep legacy anchors, append stable
+      // attributes / CSS-Module prefixes, never match a full hash. Note
+      // [role='main'] exists ONLY on the home route, so it stays last as a
+      // degraded fallback, not a route-agnostic anchor.
+      selectors: [
+        "main:is(.main-surface, [data-app-shell-main-surface], [class*='_MainContentSurface_'])",
+        "main[class*='MainContentSurface']",
+        '#root',
+        'main',
+        "[role='main']",
+      ],
       required: true,
       routeHint: '/',
     },
     {
       name: 'composer',
       selectors: [
+        ":is(.composer-surface-chrome, [class*='_ComposerLayoutRoot_'], [data-composer-surface-variant][data-composer-radius-variant])",
         '.composer-surface-chrome',
         "[class*='composer-surface']",
         "[class*='_multilineSurface_']",
@@ -40,7 +52,21 @@ export const DEFAULT_LANDMARKS: Record<AgentId, LandmarkDefinition[]> = {
       required: false,
       routeHint: '/',
     },
-    { name: 'sidebar', selectors: ['.app-shell-left-panel'], required: false, routeHint: '/' },
+    {
+      name: 'sidebar',
+      selectors: ['aside.app-shell-left-panel', '.app-shell-left-panel'],
+      required: false,
+      routeHint: '/',
+    },
+    {
+      name: 'header',
+      selectors: [
+        "header:is(.app-header-tint, [data-app-shell-header-edge-scroll], [class*='_Header_'])",
+        'header',
+      ],
+      required: false,
+      routeHint: '/',
+    },
   ],
   workbuddy: [
     {

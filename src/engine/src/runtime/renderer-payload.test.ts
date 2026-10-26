@@ -73,9 +73,12 @@ describe('buildStyleSamplingSnippet', () => {
   });
 
   it('keeps and prefers the controlling shell for codex composer (A-03)', () => {
-    // codex composer 有独立受控壳体 .composer-surface-chrome → 保留采样并优先采样它。
+    // codex composer 有独立受控壳体（26.814+ 迁移至 _ComposerLayoutRoot_ CSS
+    // Module，上游合同 26.715→26.818）→ 保留采样并优先采样它。
     const snippet = buildStyleSamplingSnippet({ id: 'codex' });
-    expect(snippet).toContain('"controllingSelector":".composer-surface-chrome"');
+    expect(snippet).toContain(
+      '"controllingSelector":":is(.composer-surface-chrome, [class*=\'_ComposerLayoutRoot_\'], [data-composer-surface-variant][data-composer-radius-variant])"',
+    );
     expect(snippet).toContain('"name":"composer"');
   });
 

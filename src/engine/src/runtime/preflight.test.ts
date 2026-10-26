@@ -17,11 +17,15 @@ import {
   rebindSnapshot,
   resolveBindingIndex,
 } from './preflight.mjs';
+import { getSelectors } from './selectivity-registry.mjs';
 
 const CODE = 'codex';
-// codex.root 的真实 fallback 链（selectivity-registry.mjs:100-110）
-const ROOT_PRIMARY = 'main.main-surface';
-const ROOT_FALLBACK = 'main';
+// codex.root 的真实 fallback 链 —— 直接从注册表取，避免链序漂移（WIP 曾在链首
+// 插入新的主选择器，把原有 index 整体后移一位）。index 0 = primary，index 1 =
+// 首个 fallback。makeDoc 按「真实选择器字符串」建表，故必须与注册表保持一致。
+const rootChain = getSelectors(CODE, 'root') ?? [];
+const ROOT_PRIMARY = rootChain[0];
+const ROOT_FALLBACK = rootChain[1];
 
 function makeNode() {
   // 非零尺寸且无 getComputedStyle → isVisible 判可见

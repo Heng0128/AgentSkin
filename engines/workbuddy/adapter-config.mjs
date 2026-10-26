@@ -39,6 +39,12 @@
     }
   }
 
+  // ── Host-patch registry (audit W4, 2026-09-08) ──
+  // Every monkey-patch of a host prototype must register an inverse here so
+  // the restore chain (injection-runtime CLEAR_ADAPTERS_BODY → marker
+  // .storageRestore) can leave the page exactly as it was found.
+  const HOST_PATCHES = [];
+
   function initThemeStorageAwareness() {
     const themeKeyPatterns = [
       /theme/i, /dark/i, /light/i, /appearance/i, /color-scheme/i,
@@ -58,18 +64,26 @@
       try { themeSnapshots[key] = localStorage.getItem(key); } catch {}
     }
 
-    window.addEventListener('storage', (e) => {
+    const storageHandler = (e) => {
       if (e.key && themeKeys.includes(e.key) && e.newValue !== themeSnapshots[e.key]) {
         themeSnapshots[e.key] = e.newValue;
         if (typeof window.__agentskin_workbuddy_force_reinject === 'function') {
           window.__agentskin_workbuddy_force_reinject();
         }
       }
-    });
+    };
+    if (!window.__agentskin_workbuddy_storage_hooked) {
+      window.addEventListener('storage', storageHandler);
+      window.__agentskin_workbuddy_storage_hooked = true;
+      HOST_PATCHES.push(() => {
+        window.removeEventListener('storage', storageHandler);
+        window.__agentskin_workbuddy_storage_hooked = false;
+      });
+    }
 
     const originalSetItem = localStorage.setItem;
-    if (!originalSetItem.__agentskin_patched) {
-      localStorage.setItem = function (key, value) {
+    if (!originalSetItem.__agentskin_patch) {
+      const patched = function (key, value) {
         const result = originalSetItem.call(this, key, value);
         if (themeKeys.includes(key) && value !== themeSnapshots[key]) {
           themeSnapshots[key] = value;
@@ -79,21 +93,33 @@
         }
         return result;
       };
-      localStorage.setItem.__agentskin_patched = true;
+      patched.__agentskin_patch = true;
+      localStorage.setItem = patched;
+      HOST_PATCHES.push(() => {
+        if (localStorage.setItem === patched) localStorage.setItem = originalSetItem;
+      });
     }
   }
 
   function initSWProtection() {
     if (navigator.serviceWorker) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
+      const controllerHandler = () => {
         if (typeof window.__agentskin_workbuddy_force_reinject === 'function') {
           window.__agentskin_workbuddy_force_reinject();
         }
-      });
+      };
+      if (!window.__agentskin_workbuddy_sw_hooked) {
+        navigator.serviceWorker.addEventListener('controllerchange', controllerHandler);
+        window.__agentskin_workbuddy_sw_hooked = true;
+        HOST_PATCHES.push(() => {
+          navigator.serviceWorker.removeEventListener('controllerchange', controllerHandler);
+          window.__agentskin_workbuddy_sw_hooked = false;
+        });
+      }
 
       const originalRegister = navigator.serviceWorker.register;
-      if (originalRegister && !originalRegister.__agentskin_patched) {
-        navigator.serviceWorker.register = function (...args) {
+      if (originalRegister && !originalRegister.__agentskin_patch) {
+        const patchedRegister = function (...args) {
           return originalRegister.apply(this, args).then((registration) => {
             if (registration.active && typeof window.__agentskin_workbuddy_force_reinject === 'function') {
               window.__agentskin_workbuddy_force_reinject();
@@ -104,12 +130,25 @@
             throw err;
           });
         };
-        navigator.serviceWorker.register.__agentskin_patched = true;
+        patchedRegister.__agentskin_patch = true;
+        navigator.serviceWorker.register = patchedRegister;
+        HOST_PATCHES.push(() => {
+          if (navigator.serviceWorker.register === patchedRegister) {
+            navigator.serviceWorker.register = originalRegister;
+          }
+        });
       }
     }
 
     if (window.caches) clearSWCaches();
     initThemeStorageAwareness();
+  }
+
+  function restoreHostPatches() {
+    for (let i = HOST_PATCHES.length - 1; i >= 0; i--) {
+      try { HOST_PATCHES[i](); } catch (e) { /* best-effort */ }
+    }
+    HOST_PATCHES.length = 0;
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -222,7 +261,10 @@
     gridViewItem: ':is([class*="_gridViewItem_"], [class*="_gridView_"] > div > div)',
     mainArea: ':is([class*="_mainArea_"], .teams-main-content, .chat-container, main, [role="main"])',
     sidebar: ':is(.conversation-sidebar, .sidebar-next, aside, nav)',
-    composer: ':is([contenteditable="true"], textarea, [role="textbox"]),',
+    // 2026-09-07 CDP probe fix: the trailing comma inside this selector string
+    // (":is(...),") made querySelectorAll throw SYNTAX_ERROR on every call —
+    // the composer key never matched anything.
+    composer: ':is([contenteditable="true"], textarea, [role="textbox"])',
     conversationList: ':is(.conversation-list, .chat-container, .wb-cb-chat, .chat-main, .message-list, .main-content, .main-content--welcome)',
     dropdown: ':is([class*="_dropdownRoot_"], [class*="_dropdown_"][class*="view-selector"])',
     overlayDialog: '[role="dialog"]',
@@ -273,6 +315,7 @@
     deepConfig,
     intervals: { selfHeal: 2000, sheetGuard: 1500, reinjectDebounce: 100, progressiveRetry: 2000 },
     applyHeuristicOverride,
+    restoreHostPatches,
     onReinject: () => { applyHeuristicStyles(); },
     onHealthCheck: (report) => {
       if (!report) return;

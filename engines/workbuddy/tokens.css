@@ -260,6 +260,85 @@ html.agentskin-host-workbuddy body {
   --cb-icon-button-hover-background: color-mix(in srgb, var(--wb-accent) 12%, transparent) !important;
 }
 
+/* ===== Probe-verified native families (2026-09-08 live CDP probe) =====
+   The 2026-09-08 read-only probe (test-output/probe-live-2026-09-08.json)
+   enumerated every native custom property declared on this WorkBuddy build.
+   Findings that reshape earlier blocks:
+   • Most --cb-chat-*/--cb-markdown-*/--cb-input-*/--cb-editor-*/--cb-tab-*/
+     --cb-badge-*/--cb-notification-* names above are SPECULATIVE (20/22 not
+     declared natively on this build). They are kept for version drift but the
+     real names below are the ones that actually take effect here.
+   • --sc-ui-* is absent on this build (real --sc-* set is 12 different names);
+     kept for version drift, real set mapped below.
+   • --cr-* is a full parallel theme system (233 declarations) driving the
+     code-workspace surfaces/borders — previously untouched by any layer.
+   Only name-unambiguous surface/text/border/accent tokens are mapped; syntax
+   highlighting (--cr-code-*) and semantic hues stay native (palette policy). */
+html.agentskin-host-workbuddy body {
+  /* Real input kit (replaces speculative --cb-input-bg/-border/-text) */
+  --cb-input-background: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
+  --cb-input-foreground: var(--wb-text) !important;
+  --cb-input-placeholder: color-mix(in srgb, var(--wb-text) 50%, transparent) !important;
+  --cb-input-border-color: color-mix(in srgb, var(--wb-accent) 25%, transparent) !important;
+  --cb-input-border-primary: color-mix(in srgb, var(--wb-accent) 25%, transparent) !important;
+  --cb-input-focus-border-color: var(--wb-accent) !important;
+  --cb-input-active-border: var(--wb-accent) !important;
+  --cb-input-hover-bg: color-mix(in srgb, var(--wb-accent) 6%, transparent) !important;
+  --cb-input-button-background: var(--wb-accent) !important;
+  --cb-input-button-foreground: var(--agentskin-bg) !important;
+  --cb-input-area-container-secondary: color-mix(in srgb, var(--wb-surface) 78%, var(--wb-accent) 10%) !important;
+
+  /* Real markdown code-block kit (replaces speculative --cb-markdown-code-bg) */
+  --cb-markdown-code-block-bg: var(--agentskin-code-bg, var(--wb-surface)) !important;
+  --cb-markdown-code-block-header-bg: color-mix(in srgb, var(--agentskin-surface) 95%, var(--agentskin-bg)) !important;
+  --cb-markdown-code-block-border: color-mix(in srgb, var(--wb-accent) 14%, transparent) !important;
+  --cb-markdown-code-bg-color: var(--agentskin-code-bg, var(--wb-surface)) !important;
+  --cb-markdown-code-block-action-fg: color-mix(in srgb, var(--wb-text) 65%, transparent) !important;
+  --cb-markdown-code-block-action-hover-bg: color-mix(in srgb, var(--wb-accent) 12%, transparent) !important;
+  --cb-markdown-code-block-title-fg: color-mix(in srgb, var(--wb-text) 80%, transparent) !important;
+  --cb-markdown-table-border-color: color-mix(in srgb, var(--agentskin-border) 60%, transparent) !important;
+  --cb-markdown-table-cell-bg: color-mix(in srgb, var(--wb-surface) 60%, transparent) !important;
+  --cb-markdown-table-header-bg: color-mix(in srgb, var(--agentskin-surface) 70%, transparent) !important;
+  --cb-markdown-border-color: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --cb-markdown-symbol-background: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --cb-markdown-symbol-color: var(--wb-accent) !important;
+  --cb-markdown-symbol-hover-background: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --cb-send-button-loading-bg: color-mix(in srgb, var(--wb-accent) 30%, transparent) !important;
+  --cb-send-button-loading-color: var(--wb-accent) !important;
+  --cb-chat-menu-main-text: var(--wb-text) !important;
+
+  /* Real --sc-* kit (12 names on this build; semantic hues stay native) */
+  --sc-surface: var(--wb-surface) !important;
+  --sc-surface-alt: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
+  --sc-body: var(--wb-text) !important;
+  --sc-title: var(--wb-text) !important;
+  --sc-muted: color-mix(in srgb, var(--wb-text) 55%, transparent) !important;
+  --sc-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --sc-border-soft: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --sc-hover: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+
+  /* --cr-* code-workspace parallel system (conservative subset) */
+  --cr-accent: var(--wb-accent) !important;
+  --cr-accent-secondary: var(--agentskin-secondary, var(--wb-accent)) !important;
+  --cr-brand-primary: var(--wb-accent) !important;
+  --cr-bg-canvas: var(--agentskin-bg) !important;
+  --cr-bg-elevated: var(--agentskin-surface-elevated) !important;
+  --cr-bg-hover: color-mix(in srgb, var(--wb-text) 6%, transparent) !important;
+  --cr-bg-code: var(--agentskin-code-bg, var(--wb-surface)) !important;
+  --cr-bg-code-header: color-mix(in srgb, var(--agentskin-surface) 95%, var(--agentskin-bg)) !important;
+  --cr-bg-code-inline: color-mix(in srgb, var(--agentskin-surface) 85%, var(--agentskin-bg)) !important;
+  --cr-code-fg: var(--agentskin-code-fg, var(--wb-text)) !important;
+  --cr-bg-input-inset: color-mix(in srgb, var(--wb-surface) 82%, transparent) !important;
+  --cr-border-default: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --cr-border-elevated: color-mix(in srgb, var(--wb-accent) 25%, transparent) !important;
+  --cr-border-strong: color-mix(in srgb, var(--wb-accent) 40%, transparent) !important;
+  --cr-badge-text: var(--agentskin-bg) !important;
+  --cr-badge-bg: var(--wb-accent) !important;
+  --cr-chip-hover-bg: color-mix(in srgb, var(--wb-accent) 12%, transparent) !important;
+  --cr-avatar-fallback-fg: var(--wb-text) !important;
+  --cr-avatar-fallback-bg: color-mix(in srgb, var(--wb-surface) 80%, var(--wb-accent) 10%) !important;
+}
+
 /* ===== sidebar-next / detail-panel shadowing patch =====
    WorkBuddy's newer sidebar design re-declares --cb-* directly on
    .sidebar-next / .sidebar-next-main-header / .detail-panel /

@@ -111,12 +111,17 @@
   // ═══════════════════════════════════════════════════════════
   // Selector map — multi-version strategy with data-testid >
   // role > stable class > CSS Modules prefix
+  // Contract synced with upstream Codex-Dream-Skin selectors.json
+  // (2026-08-27, verified 26.715 → 26.818 dual-platform): keep legacy
+  // anchors, append stable attributes / CSS-Module prefixes, never match
+  // a full hash. [role=main] exists ONLY on the home route.
   // ═══════════════════════════════════════════════════════════
   const SELECTORS = {
     rootContainer: 'main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"])',
     shellMain: 'main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"])',
     leftPanel: 'aside.app-shell-left-panel',
     headerTint: 'header:is(.app-header-tint, [data-app-shell-header-edge-scroll], [class*="_Header_"])',
+    mainContentTopFade: ':is(.app-shell-main-content-top-fade, [data-app-shell-main-content-top-fade], [class*="_MainContentTopFade_"])',
     homeIcon: '[data-testid="home-icon"]',
     composerChrome: ':is(.composer-surface-chrome, [class*="_ComposerLayoutRoot_"], [data-composer-surface-variant][data-composer-radius-variant])',
     composerToolbar: ':is(.composer-surface-chrome [class*="_footer_"], [class*="_ComposerLayoutRoot_"] [class*="_ComposerLayoutFooter_"], [data-composer-surface-variant][data-composer-radius-variant] :is([data-composer-footer-responsive], [class*="_ComposerLayoutFooter_"], [class*="_footer_"]))',
@@ -279,19 +284,49 @@
     } catch (_) { /* silent */ }
   }
 
-  // Health check: verify L1 codex-specific selectors match real DOM
+  // Health check: tier-graded doctor (upstream Codex-Dream-Skin selectors.json
+  // semantics). Tiers mirror engines/codex/selectors.contract.json (C14):
+  //   L1 missing  → 皮肤主行为受损 → report.healthy = false
+  //   L2 missing  → 精修静默降级   → console.info（不阻断注入）
+  // 合同中 home-icon 为 route-scoped L1，但 runtime doctor 无路由上下文且首页
+  // 渐进渲染（home-icon 可晚到 1-2 秒），故此处降为 L2 观察。
+  const DOCTOR_CONTRACT = [
+    { key: 'shell-main', tier: 'L1', selector: SELECTORS.shellMain },
+    { key: 'left-panel', tier: 'L1', selector: SELECTORS.leftPanel },
+    { key: 'header-tint', tier: 'L1', selector: SELECTORS.headerTint },
+    { key: 'main-content-top-fade', tier: 'L2', selector: SELECTORS.mainContentTopFade },
+    { key: 'composer-root', tier: 'L2', selector: SELECTORS.composerChrome },
+    { key: 'composer-footer', tier: 'L2', selector: SELECTORS.composerToolbar },
+    { key: 'home-utility', tier: 'L2', selector: SELECTORS.homeUtility },
+    { key: 'home-suggestions', tier: 'L2', selector: SELECTORS.homeSuggestions },
+    { key: 'home-icon', tier: 'L2', selector: SELECTORS.homeIcon },
+    { key: 'thread-surface', tier: 'L2', selector: SELECTORS.threadSurface },
+    { key: 'markdown', tier: 'L2', selector: SELECTORS.markdown },
+    { key: 'message', tier: 'L2', selector: SELECTORS.message },
+    { key: 'settings-panel', tier: 'L2', selector: SELECTORS['route:settings'] },
+  ];
+
   function onHealthCheck(report) {
     if (!report) return;
     try {
-      const l1Checks = [
-        { key: 'shellMain', selector: SELECTORS.shellMain, required: true },
-        { key: 'leftPanel', selector: SELECTORS.leftPanel, required: true },
-      ];
-      for (const check of l1Checks) {
-        if (check.required && document.querySelectorAll(check.selector).length === 0) {
+      report.degraded = [];
+      for (const check of DOCTOR_CONTRACT) {
+        let missing = false;
+        try {
+          missing = document.querySelectorAll(check.selector).length === 0;
+        } catch (_) {
+          continue; // invalid selector in this DOM → treat as unverifiable, not degraded
+        }
+        if (!missing) continue;
+        if (check.tier === 'L1') {
           report.healthy = false;
           report.issues.push('L1 missing: ' + check.key + ' (' + check.selector + ')');
+        } else {
+          report.degraded.push(check.key);
         }
+      }
+      if (report.degraded.length) {
+        console.info('[codex-adapter] L2 silent degradation:', report.degraded.join(', '));
       }
     } catch (e) {
       report.healthy = false;

@@ -4,10 +4,15 @@
  * 豆包原生只有亮色模式，暗色主题需要重映射豆包的 DBX / s-color
  * 文字 token，避免黑色文字落在暗色背景上。
  *
+ * ⚠️ SYNC WARNING (2026-09-08, audit D3/O-3): the RUNTIME copy of this logic
+ * is inlined in adapter-config.mjs (CDP evaluate cannot import ESM).
+ * adapter-config.mjs is what ships; this module is its unit-tested twin.
+ * Edit BOTH together, or wire one into the other before deleting a copy.
+ *
  * 本模块导出三个函数：
  *   - getDarkModeTokenOverrides()  → 暗色模式下的 CSS 变量覆盖
  *   - getDarkModeElementOverrides() → 暗色模式下的元素级覆盖 CSS
- *   - isDarkModePreferred()        → 检测当前是否为暗色系统偏好
+ *   - isDarkModePreferred()        → 检测当前是否为暗色偏好（宿主属性优先）
  *
  * 设计原则：
  *   - 不引入新依赖，纯计算函数（便于单元测试）
@@ -37,7 +42,7 @@ export function getDarkModeTokenOverrides() {
   return {
     /* --- 文字颜色重映射（使用 agentskin 变量，跟随主题） --- */
     '--dbx-text-primary': 'var(--agentskin-text)',
-    '--dbx-text-secondary': 'var(--agentskin-text-muted)',
+    '--dbx-text-secondary': 'var(--agentskin-muted)',
     '--dbx-text-tertiary': 'color-mix(in srgb, var(--agentskin-text) 50%, transparent)',
     '--dbx-text-disable': 'color-mix(in srgb, var(--agentskin-text) 35%, transparent)',
     '--dbx-text-markdown': 'var(--agentskin-text)',
@@ -83,7 +88,7 @@ export function getDarkModeTokenOverrides() {
     '--s-color-bg-dialogs-grey': 'var(--agentskin-surface)',
 
     '--s-color-text-primary': 'var(--agentskin-text)',
-    '--s-color-text-secondary': 'var(--agentskin-text-muted)',
+    '--s-color-text-secondary': 'var(--agentskin-muted)',
     '--s-color-text-tertiary': 'color-mix(in srgb, var(--agentskin-text) 50%, transparent)',
     '--s-color-text-quaternary': 'color-mix(in srgb, var(--agentskin-text) 40%, transparent)',
     '--s-color-text-disable': 'color-mix(in srgb, var(--agentskin-text) 35%, transparent)',
@@ -99,7 +104,7 @@ export function getDarkModeTokenOverrides() {
     '--semi-color-bg-4': 'color-mix(in srgb, var(--agentskin-surface-elevated) 120%, white)',
 
     '--semi-color-text-0': 'var(--agentskin-text)',
-    '--semi-color-text-1': 'var(--agentskin-text-muted)',
+    '--semi-color-text-1': 'var(--agentskin-muted)',
     '--semi-color-text-2': 'color-mix(in srgb, var(--agentskin-text) 50%, transparent)',
     '--semi-color-text-3': 'color-mix(in srgb, var(--agentskin-text) 40%, transparent)',
 
@@ -115,7 +120,7 @@ export function getDarkModeTokenOverrides() {
 
     /* --- ffc 组件 token --- */
     '--ffc-text-primary': 'var(--agentskin-text)',
-    '--ffc-text-secondary': 'var(--agentskin-text-muted)',
+    '--ffc-text-secondary': 'var(--agentskin-muted)',
     '--ffc-text-tertiary': 'color-mix(in srgb, var(--agentskin-text) 50%, transparent)',
     '--ffc-text-disabled': 'color-mix(in srgb, var(--agentskin-text) 35%, transparent)',
     '--ffc-bg-float': 'var(--agentskin-surface-elevated)',
@@ -130,7 +135,7 @@ export function getDarkModeTokenOverrides() {
     '--gray1': 'var(--agentskin-text)',
     '--gray2': 'color-mix(in srgb, var(--agentskin-text) 80%, var(--agentskin-bg))',
     '--gray3': 'color-mix(in srgb, var(--agentskin-text) 65%, var(--agentskin-bg))',
-    '--gray4': 'var(--agentskin-text-muted)',
+    '--gray4': 'var(--agentskin-muted)',
     '--gray5': 'color-mix(in srgb, var(--agentskin-text) 45%, var(--agentskin-bg))',
     '--gray6': 'color-mix(in srgb, var(--agentskin-text) 35%, var(--agentskin-bg))',
     '--gray7': 'color-mix(in srgb, var(--agentskin-border) 120%, white)',
@@ -165,15 +170,14 @@ export function getDarkModeTokenOverrides() {
 export function getDarkModeElementOverrides() {
   return `
 /* === 暗色模式：豆包元素级覆盖 === */
+/* 2026-09-08 (audit D3)：移除 dbx- 前缀虚构精确类（account-info/history-item/
+   titlebar/suggestion-card/composer-actions/text-secondary 六枚，豆包组件类为
+   CSS Modules 哈希 + data-testid，无 dbx- 语义类实证）；
+   [class*="..."] 子串候选保留为未验证兜底，待选择器合同登记。与 adapter-config.mjs 同步。 */
 /* 侧栏账号信息 */
-html.agentskin-host-doubao .dbx-account-info,
 html.agentskin-host-doubao [class*="account"],
 html.agentskin-host-doubao [class*="user-info"] {
   color: var(--agentskin-text) !important;
-}
-html.agentskin-host-doubao [class*="account"] .dbx-text-secondary,
-html.agentskin-host-doubao [class*="user-info"] .dbx-text-secondary {
-  color: var(--agentskin-text-muted) !important;
 }
 
 /* 搜索框 */
@@ -191,22 +195,18 @@ html.agentskin-host-doubao input[class*="search"]::placeholder {
 }
 
 /* 历史对话列表 */
-html.agentskin-host-doubao .dbx-history-item,
 html.agentskin-host-doubao [class*="history-item"],
 html.agentskin-host-doubao [class*="conversation-item"],
 html.agentskin-host-doubao [class*="chat-item"],
 html.agentskin-host-doubao [class*="session-item"] {
-  color: var(--agentskin-text-muted) !important;
+  color: var(--agentskin-muted) !important;
 }
-html.agentskin-host-doubao .dbx-history-item:hover,
 html.agentskin-host-doubao [class*="history-item"]:hover,
 html.agentskin-host-doubao [class*="conversation-item"]:hover,
 html.agentskin-host-doubao [class*="chat-item"]:hover,
 html.agentskin-host-doubao [class*="session-item"]:hover {
   background: var(--agentskin-surface-elevated) !important;
 }
-html.agentskin-host-doubao .dbx-history-item[class*="active"],
-html.agentskin-host-doubao .dbx-history-item [class*="active"],
 html.agentskin-host-doubao [class*="history-item"][class*="active"],
 html.agentskin-host-doubao [class*="conversation-item"][class*="active"] {
   background: color-mix(in srgb, var(--agentskin-surface-elevated) 110%, white) !important;
@@ -214,7 +214,6 @@ html.agentskin-host-doubao [class*="conversation-item"][class*="active"] {
 }
 
 /* 顶部标题栏 */
-html.agentskin-host-doubao .dbx-titlebar,
 html.agentskin-host-doubao [class*="titlebar"],
 html.agentskin-host-doubao [class*="header-bar"] {
   background: var(--agentskin-bg) !important;
@@ -226,15 +225,14 @@ html.agentskin-host-doubao [class*="h-header-height"] {
 }
 
 /* 首页建议卡片 */
-html.agentskin-host-doubao .dbx-suggestion-card,
 html.agentskin-host-doubao [class*="suggestion-card"],
 html.agentskin-host-doubao [class*="recommend-card"],
 html.agentskin-host-doubao [class*="guide-card"] {
   background: var(--agentskin-surface) !important;
   border-color: var(--agentskin-border) !important;
 }
-html.agentskin-host-doubao .dbx-suggestion-card:hover,
-html.agentskin-host-doubao [class*="suggestion-card"]:hover {
+html.agentskin-host-doubao [class*="suggestion-card"]:hover,
+html.agentskin-host-doubao [class*="recommend-card"]:hover {
   background: var(--agentskin-surface-elevated) !important;
 }
 
@@ -246,7 +244,6 @@ html.agentskin-host-doubao [class*="msg-body"] {
 }
 
 /* 输入框操作栏 */
-html.agentskin-host-doubao .dbx-composer-actions,
 html.agentskin-host-doubao [class*="composer-actions"],
 html.agentskin-host-doubao [class*="input-actions"],
 html.agentskin-host-doubao [class*="chat-input-actions"] {
@@ -264,14 +261,26 @@ html.agentskin-host-doubao ::-webkit-scrollbar-thumb:hover {
 }
 
 /**
- * 检测当前是否为暗色主题偏好。
- * 通过 CSS media query 判断系统偏好。
+ * 检测当前是否为暗色偏好。
+ * 2026-09-08 (audit D5)：宿主自身外观声明优先——豆包系在 html[data-theme] /
+ * body[theme-mode] 上声明应用外观，可与系统 media query 相反（系统深 + 应用浅）。
+ * 取值顺序：宿主属性 → 系统 prefers-color-scheme。与 adapter-config.mjs 同步。
  * 在非浏览器环境（如单元测试）中返回 false。
  *
- * @returns {boolean} true 表示暗色模式偏好
+ * @returns {boolean} true 表示暗色偏好
  */
 export function isDarkModePreferred() {
-  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  if (typeof window === 'undefined') return false;
+  let host = null;
+  try {
+    const e = typeof document !== 'undefined' && document.documentElement;
+    const b = typeof document !== 'undefined' && document.body;
+    host = (e && (e.getAttribute('data-theme') || e.getAttribute('theme-mode')))
+      || (b && (b.getAttribute('theme-mode') || b.getAttribute('data-theme')));
+  } catch { /* no DOM — fall through to media query */ }
+  if (host === 'dark') return true;
+  if (host === 'light') return false;
+  if (!window.matchMedia) return false;
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 

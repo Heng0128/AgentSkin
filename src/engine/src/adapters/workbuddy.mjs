@@ -67,9 +67,21 @@ const workbuddy = {
     // .teams-container (which doesn't exist in QoderWork's DOM). (Fixes
     // 2026-08-29 AGENTSKIN_DOM_INCOMPATIBLE for QoderWork CN targets.)
     if (/qoderwork/i.test(url) || /qoder/i.test(title)) return false;
+    // Cross-adapter exclusions (2026-09-07 CDP probe): the trailing "any page
+    // with a non-empty title" catch-all below also captured Doubao (title
+    // 豆包), ZCode and Codex targets. Reject the other agents' fingerprints
+    // explicitly before the positive rules.
+    if (/doubao/i.test(url) || /豆包/i.test(title)) return false; // Doubao
+    if (/zcode/i.test(url) || /zcode/i.test(title)) return false; // ZCode
+    // Codex: app:// protocol or Codex-family evidence.
+    if (/^app:\/\//i.test(url)) return false;
+    if (/chatgpt|codex|openai/i.test(url) || /chatgpt|codex|openai/i.test(title)) return false;
     // Title-based: window title contains workbuddy (case-insensitive)
     if (/workbuddy/i.test(title)) return true;
-    // URL-based: app.asar anywhere in path (covers renderer/index.html and variants)
+    // URL-based: app.asar anywhere in path. The bare /app\.asar/ match used to
+    // be the QoderWork-hijack vector; the qoder exclusion above guards it, and
+    // the 2026-09-07 exclusions guard Doubao/ZCode (doubao:// URLs contain no
+    // app.asar, but ZCode's renderer path does).
     if (/app\.asar/i.test(url)) return true;
     // Custom protocols used by Electron apps (vscode-file intentionally
     // excluded — see the early rejection above).
@@ -82,8 +94,9 @@ const workbuddy = {
     // use conversation title as window title; "wb-" covers internal tooling
     // windows that don't carry the full product name).
     if (/workbuddy|wb-/i.test(title)) return true;
-    // Fallback: any page target with a non-empty title that looks like an app window
-    if (type === "page" && title && !/^(DevTools|chrome)/i.test(title) && url && !url.startsWith("about:")) return true;
+    // 2026-09-07: the "any non-empty title" catch-all is REMOVED. A bare title
+    // (e.g. a conversation name in ANY agent) is not WorkBuddy evidence —
+    // it was the vector that let this adapter claim other agents' windows.
     return false;
   },
   // CSS variable bridge (S3): re-route the native --cb-* (VS Code-arch) family

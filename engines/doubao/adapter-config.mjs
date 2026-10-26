@@ -150,18 +150,24 @@
   }
 
   function findGreetingElement() {
+    // 2026-09-08 (audit D4): class anchors FIRST — greeting copy rotates
+    // across releases (doubao-skin hit exactly this on 2026-08-30 and moved
+    // to [class*="greeting-text-"]). Text-content matching stays as the
+    // last-resort fallback only.
+    const classCandidates = document.querySelectorAll(
+      '[class*="greeting-text-"], [class*="greeting"], [class*="welcome-text"], h1, h2',
+    );
+    for (const el of classCandidates) {
+      const rect = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      if (rect.width > 100 && rect.width < 600 && rect.top > 100 && rect.top < 500
+        && parseFloat(style.fontSize) >= 20) return el;
+    }
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const patterns = /有什么我能帮你的|今天想聊点什么|你好.*我是豆包|想问点什么/;
     while (walker.nextNode()) {
       const node = walker.currentNode;
       if (patterns.test(node.textContent) && node.textContent.length < 50) return node.parentElement;
-    }
-    const candidates = document.querySelectorAll('div[class*="greeting"], div[class*="welcome-text"], h1, h2');
-    for (const el of candidates) {
-      const rect = el.getBoundingClientRect();
-      const style = getComputedStyle(el);
-      if (rect.width > 100 && rect.width < 600 && rect.top > 100 && rect.top < 500
-        && parseFloat(style.fontSize) >= 20 && style.textAlign === 'center') return el;
     }
     return null;
   }
@@ -323,8 +329,21 @@
   // ═══════════════════════════════════════════════════════════
   // DARK MODE HELPERS
   // ═══════════════════════════════════════════════════════════
+  // 2026-09-08 (audit D5): the app's OWN appearance is declared on host
+  // attributes (html[data-theme], body[theme-mode]) and can differ from the
+  // system media query (e.g. system dark + app pinned light). Read host
+  // attributes first; system prefers-color-scheme is only the fallback.
+  // Priority mirrors the doubao-skin runtime appMode() contract.
   function isDarkModePreferred() {
-    try { return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false; } catch { return false; }
+    try {
+      const e = document.documentElement;
+      const b = document.body;
+      const host = (e && (e.getAttribute('data-theme') || e.getAttribute('theme-mode')))
+        || (b && (b.getAttribute('theme-mode') || b.getAttribute('data-theme')));
+      if (host === 'dark') return true;
+      if (host === 'light') return false;
+      return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+    } catch { return false; }
   }
 
   function getDarkModeTokenOverrides() {
@@ -438,72 +457,79 @@
     };
   }
 
+  // LIVE COPY of engines/doubao/dark-mode-remap.mjs getDarkModeElementOverrides()
+  // (CDP evaluate cannot import ESM — keep the two in sync when editing).
+  // 2026-09-08 (audit D3): all colors now derive from --agentskin-* tokens
+  // (previously 22 hard-coded VS Code greys that ignored the active theme),
+  // and the fabricated `.dbx-history-item/.dbx-titlebar/.dbx-suggestion-card/
+  // .dbx-composer-actions` exact classes (zero occurrences in any verified
+  // Doubao DOM evidence) were removed. The [class*="..."] substring candidates
+  // remain as unverified generic fallbacks pending selector-contract registration.
   function getDarkModeElementOverrides() {
     return `
-/* === Dark-mode element overrides for doubao === */
+/* === Dark-mode element overrides for doubao (derived from --agentskin-*) === */
 html.${HOST_CLASS} [class*="account"],
 html.${HOST_CLASS} [class*="user-info"] {
-  color: #E8E8E8 !important;
+  color: var(--agentskin-text) !important;
 }
 html.${HOST_CLASS} [class*="search"] input,
 html.${HOST_CLASS} input[class*="search"],
 html.${HOST_CLASS} [data-testid*="search"] input {
-  background: #252526 !important;
-  color: #E8E8E8 !important;
-  border-color: #3E3E42 !important;
+  background: var(--agentskin-surface) !important;
+  color: var(--agentskin-text) !important;
+  border-color: var(--agentskin-border) !important;
 }
 html.${HOST_CLASS} [class*="search"] input::placeholder,
 html.${HOST_CLASS} input[class*="search"]::placeholder {
-  color: #7A7A7A !important;
+  color: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
 }
-html.${HOST_CLASS} .dbx-history-item,
 html.${HOST_CLASS} [class*="history-item"],
 html.${HOST_CLASS} [class*="conversation-item"],
 html.${HOST_CLASS} [class*="chat-item"],
 html.${HOST_CLASS} [class*="session-item"] {
-  color: #A0A0A0 !important;
+  color: var(--agentskin-muted) !important;
 }
-html.${HOST_CLASS} .dbx-history-item:hover,
 html.${HOST_CLASS} [class*="history-item"]:hover,
-html.${HOST_CLASS} [class*="conversation-item"]:hover {
-  background: #2D2D30 !important;
+html.${HOST_CLASS} [class*="conversation-item"]:hover,
+html.${HOST_CLASS} [class*="chat-item"]:hover,
+html.${HOST_CLASS} [class*="session-item"]:hover {
+  background: var(--agentskin-surface-elevated) !important;
 }
-html.${HOST_CLASS} .dbx-history-item[class*="active"],
-html.${HOST_CLASS} [class*="history-item"][class*="active"] {
-  background: #333337 !important;
-  color: #E8E8E8 !important;
+html.${HOST_CLASS} [class*="history-item"][class*="active"],
+html.${HOST_CLASS} [class*="conversation-item"][class*="active"] {
+  background: var(--agentskin-surface-elevated) !important;
+  color: var(--agentskin-text) !important;
 }
-html.${HOST_CLASS} .dbx-titlebar,
 html.${HOST_CLASS} [class*="titlebar"],
 html.${HOST_CLASS} [class*="header-bar"] {
-  background: #1E1E1E !important;
-  border-color: #3E3E42 !important;
+  background: var(--agentskin-bg) !important;
+  border-color: var(--agentskin-border) !important;
 }
-html.${HOST_CLASS} .dbx-suggestion-card,
 html.${HOST_CLASS} [class*="suggestion-card"],
-html.${HOST_CLASS} [class*="recommend-card"] {
-  background: #252526 !important;
-  border-color: #3E3E42 !important;
+html.${HOST_CLASS} [class*="recommend-card"],
+html.${HOST_CLASS} [class*="guide-card"] {
+  background: var(--agentskin-surface) !important;
+  border-color: var(--agentskin-border) !important;
 }
-html.${HOST_CLASS} .dbx-suggestion-card:hover,
-html.${HOST_CLASS} [class*="suggestion-card"]:hover {
-  background: #2D2D30 !important;
+html.${HOST_CLASS} [class*="suggestion-card"]:hover,
+html.${HOST_CLASS} [class*="recommend-card"]:hover {
+  background: var(--agentskin-surface-elevated) !important;
 }
 html.${HOST_CLASS} [class*="message-content"],
 html.${HOST_CLASS} [class*="chat-content"],
 html.${HOST_CLASS} [class*="msg-body"] {
-  color: #E8E8E8 !important;
+  color: var(--agentskin-text) !important;
 }
-html.${HOST_CLASS} .dbx-composer-actions,
 html.${HOST_CLASS} [class*="composer-actions"],
-html.${HOST_CLASS} [class*="input-actions"] {
-  color: #7A7A7A !important;
+html.${HOST_CLASS} [class*="input-actions"],
+html.${HOST_CLASS} [class*="chat-input-actions"] {
+  color: color-mix(in srgb, var(--agentskin-muted) 80%, transparent) !important;
 }
 html.${HOST_CLASS} ::-webkit-scrollbar-thumb {
-  background: #3E3E42 !important;
+  background: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
 }
 html.${HOST_CLASS} ::-webkit-scrollbar-thumb:hover {
-  background: #4A4A4E !important;
+  background: color-mix(in srgb, var(--agentskin-accent) 50%, transparent) !important;
 }`;
   }
 
@@ -594,7 +620,6 @@ html.${HOST_CLASS} [class*="recommend"],
 html.${HOST_CLASS} [class*="topic"],
 html.${HOST_CLASS} [class*="quick-action"],
 html.${HOST_CLASS} [class*="shortcut"],
-html.${HOST_CLASS} [class*="content-KTJ1Rj"],
 html.${HOST_CLASS} [class*="suggest-message-list-wrapper"],
 html.${HOST_CLASS} [class*="suggest"] *,
 html.${HOST_CLASS} [class*="recommend"] *,

@@ -391,13 +391,116 @@ html.agentskin-host-doubao:root body {
   --input-guidance-input-container-border: color-mix(in srgb, var(--agentskin-accent) 15%, transparent) !important;
   --input-guidance-input-editor-color: var(--agentskin-text) !important;
   --input-guidance-input-editor-placeholder-color: color-mix(in srgb, var(--agentskin-muted) 60%, transparent) !important;
+  --input-guidance-input-editor-caret-color: var(--agentskin-accent) !important;
   --left-side: var(--agentskin-surface) !important;
+
+  /* ===== Composer alias families (2026-09-08, D2) =====
+     The host ships at least three parallel naming systems for the input
+     box (--input-guidance-*, --color-composebox-*, --cr-composebox-*).
+     Overriding only one leaves the others on native colors. Evidence:
+     doubao-skin theme.rs semantic_css fan-out (real-window verified). */
+  --color-composebox-background: var(--input-guidance-input-container-background) !important;
+  --cr-composebox-background-color: var(--input-guidance-input-container-background) !important;
+  --color-composebox-font: var(--agentskin-text) !important;
+  --color-composebox-input-placeholder-color: color-mix(in srgb, var(--agentskin-muted) 60%, transparent) !important;
+  --cr-composebox-input-placeholder-color: color-mix(in srgb, var(--agentskin-muted) 60%, transparent) !important;
+  --color-composebox-input-icon: var(--agentskin-muted) !important;
+  --color-composebox-submit-button-background: var(--agentskin-accent) !important;
+  --color-composebox-submit-button-icon: var(--agentskin-bg) !important;
+
+  /* ===== Message bubble families (2026-09-08, D2) =====
+     User/assistant bubble colors are driven by --g-*-bubble-* tokens that
+     our previous layers never touched — bubbles stayed native. Bubble text
+     maps to --agentskin-bg (the "paper" pole), matching the verified
+     doubao-skin pattern (white text on accent in light themes, near-black
+     on accent in dark themes). */
+  --g-send-msg-bubble-bg: var(--agentskin-accent) !important;
+  --g-send-msg-bubble-text: var(--agentskin-bg) !important;
+  --color-g-send-msg-bubble-text: var(--agentskin-bg) !important;
+  --g-msg-bubble-bg: var(--agentskin-surface-elevated) !important;
+  --g-msg-bubble-text: var(--agentskin-text) !important;
+  --chatarea-bg-color: transparent !important;
+
+  /* ===== md-box bridge (2026-09-08, D2) =====
+     Markdown container reads --md-box-color-fg/-muted (distinct from the
+     samantha kit family already mapped below). */
+  --md-box-color-fg: var(--agentskin-text) !important;
+  --md-box-color-fg-muted: var(--agentskin-muted) !important;
+
+  /* ===== --color-dbx-* twins (2026-09-08, D2) =====
+     Some pages read the --color- prefixed twins of --dbx-text-*. */
+  --color-dbx-text-primary: var(--dbx-text-primary, var(--agentskin-text)) !important;
+  --color-dbx-text-secondary: var(--dbx-text-secondary, var(--agentskin-muted)) !important;
+  --color-dbx-text-disable: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
 }
 
-/* ===== REAL Doubao token system: Semi Design (--semi-color-*) =====
-   Probe (2026-07-23) confirmed Doubao ships 268 --semi-* tokens + 12 --gray*
-   + 64 semantic vars. These are the tokens that ACTUALLY drive the UI.
-   The --dbx-*/--s-color-*/--ffc-* above are dead/legacy but kept for safety.
+/* ===== N/B neutral & brand ramps (2026-09-08, D2) =====
+   DoubaoWork's surface system is built on the --N00..--N950 neutral ramp
+   and --B50..--B900 brand ramp, consumed both directly and via
+   rgb(var(--N100-raw), α) triplet composition — so -raw twins are set
+   alongside every mapped step (doubao-skin verified pattern). Ramp
+   direction: N00 = paper (bg), N900/N950 = ink (text); mid-steps interpolate
+   through surface/elevated/border/muted. B500 = accent; B600+ darken toward
+   text, B400- lighten toward bg — direction follows theme polarity
+   automatically because text/bg swap with the theme.
+   Applied on html AND body (host reads both). */
+html.agentskin-host-doubao:root,
+html.agentskin-host-doubao:root body {
+  --N00: var(--agentskin-bg) !important;
+  --N00-raw: var(--agentskin-bg-raw) !important;
+  --N50: color-mix(in srgb, var(--agentskin-surface) 35%, var(--agentskin-bg)) !important;
+  --N50-raw: var(--agentskin-bg-raw) !important;
+  --N100: var(--agentskin-surface) !important;
+  --N100-raw: var(--agentskin-surface-raw) !important;
+  --N200: var(--agentskin-surface-elevated) !important;
+  --N200-raw: var(--agentskin-surface-elevated-raw) !important;
+  --N300: color-mix(in srgb, var(--agentskin-border) 70%, var(--agentskin-surface-elevated)) !important;
+  --N300-raw: var(--agentskin-border-raw) !important;
+  --N350: color-mix(in srgb, var(--agentskin-muted) 80%, var(--agentskin-bg)) !important;
+  --N350-raw: var(--agentskin-muted-raw) !important;
+  --N400: color-mix(in srgb, var(--agentskin-muted) 65%, var(--agentskin-bg)) !important;
+  --N400-raw: var(--agentskin-muted-raw) !important;
+  --N500: var(--agentskin-muted) !important;
+  --N500-raw: var(--agentskin-muted-raw) !important;
+  --N600: color-mix(in srgb, var(--agentskin-muted) 60%, var(--agentskin-text)) !important;
+  --N600-raw: var(--agentskin-muted-raw) !important;
+  --N650: color-mix(in srgb, var(--agentskin-muted) 40%, var(--agentskin-text)) !important;
+  --N650-raw: var(--agentskin-text-raw) !important;
+  --N700: color-mix(in srgb, var(--agentskin-muted) 20%, var(--agentskin-text)) !important;
+  --N700-raw: var(--agentskin-text-raw) !important;
+  --N800: color-mix(in srgb, var(--agentskin-muted) 8%, var(--agentskin-text)) !important;
+  --N800-raw: var(--agentskin-text-raw) !important;
+  --N900: var(--agentskin-text) !important;
+  --N900-raw: var(--agentskin-text-raw) !important;
+  --N950: var(--agentskin-text) !important;
+  --N950-raw: var(--agentskin-text-raw) !important;
+
+  --B50: color-mix(in srgb, var(--agentskin-accent) 12%, var(--agentskin-bg)) !important;
+  --B100: color-mix(in srgb, var(--agentskin-accent) 25%, var(--agentskin-bg)) !important;
+  --B200: color-mix(in srgb, var(--agentskin-accent) 40%, var(--agentskin-bg)) !important;
+  --B300: color-mix(in srgb, var(--agentskin-accent) 60%, var(--agentskin-bg)) !important;
+  --B350: color-mix(in srgb, var(--agentskin-accent) 70%, var(--agentskin-bg)) !important;
+  --B400: color-mix(in srgb, var(--agentskin-accent) 80%, var(--agentskin-bg)) !important;
+  --B500: var(--agentskin-accent) !important;
+  --B500-raw: var(--agentskin-accent-raw) !important;
+  --B600: color-mix(in srgb, var(--agentskin-accent) 80%, var(--agentskin-text)) !important;
+  --B700: color-mix(in srgb, var(--agentskin-accent) 60%, var(--agentskin-text)) !important;
+  --B800: color-mix(in srgb, var(--agentskin-accent) 40%, var(--agentskin-text)) !important;
+  --B900: color-mix(in srgb, var(--agentskin-accent) 25%, var(--agentskin-text)) !important;
+}
+
+/* ===== Multi-family token system (2026-09-08 修正) =====
+   Doubao/DoubaoWork ship MULTIPLE parallel token families that are ALL
+   load-bearing: Semi Design (--semi-color-*, --gray*), the dbx layer
+   (--dbx-*), the s-color layer (--s-color-*), ffc component tokens, the
+   N/B neutral/brand ramps (--N00..--N950 / --B50..--B900 with -raw
+   triplets), plus bubble/composer alias families (--g-*, --cr-composebox-*,
+   --color-composebox-*).
+   The previous "dead/legacy" annotation (probe 2026-07-23) was WRONG —
+   cross-validated against doubao-skin-main (2026-08-29/31, 34 themes
+   effective in real Doubao & DoubaoWork windows override --dbx-*/--s-color-*/
+   --N*/--B* as primary surfaces). DO NOT delete any family below; if a
+   family looks unused on one page, it is used on another target/version.
    Selector: html.agentskin-host-doubao:root (0,2,1) + adoptedStyleSheets
    cascade position beats Doubao's own :root[data-theme] rules. */
 html.agentskin-host-doubao:root {

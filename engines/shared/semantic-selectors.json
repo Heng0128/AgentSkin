@@ -11,37 +11,72 @@
     "menu": ["[role='menu']", ".dropdown-menu", ".popup"]
   },
   "qoderwork": {
+    "_comment": "2026-09-08 实窗探针（主窗 + voice-overlay）：.ant-* 全零（非 Ant Design 栈，猜测锚点）删除；实证存活承载：.agents-layout-root/-body/-content-area/-sidebar、.chat-input-editor-text、[data-resizable-sidebar]；.agents-main-content/.agents-composer/.nav-panel/.editor-area 零命中降为末位兜底。",
     "root": [".agents-layout-root", "#root", "body"],
-    "main": [".agents-main-content", "main", ".chat-surface", ".conversation-panel"],
-    "sidebar": [".agents-sidebar", "aside", "[role='navigation'", ".nav-panel"],
-    "composer": [".agents-composer", "[contenteditable]", "textarea", ".editor-area"],
-    "dialog": ["[role='dialog']", ".ant-modal", ".ant-drawer"],
-    "button": ["button", "[role='button']", ".ant-btn"],
-    "menu": ["[role='menu']", ".ant-dropdown", ".ant-popover"]
+    "main": [".agents-content-area", "main", ".agents-main-content", ".chat-surface"],
+    "sidebar": [".agents-sidebar", "[data-resizable-sidebar]", "aside", ".nav-panel"],
+    "composer": [".chat-input-editor-text", "[contenteditable]", "textarea", ".agents-composer"],
+    "dialog": ["[role='dialog']", "[class*='modal']"],
+    "button": ["button", "[role='button']"],
+    "menu": ["[role='menu']", "[class*='dropdown']", "[class*='menu']"]
   },
   "workbuddy": {
-    "root": [".teams-container", "#root", "body[data-application-name='workbuddy']"],
-    "main": [".wb-cb-chat", ".conversation-surface", "main", ".chat-area"],
-    "sidebar": [".conversation-sidebar", "aside", "[role='navigation']", ".sidebar-next"],
-    "composer": [".wb-cb-input", "[contenteditable]", "textarea", ".input-container"],
-    "dialog": ["[role='dialog']", ".ms-Dialog", ".modal-overlay"],
-    "button": ["button", "[role='button']", ".ms-Button"],
-    "menu": ["[role='menu']", ".ms-ContextualMenu", ".dropdown"]
+    "_comment": "2026-09-08 修正 + 实窗探针（Windows WorkBuddy，html.class='dark cb-dark vscode-dark'）：.ms-* Fluent 猜测零命中已删；body[data-application-name] 与 .sidebar-next 探针实证存活（1/11 命中）保留；.wb-cb-chat/.chat-container/.wb-cb-input 当前 Windows 构建零命中但豆皮 5.3.14 macOS 有证，降为版本兜底候选。",
+    "root": [".teams-container", "body[data-application-name='workbuddy']", "#root", "body"],
+    "main": [".wb-home-page__main-content", ".teams-main-content", "main", ".wb-cb-chat"],
+    "sidebar": [".conversation-sidebar", ".sidebar-next", "[role='navigation']", "aside"],
+    "composer": [
+      ".wb-home-composer",
+      "[contenteditable]",
+      "[role='textbox']",
+      ".input-container",
+      ".wb-cb-input",
+      "textarea"
+    ],
+    "dialog": ["[role='dialog']", "[class*='popover']", "[class*='dropdown']"],
+    "button": ["button", "[role='button']", ".wb-button"],
+    "menu": ["[role='menu']", "[class*='dropdown']", ".dropdown"]
   },
   "doubao": {
+    "_comment": "2026-09-08 修正 + 实窗探针（doubao://doubao-chat 首页视图，原生 dark）：.ant-* 已删（豆包为 Semi 栈）；.semi-modal/.semi-button/.semi-portal 首页零命中（弹窗未开/按钮非 Semi 类），保留待弹窗视图复验；探针实证承载候选：main/aside/[contenteditable]/[role='textbox']；.chat-main/.chat-list/.conversation-panel/.chat-input-container 零命中降为末位。",
     "root": ["#root", "body", ".app-container"],
-    "main": [".chat-main", ".conversation-panel", "main", ".main-content"],
-    "sidebar": [".chat-list", "aside", "[role='navigation']", ".conversation-list"],
-    "composer": [".chat-input-container", ".input-area", "[contenteditable]", "textarea"],
-    "dialog": ["[role='dialog']", ".ant-modal", ".modal-root"],
-    "button": ["button", "[role='button']", ".ant-btn"],
-    "menu": ["[role='menu']", ".ant-dropdown", ".dropdown-menu"]
+    "main": ["main", ".main-content", ".chat-main", ".conversation-panel"],
+    "sidebar": ["aside", ".conversation-list", ".chat-list", "[role='navigation']"],
+    "composer": [
+      "[contenteditable]",
+      "[role='textbox']",
+      ".input-guidance",
+      ".chat-input-container",
+      ".input-area",
+      "textarea"
+    ],
+    "dialog": ["[role='dialog']", ".semi-modal", ".semi-portal"],
+    "button": ["button", "[role='button']", ".semi-button"],
+    "menu": ["[role='menu']", ".semi-dropdown-menu", ".semi-popover"]
   },
   "codex": {
-    "root": ["main.main-surface", "main[class*='MainContentSurface']", ":root", "body"],
+    "root": [
+      "main:is(.main-surface, [data-app-shell-main-surface], [class*='_MainContentSurface_'])",
+      "main.main-surface",
+      "main[class*='MainContentSurface']",
+      ":root",
+      "body"
+    ],
     "main": [".thread-scroll-container", "main", ".chat-surface", ".main-area"],
-    "sidebar": [".sidebar", "aside", "[role='navigation']", ".side-panel"],
-    "composer": [".composer-area", "[contenteditable]", ".chat-input", "textarea"],
+    "sidebar": [
+      "aside.app-shell-left-panel",
+      ".sidebar",
+      "aside",
+      "[role='navigation']",
+      ".side-panel"
+    ],
+    "composer": [
+      ":is(.composer-surface-chrome, [class*='_ComposerLayoutRoot_'], [data-composer-surface-variant][data-composer-radius-variant])",
+      ".composer-area",
+      "[contenteditable]",
+      ".chat-input",
+      "textarea"
+    ],
     "dialog": ["[role='dialog']", ".codex-modal", ".overlay"],
     "button": ["button", "[role='button']", "[data-testid='send-button']"],
     "menu": ["[role='menu']", ".dropdown", ".menu-popup"]

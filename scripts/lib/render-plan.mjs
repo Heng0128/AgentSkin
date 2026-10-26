@@ -229,7 +229,7 @@ const CRITICAL_SELECTORS = Object.freeze({
   codex: [
     ':root.agentskin-host-codex button.sidebar-item',
     ':root.agentskin-host-codex[data-app-action-sidebar-thread-selected="true"]',
-    ':root.agentskin-host-codex .composer-surface-chrome',
+    ':root.agentskin-host-codex :is(.composer-surface-chrome, [class*="_ComposerLayoutRoot_"], [data-composer-surface-variant][data-composer-radius-variant])',
   ],
   zcode: [
     'html.agentskin-host-zcode [data-workspace-sidebar-panel="true"]',

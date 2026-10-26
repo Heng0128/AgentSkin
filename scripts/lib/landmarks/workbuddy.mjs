@@ -27,7 +27,9 @@ export const workbuddyLandmarks = {
     },
     {
       name: 'workspace',
-      selectors: ['.teams-main-content', '.main-content', '.chat-container', '.wb-home-page'],
+      // 2026-09-08 probe: .main-content/.chat-container 在当前 Windows 构建零命中
+      // （豆皮 5.3.14 macOS 有证 → 版本漂移兜底保留末位）。
+      selectors: ['.teams-main-content', '.wb-home-page__main-content', '.wb-home-page', '.main-content', '.chat-container'],
     },
     {
       name: 'composer',
@@ -43,9 +45,12 @@ export const workbuddyLandmarks = {
     },
     {
       name: 'detail-panel',
-      selectors: ['.detail-panel-container'],
+      // 2026-09-08 probe: .detail-panel-container 零命中；实证为 [class*="detail-panel"]（hit=2）。
+      selectors: ['[class*="detail-panel"]', '[class*="detail-sidebar"]'],
     },
     {
+      // LEGACY (codebuddy-era) anchors — zero on 2026-09-08 Windows build, kept as
+      // version-drift insurance for older macOS builds only. Do not build new rules on them.
       name: 'chat-pane',
       selectors: ['.claw-agent-chat-pane', '.claw-agent-chat-topbar'],
     },
@@ -63,7 +68,10 @@ export const workbuddyLandmarks = {
     },
     {
       name: 'main-area',
-      selectors: ['[class*="_mainArea_"]', '[class*="_title_"]', '[class*="_time_"]'],
+      // 2026-09-08 probe: [class*="_mainArea_"] 两次采样均零（CSS Module 已轮换）；
+      // 主区承载改用 workspace 组（.teams-main-content/.wb-home-page__main-content）。
+      // _time_ 实证存活（hit=39），_title_ 未再验证。
+      selectors: ['[class*="_time_"]'],
     },
     {
       name: 'portal-fallback',

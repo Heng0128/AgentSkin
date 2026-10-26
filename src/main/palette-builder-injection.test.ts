@@ -136,7 +136,14 @@ describe('tryEngineInjection', () => {
     expect(payload.heroDataUrl).toBe('data:hero');
     expect(payload.paletteCss).toContain('--agentskin-accent-raw: 255, 0, 0;');
     expect(payload.tokensCss).toBe(':root{}');
-    expect(payload.adapterJs).toBe('export{}');
+    // Adapter JS is the full Script Concatenation product (AGENTS.md §4):
+    // [self-heal-patrol] + [unified engine] + adapter wrapper + WCAG AA
+    // contrast fallback IIFE, concatenated into a single expression. The
+    // shared engine files resolve to '' in the test env (read failure is
+    // tolerated by design), so the payload is the adapter wrapper plus the
+    // contrast fallback marker.
+    expect(payload.adapterJs).toContain('export{}');
+    expect(payload.adapterJs).toContain('contrast-check-done');
     expect(payload.cosmeticCss).toBe('/*c*/');
     expect(payload.themeCss).toBe(VALID_THEME_CSS);
   });

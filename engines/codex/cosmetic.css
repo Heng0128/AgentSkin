@@ -2,6 +2,102 @@
    ENGINE: codex — Layer 2: Cosmetic Enhancement
    ============================================================ */
 
+/* === Scrim readability system (upstream Codex-Dream-Skin parity) ===
+   Art punch-through alone strands text on bright wallpapers. Upstream
+   solves this with a task-scope veil: a vertical fade (denser toward the
+   composer where text sits) + a horizontal shade (denser on the reading
+   side), both derived from the theme's own surface color. Scrim only
+   applies to task routes — `[role="main"]` exists ONLY on the home route
+   (upstream selectors.json), so :not(:has([role="main"])) gates thread /
+   settings / detail routes. Safe-area direction mirrors are driven by
+   [data-agentskin-art-safe] (written by the adapter's art analysis). */
+
+html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"])) {
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden !important;
+}
+
+html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"]))::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  /* Default safe-side = left (text reads left, art breathes right). */
+  background-image:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--agentskin-surface) 10%, transparent) 0%,
+      color-mix(in srgb, var(--agentskin-surface) 18%, transparent) 32%,
+      color-mix(in srgb, var(--agentskin-surface) 76%, transparent) 68%,
+      var(--agentskin-surface) 100%),
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--agentskin-surface) 56%, transparent) 0%,
+      color-mix(in srgb, var(--agentskin-surface) 36%, transparent) 48%,
+      color-mix(in srgb, var(--agentskin-surface) 12%, transparent) 100%) !important;
+  background-repeat: no-repeat !important;
+  opacity: 0.78 !important;
+}
+
+/* Lift native content above the scrim layer (::before z-0). */
+html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"])) > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Safe-area mirror: art focus on the right → shade protects the left
+   reading side (gradient direction flips 90deg → 270deg). */
+html.agentskin-host-codex[data-agentskin-art-safe="right"] main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"]))::before {
+  background-image:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--agentskin-surface) 10%, transparent) 0%,
+      color-mix(in srgb, var(--agentskin-surface) 18%, transparent) 32%,
+      color-mix(in srgb, var(--agentskin-surface) 76%, transparent) 68%,
+      var(--agentskin-surface) 100%),
+    linear-gradient(270deg,
+      color-mix(in srgb, var(--agentskin-surface) 56%, transparent) 0%,
+      color-mix(in srgb, var(--agentskin-surface) 36%, transparent) 48%,
+      color-mix(in srgb, var(--agentskin-surface) 12%, transparent) 100%) !important;
+}
+
+/* Safe-area center: symmetric horizontal scrim + radial shade. */
+html.agentskin-host-codex[data-agentskin-art-safe="center"] main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"]))::before {
+  background-image:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--agentskin-surface) 10%, transparent) 0%,
+      color-mix(in srgb, var(--agentskin-surface) 18%, transparent) 32%,
+      color-mix(in srgb, var(--agentskin-surface) 76%, transparent) 68%,
+      var(--agentskin-surface) 100%),
+    radial-gradient(ellipse at center,
+      color-mix(in srgb, var(--agentskin-surface) 48%, transparent) 0%,
+      color-mix(in srgb, var(--agentskin-surface) 30%, transparent) 52%,
+      color-mix(in srgb, var(--agentskin-surface) 10%, transparent) 100%) !important;
+}
+
+/* Safe-area none: subject fills the frame — light vertical veil only. */
+html.agentskin-host-codex[data-agentskin-art-safe="none"] main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"]))::before {
+  background-image:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--agentskin-surface) 34%, transparent),
+      color-mix(in srgb, var(--agentskin-surface) 20%, transparent)) !important;
+}
+
+/* Light-shell tuning (upstream parity: .72 vs .78): a bright surface veil
+   needs slightly less strength — data-agentskin-shell is written by the
+   adapter's shell appearance watch from the theme's surface brightness. */
+html.agentskin-host-codex[data-agentskin-shell="light"] main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"]))::before {
+  opacity: 0.72 !important;
+}
+
+/* Text readability fallback: double-layer text shadow on thread content
+   (markdown + messages) above the scrim. */
+html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"])) [class*="_markdown"],
+html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"])) [data-message-author-role] {
+  text-shadow:
+    0 1px 2px color-mix(in srgb, var(--agentskin-surface) 82%, transparent),
+    0 0 10px color-mix(in srgb, var(--agentskin-surface) 58%, transparent) !important;
+}
+
 /* === Selection === */
 html.agentskin-host-codex ::selection {
   background: var(
@@ -75,6 +171,33 @@ html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], 
   color: var(--agentskin-text) !important;
 }
 
+/* === Native top fade removal (26.727+) ===
+   Codex paints a white gradient mask at the top of the main content; under a
+   theme art layer it reads as a stray white band. Anchor contract mirrors the
+   upstream Codex-Dream-Skin selectors.json entry (legacy class + stable data
+   attribute + CSS-Module prefix). */
+html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"])
+  :is(.app-shell-main-content-top-fade, [data-app-shell-main-content-top-fade], [class*="_MainContentTopFade_"]) {
+  display: none !important;
+  background: transparent !important;
+}
+
+/* === Content frame border under transparent art (26.727+) === */
+html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]) .app-shell-main-content-frame {
+  border-top: 0 !important;
+}
+
+/* === Utility routes full-size opaque wrappers (26.727+) ===
+   Pull Requests and similar non-home routes wrap their content in a native
+   full-size opaque surface. Only clear full-window wrappers (h-full + w-full),
+   never cards. :not(:has()) stays single-level — nesting a :has()-bearing
+   selector inside another pseudo drops the whole rule (upstream v1.3.1
+   regression). */
+html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"]))
+  [class~="bg-token-main-surface-primary"][class~="h-full"][class~="w-full"] {
+  background: transparent !important;
+}
+
 /* === App header tint: semi-transparent frosted bar === */
 html.agentskin-host-codex header:is(.app-header-tint, [data-app-shell-header-edge-scroll], [class*="_Header_"]) {
   background: color-mix(in srgb, var(--agentskin-surface) 8%, transparent) !important;
@@ -116,6 +239,55 @@ html.agentskin-host-codex textarea:focus {
   border-color: var(--agentskin-accent) !important;
 }
 
+/* === Composer inner Body surface clear (26.803+) ===
+   Codex 26.803+ moved the input surface to a nested _ComposerLayoutBody_
+   node inside the public Root shell. With both painted, the composer renders
+   two stacked glass layers. Keep the outer Root (matched above) as the
+   single visible surface; legacy .composer-surface-chrome has no such
+   children, so the rule is inert on pre-26.803 builds. Upstream parity:
+   dream-skin.css "Keep the public ComposerLayoutRoot as the single thread
+   surface too. The canonical 26.814+ contract maps that Root, so clear
+   only nested paint." */
+html.agentskin-host-codex :is(.composer-surface-chrome, [class*="_ComposerLayoutRoot_"], [data-composer-surface-variant][data-composer-radius-variant]) > [class*="_ComposerLayoutBody_"] {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* === Composer placeholder (pseudo-element recolor) ===
+   Codex renders the placeholder as a `p.placeholder::after` pseudo element,
+   not a placeholder attribute — it needs its own recolor pass. */
+html.agentskin-host-codex :is(.composer-surface-chrome, [class*="_ComposerLayoutRoot_"], [data-composer-surface-variant][data-composer-radius-variant]) p.placeholder::after {
+  color: color-mix(in srgb, var(--agentskin-muted) 82%, transparent) !important;
+  opacity: 1 !important;
+}
+
+/* === Send / stop / voice buttons: accent keycap (upstream parity) ===
+   Double-layer border+inset simulates a physical keycap highlight; children
+   forced to currentColor so icons follow the computed foreground. aria-label
+   matching covers zh/en variants. */
+html.agentskin-host-codex :is(.composer-surface-chrome, [class*="_ComposerLayoutRoot_"], [data-composer-surface-variant][data-composer-radius-variant]) :is(button[class~="bg-primary-solid"], button[aria-label="发送"], button[aria-label="停止"], button[aria-label*="语音"], button[aria-label*="对话"], button[aria-label*="send" i], button[aria-label*="stop" i], button[aria-label*="voice" i]) {
+  border-color: color-mix(in srgb, var(--agentskin-text) 46%, transparent) !important;
+  background: var(--agentskin-accent) !important;
+  color: var(--agentskin-bg) !important;
+  box-shadow:
+    0 5px 16px color-mix(in srgb, var(--agentskin-surface) 24%, transparent),
+    inset 0 1px color-mix(in srgb, var(--agentskin-text) 42%, transparent) !important;
+}
+html.agentskin-host-codex :is(.composer-surface-chrome, [class*="_ComposerLayoutRoot_"], [data-composer-surface-variant][data-composer-radius-variant]) :is(button[class~="bg-primary-solid"], button[aria-label="发送"], button[aria-label="停止"], button[aria-label*="语音"], button[aria-label*="对话"], button[aria-label*="send" i], button[aria-label*="stop" i], button[aria-label*="voice" i]) * {
+  color: currentColor !important;
+  opacity: 1 !important;
+}
+
+/* === Global primary buttons: accent with glow === */
+html.agentskin-host-codex button[class~="bg-token-foreground"] {
+  background: var(--agentskin-accent) !important;
+  color: var(--agentskin-bg) !important;
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
+}
+
 /* === Home utility bar === */
 html.agentskin-host-codex :is([class*="_homeUtilityBar_"], [class*="_ComposerHomeUtilityBar_"]) {
   background: color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-sm), transparent) !important;
@@ -123,13 +295,42 @@ html.agentskin-host-codex :is([class*="_homeUtilityBar_"], [class*="_ComposerHom
   -webkit-backdrop-filter: blur(var(--ag-glass-blur-sm)) saturate(var(--ag-glass-sat-sm)) !important;
 }
 
-/* === Home suggestions === */
-html.agentskin-host-codex .group\\/home-suggestions {
+/* === Home suggestions ===
+   NOTE: the escaped form `\/` (ONE backslash) is required — a doubled
+   backslash makes the whole selector unparseable and the rule is silently
+   dropped (caught by C14 provenance run 2026-09-08). */
+html.agentskin-host-codex .group\/home-suggestions {
   background: transparent !important;
+}
+
+/* === Home suggestion cards: glass + hover triple (upstream parity) ===
+   Frosted card with lift-on-hover (translate + border + shadow in one
+   cubic-bezier(.22,1,.36,1) curve — upstream's unified easing). */
+html.agentskin-host-codex .group\/home-suggestions button {
+  min-height: 118px;
+  border: 1px solid color-mix(in srgb, var(--agentskin-muted) 18%, transparent) !important;
+  border-radius: 18px !important;
+  background: color-mix(in srgb, var(--agentskin-surface) 90%, transparent) !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--agentskin-surface) 18%, transparent) !important;
+  backdrop-filter: blur(10px) saturate(105%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(105%) !important;
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+html.agentskin-host-codex .group\/home-suggestions button:hover {
+  transform: translateY(-2px) !important;
+  border-color: color-mix(in srgb, var(--agentskin-accent) 42%, transparent) !important;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--agentskin-surface) 24%, transparent) !important;
 }
 
 /* === Thread surface === */
 html.agentskin-host-codex .thread-scroll-container {
+  background: transparent !important;
+}
+
+/* === Second opaque fade behind the sticky composer (26.727+) ===
+   The composer already owns its readable surface; retaining this gradient
+   creates a false bottom panel and makes the control look duplicated. */
+html.agentskin-host-codex .thread-scroll-container .bg-gradient-to-t.from-token-main-surface-primary {
   background: transparent !important;
 }
 
@@ -140,6 +341,127 @@ html.agentskin-host-codex :is([data-message-author-role], [data-local-conversati
 html.agentskin-host-codex [data-message-author-role="user"] {
   background: color-mix(in srgb, var(--agentskin-surface) var(--ag-glass-bg-md), transparent) !important;
   border-radius: 12px !important;
+}
+
+/* === Streaming reasoning card (upstream parity) ===
+   While Codex streams its reasoning it renders an annotation block inside
+   the thread: give it its own glass card with a 135° highlight sweep, then
+   reset the styling once the final assistant message lands — nested
+   decoration inside a finalized message reads as card-in-card clutter. */
+html.agentskin-host-codex .thread-scroll-container [data-response-annotation-conversation][data-response-annotation-target] {
+  margin-block: 4px 10px !important;
+  padding: 14px 16px !important;
+  border: 1px solid color-mix(in srgb, var(--agentskin-muted) 18%, transparent) !important;
+  border-radius: 18px !important;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--agentskin-text) 8%, transparent),
+      transparent 42%),
+    color-mix(in srgb, var(--agentskin-surface) 46%, transparent) !important;
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--agentskin-surface) 18%, transparent),
+    inset 0 1px color-mix(in srgb, var(--agentskin-text) 14%, transparent) !important;
+  backdrop-filter: blur(20px) saturate(125%) brightness(104%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(125%) brightness(104%) !important;
+}
+html.agentskin-host-codex [data-local-conversation-final-assistant] [data-response-annotation-conversation] {
+  margin: 0 !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* === Composer caret follows the accent (upstream parity) === */
+html.agentskin-host-codex .ProseMirror {
+  color: var(--agentskin-text) !important;
+  caret-color: var(--agentskin-accent) !important;
+}
+
+/* === Message / content cards: unified glass (upstream parity) ===
+   Task-route articles (tool results, attachment previews) get the shared
+   card recipe: hairline border + translucent panel + light blur + soft
+   shadow. Light shells compensate contrast via the [data-agentskin-shell]
+   opacity bump. The user-bubble rule above stays more specific. */
+html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"])) article {
+  border: 1px solid color-mix(in srgb, var(--agentskin-muted) 12%, transparent) !important;
+  background: color-mix(in srgb, var(--agentskin-surface) 44%, transparent) !important;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--agentskin-surface) 10%, transparent) !important;
+  backdrop-filter: blur(7px) saturate(105%) !important;
+  -webkit-backdrop-filter: blur(7px) saturate(105%) !important;
+  border-radius: 16px !important;
+}
+html.agentskin-host-codex[data-agentskin-shell="light"] main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"])) article {
+  background: color-mix(in srgb, var(--agentskin-surface) 72%, transparent) !important;
+}
+
+/* === Wide immersive mode (upstream parity) ===
+   Panoramic heroes (aspect >= 1.75, written by the adapter's art analysis as
+   data-agentskin-art-wide) earn a full-window treatment: the art moves to the
+   body (fixed attachment), the ::before hero layer turns off, the sidebar
+   becomes a horizontal reading gradient, and the header goes fully
+   transparent with shadow-outlined text. The task-scope scrim (::before in
+   main) keeps working above the body art. */
+html.agentskin-host-codex[data-agentskin-art-wide="true"] body::before {
+  content: none !important;
+}
+html.agentskin-host-codex[data-agentskin-art-wide="true"] body {
+  background: var(--agentskin-art, none) !important;
+  background-position: calc(var(--ag-art-focus-x, 100%)) calc(var(--ag-art-focus-y, 50%)) !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+html.agentskin-host-codex[data-agentskin-art-wide="true"] aside.app-shell-left-panel {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--agentskin-surface) 70%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-surface) 46%, transparent) 60%,
+    color-mix(in srgb, var(--agentskin-surface) 16%, transparent) 100%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html.agentskin-host-codex[data-agentskin-art-wide="true"] header:is(.app-header-tint, [data-app-shell-header-edge-scroll], [class*="_Header_"]) {
+  background: transparent !important;
+  border-bottom: 0 !important;
+  color: var(--agentskin-text) !important;
+  text-shadow:
+    0 1px 2px color-mix(in srgb, var(--agentskin-surface) 86%, transparent),
+    0 0 8px color-mix(in srgb, var(--agentskin-surface) 52%, transparent) !important;
+}
+html.agentskin-host-codex[data-agentskin-art-wide="true"] header:is(.app-header-tint, [data-app-shell-header-edge-scroll], [class*="_Header_"]) svg {
+  filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--agentskin-surface) 72%, transparent)) !important;
+}
+html.agentskin-host-codex[data-agentskin-art-wide="true"] :is(.composer-surface-chrome, [class*="_ComposerLayoutRoot_"], [data-composer-surface-variant][data-composer-radius-variant]) {
+  background: color-mix(in srgb, var(--agentskin-surface) 92%, transparent) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--agentskin-surface) 24%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--agentskin-muted) 42%, transparent) !important;
+}
+
+/* === Responsive: narrow-window shrink (upstream parity, light subset) === */
+@media (max-width: 1120px) {
+  html.agentskin-host-codex .group\/home-suggestions button {
+    min-height: 104px;
+  }
+}
+@media (max-width: 900px) {
+  html.agentskin-host-codex .group\/home-suggestions button {
+    min-height: 96px;
+  }
+  html.agentskin-host-codex main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]):not(:has([role="main"])) article {
+    border-radius: 12px !important;
+  }
+}
+
+/* === Focus ring misfire fix (upstream parity) ===
+   Codex moves focus to a non-interactive route wrapper when navigating;
+   the native outline then spans the entire content area. Only the wrapper
+   case is suppressed — interactive elements keep their focus indication. */
+html.agentskin-host-codex [data-vscode-context][tabindex="0"]:focus-visible {
+  outline: none !important;
 }
 
 /* === Markdown content === */

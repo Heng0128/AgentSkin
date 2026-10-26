@@ -50,6 +50,31 @@ import type { ThemeManifest } from '../../src/shared/types/theme';
 
 const THEMES_DIR = join(process.cwd(), 'themes');
 
+/**
+ * v3 manifest extension fields (schemaVersion ≥ 3).
+ *
+ * v3 themes ship a single `theme.css` (base) plus per-agent `overrides/*.css`
+ * files declared in the manifest's `overrides` map — there is no legacy
+ * `targets` map. Each override re-declares the full 14-token block on the
+ * agent's host selector, so it is the correct unit for per-agent token
+ * assertions (the base theme.css intentionally carries no tokens).
+ */
+interface V3ThemeManifestFields {
+  schemaVersion?: number;
+  semanticVersion?: number;
+  themeCss?: string;
+  apps?: string[];
+  overrides?: Record<string, string>;
+}
+
+type ThemeManifestV3 = ThemeManifest & V3ThemeManifestFields;
+
+/** v3 schema detection (single-file base + per-agent overrides). */
+function isV3Theme(t: ThemeManifest): boolean {
+  return ((t as ThemeManifestV3).schemaVersion ?? 0) >= 3;
+}
+
+
 /** 14 required tokens (THEME_SPEC.md contract) + text-shadow (emitted by tokenBlock). */
 const REQUIRED_TOKENS = [
   '--agentskin-accent',
@@ -471,10 +496,24 @@ function themeAgents(t: ThemeManifest): string[] {
 
 /** Resolve an agent's CSS path safely, or null when not configured. */
 function agentCssPath(t: ThemeManifest, agent: string): string | null {
+  const v3 = t as ThemeManifestV3;
+  if (isV3Theme(t)) {
+    const rel = v3.overrides?.[agent];
+    return rel ? join(THEMES_DIR, t.id, rel) : null;
+  }
   const cfg = t.targets?.[agent];
   if (!cfg?.css) return null;
   return join(THEMES_DIR, t.id, cfg.css);
 }
+
+/** Agents a theme covers: v3 → `apps` map keys, legacy → supportedAgents/targets. */
+function themeAgentsV3Aware(t: ThemeManifest): string[] {
+  if (isV3Theme(t)) {
+    return (t as ThemeManifestV3).apps ?? [];
+  }
+  return themeAgents(t);
+}
+
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -498,9 +537,7 @@ describe('theme discovery', () => {
 
 describe('required agent CSS coverage', () => {
   for (const t of themes) {
-    // v3 格式: 单一 theme.css,构建阶段自动 scope,无需 per-app 产物文件
-    if (t.semanticVersion && t.semanticVersion >= 1) continue;
-    const agents = themeAgents(t);
+    const agents = themeAgentsV3Aware(t);
     it(`${t.id} — provides CSS for every supported agent`, () => {
       for (const agent of agents) {
         const cssPath = agentCssPath(t, agent);
@@ -515,7 +552,7 @@ describe('required agent CSS coverage', () => {
 
 describe('required token presence', () => {
   for (const t of themes) {
-    for (const agent of themeAgents(t)) {
+    for (const agent of themeAgentsV3Aware(t)) {
       const cssPath = agentCssPath(t, agent);
       if (!cssPath || !existsSync(cssPath)) continue;
 
@@ -532,7 +569,7 @@ describe('required token presence', () => {
 
 describe('text-shadow token contract', () => {
   for (const t of themes) {
-    for (const agent of themeAgents(t)) {
+    for (const agent of themeAgentsV3Aware(t)) {
       const cssPath = agentCssPath(t, agent);
       if (!cssPath || !existsSync(cssPath)) continue;
 
@@ -550,7 +587,7 @@ describe('text-shadow token contract', () => {
 
 describe('manifest-color ↔ CSS-token consistency', () => {
   for (const t of themes) {
-    for (const agent of themeAgents(t)) {
+    for (const agent of themeAgentsV3Aware(t)) {
       const cssPath = agentCssPath(t, agent);
       if (!cssPath || !existsSync(cssPath)) continue;
 
@@ -577,7 +614,7 @@ describe('manifest-color ↔ CSS-token consistency', () => {
 
 describe('color-scheme matches manifest mode', () => {
   for (const t of themes) {
-    for (const agent of themeAgents(t)) {
+    for (const agent of themeAgentsV3Aware(t)) {
       const cssPath = agentCssPath(t, agent);
       if (!cssPath || !existsSync(cssPath)) continue;
 
@@ -595,7 +632,6 @@ describe('color-scheme matches manifest mode', () => {
 
 describe('luminance hierarchy', () => {
   for (const t of themes) {
-    if (t.semanticVersion && t.semanticVersion >= 1) continue;
     it(`${t.id} — surface clearly distinct from bg`, () => {
       const bgVal = t.colors.background;
       const sVal = t.colors.surface;
@@ -647,7 +683,6 @@ describe('luminance hierarchy', () => {
 
 describe('luminance hierarchy — surfaceElevated', () => {
   for (const t of themes) {
-    if (t.semanticVersion && t.semanticVersion >= 1) continue;
     it(`${t.id} — surfaceElevated distinguishable from surface`, () => {
       const sVal = t.colors.surface;
       const seVal = t.colors.surfaceElevated;
@@ -684,7 +719,7 @@ describe('luminance hierarchy — surfaceElevated', () => {
 
 describe('WCAG AA contrast compliance', () => {
   for (const t of themes) {
-    for (const agent of themeAgents(t)) {
+    for (const agent of themeAgentsV3Aware(t)) {
       const cssPath = agentCssPath(t, agent);
       if (!cssPath || !existsSync(cssPath)) continue;
 

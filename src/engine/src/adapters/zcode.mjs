@@ -53,11 +53,22 @@ const zcode = {
     const title = String(target.title ?? "");
     if (/^(devtools|chrome-extension):/i.test(url)) return false;
     if (/^about:/i.test(url)) return false;
-    // ZCode's renderer is served from the app bundle via file://.
+    // Cross-adapter exclusions (2026-09-07 CDP probe): the bare /app\.asar/
+    // match below also captured WorkBuddy's and QoderWork's renderers (both
+    // serve from app.asar too). ZCode targets must carry ZCode evidence.
+    if (/^vscode-file:/i.test(url)) return false; // TRAE SOLO
+    if (/doubao/i.test(url) || /豆包/i.test(title)) return false; // Doubao
+    if (/qoder/i.test(url) || /qoder/i.test(title)) return false; // QoderWork
+    if (/workbuddy/i.test(url) || /workbuddy/i.test(title)) return false; // WorkBuddy
+    if (/^app:\/\//i.test(url) || /chatgpt|codex|openai/i.test(url) || /chatgpt|codex|openai/i.test(title)) return false; // Codex
+    // ZCode's renderer is served from the app bundle via file://
+    // (file:///C:/Program%20Files/ZCode/resources/app.asar/out/renderer/…).
     if (/^file:\/\//i.test(url) && /zcode/i.test(url)) return true;
     // Title-based match covers the main window ("ZCode") and localized variants.
     if (/zcode/i.test(title)) return true;
-    // app.asar renderer (standard Electron packaging).
+    // app.asar renderer (standard Electron packaging) — only reachable here
+    // when the path carries no other agent's fingerprint (guarded above), and
+    // ZCode's own file:// URL is already matched by the zcode-path rule.
     if (/app\.asar/i.test(url)) return true;
     return false;
   },

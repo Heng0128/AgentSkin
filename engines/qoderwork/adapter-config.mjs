@@ -92,7 +92,12 @@
     layoutRoot: ':is(.agents-layout-root, .agents-layout-body, .agents-content-area)',
     sidebar: ':is(.agents-sidebar, aside, [data-view-id="sidebar"])',
     mainSurface: ':is([class*="agents-content"], [class*="chat-panel"], [class*="message-list"], [class*="conversation-panel"], [class*="workspace-panel"])',
-    header: ':is([class*="agents-header"], [class*="titlebar"], [class*="title-bar"], [class*="top-bar"], [class*="topbar"], [class*="app-header"], [class*="window-header"], [class*="header"])',
+    // 2026-09-07 CDP probe: the real top bar is `.agents-layout-root`'s first
+    // child — `div.h-[36px] flex-shrink-0 ... bg-container border-b
+    // border-border/30`. It carries NO semantic "header" class, so the old
+    // [class*="header"] family matched 0 elements. The h-[36px] attribute
+    // selector is probe-verified against the current build.
+    header: ':is([class*="h-[36px]"], [class*="agents-header"], [class*="titlebar"], [class*="title-bar"], [class*="top-bar"], [class*="topbar"], [class*="app-header"], [class*="window-header"], [class*="header"])',
     navItem: ':is(button[class~="group/extensions-nav"], [data-extension-nav-item="true"])',
     cmEditor: ':is(.cm-editor, .cm-content, .cm-line)',
     overlayDialog: '[role="dialog"]',
@@ -113,24 +118,23 @@
   const RENDERER_CSS = {
     'voice-overlay': `
 /* === voice-overlay: 全屏覆盖层，透明背景 + 居中玻璃效果 === */
+/* 2026-09-07 CDP probe: voice-overlay.html 实际结构为纯 Tailwind 工具类 —
+ * 全屏容器 div.flex h-full w-full …，语音胶囊为
+ * div.isolate.inline-flex.h-10.max-w-[240px]（无任何 voice-* 类名），
+ * 旧 [class*="voice-*"] / .voice-glass 选择器 0 命中，改为按实测锚点。 */
 html.${HOST_CLASS} body {
   background: transparent !important;
   background-color: transparent !important;
 }
-html.${HOST_CLASS} #root,
-html.${HOST_CLASS} [class*="voice-overlay"],
-html.${HOST_CLASS} [class*="voice-container"],
-html.${HOST_CLASS} [class*="voice-panel"] {
+html.${HOST_CLASS} #root {
   background: transparent !important;
   background-color: transparent !important;
 }
-html.${HOST_CLASS} [class*="voice-input-area"],
-html.${HOST_CLASS} [class*="voice-core"],
-html.${HOST_CLASS} .voice-glass {
+html.${HOST_CLASS} [class*="max-w-[240px]"] {
   background: color-mix(in srgb, var(--agentskin-surface-elevated) 72%, transparent) !important;
   backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
   -webkit-backdrop-filter: blur(var(--ag-glass-blur-lg)) saturate(var(--ag-glass-sat-lg)) !important;
-  border-radius: 16px !important;
+  border-radius: 9999px !important;
   border: 1px solid var(--ag-glass-border) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18) !important;
 }

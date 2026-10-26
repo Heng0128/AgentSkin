@@ -21,9 +21,12 @@ const CRITICAL_SELECTORS: Record<AgentId, string[]> = {
   workbuddy: ['.workbuddy-sidebar', '.workbuddy-input', '.workbuddy-main'],
   doubao: ['.doubao-sidebar', '.doubao-input', '.doubao-conversation'],
   codex: [
-    "main[class*='MainContentSurface']",
-    'nav[class*="sidebar"]',
-    'button[class*="composer"]',
+    // Selector contract synced with upstream Codex-Dream-Skin selectors.json
+    // (verified 26.715 → 26.818): keep legacy anchors, append stable
+    // attributes / CSS-Module prefixes, never match a full hash.
+    "main:is(.main-surface, [data-app-shell-main-surface], [class*='_MainContentSurface_'])",
+    'aside.app-shell-left-panel',
+    ":is(.composer-surface-chrome, [class*='_ComposerLayoutRoot_'], [data-composer-surface-variant][data-composer-radius-variant])",
   ],
   zcode: ['.zcode-sidebar', '.zcode-input', '.zcode-layout'],
 };

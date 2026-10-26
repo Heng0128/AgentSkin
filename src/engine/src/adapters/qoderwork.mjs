@@ -72,6 +72,15 @@ const qoderwork = {
     const title = String(target.title ?? "");
     if (/^(devtools|chrome-extension):/i.test(url)) return false;
     if (/^about:/i.test(url)) return false;
+    // Cross-adapter exclusions (2026-09-07 CDP probe): the "any page with a
+    // non-empty title" catch-all let qoderwork claim other agents' targets —
+    // e.g. Doubao (title 豆包) and ZCode (whose renderer path
+    // app.asar/out/renderer/index.html also matches the positive rule below).
+    if (/^vscode-file:/i.test(url)) return false; // TRAE SOLO
+    if (/doubao/i.test(url) || /豆包/i.test(title)) return false; // Doubao
+    if (/zcode/i.test(url) || /zcode/i.test(title)) return false; // ZCode
+    if (/workbuddy/i.test(url) || /workbuddy/i.test(title)) return false; // WorkBuddy
+    if (/^app:\/\//i.test(url) || /chatgpt|codex|openai/i.test(title)) return false; // Codex
     // Auxiliary windows (artifact preview, quick pick, voice overlay, MCP app
     // preview) live in the same renderer directory but are not the main shell.
     if (/(artifact-preview|mcp-app-preview|quickpick|voice-overlay)\.html/i.test(url)) return false;
@@ -82,10 +91,9 @@ const qoderwork = {
     // now static so engine and runtime agree). Broader `/qoder/i` catches
     // both "Qoder" and "QoderWork" window titles.
     if (/qoder/i.test(title)) return true;
-    // Broad fallback: any page target with a non-empty title that looks like
-    // an app window (not DevTools, not chrome-internal). Catches edge cases
-    // where the window title is the conversation name rather than the product.
-    if (title && !/^(DevTools|chrome|about:)/i.test(title) && url && !url.startsWith("about:")) return true;
+    // 2026-09-07: the "any non-empty title" catch-all is REMOVED. A bare
+    // title is not QoderWork evidence — the URL renderer match above is the
+    // authoritative signature for this app's Electron packaging.
     return false;
   },
   // CSS variable bridge (S3): re-route the native --color-* family QoderWork

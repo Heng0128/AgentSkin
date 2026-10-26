@@ -109,13 +109,15 @@ export const SELECTOR_REGISTRIES = {
 	codex: {
 		root: {
 			selectors: [
+				"main:is(.main-surface, [data-app-shell-main-surface], [class*='_MainContentSurface_'])",
 				"main.main-surface",
 				"main",
 				"#root",
 				"body > div",
 			],
 			required: true,
-			description: "ChatGPT/Codex 主视图根节点。main-surface 是 Codex 桌面端的标志性类名。",
+			description:
+				"ChatGPT/Codex 主视图根节点。选择器合同与上游 Codex-Dream-Skin selectors.json 对齐（26.715→26.818 实测）：保留旧锚点、追加稳定属性/CSS Module 前缀、绝不匹配完整 hash。",
 		},
 		sidebar: {
 			selectors: [
@@ -129,16 +131,18 @@ export const SELECTOR_REGISTRIES = {
 		},
 		composer: {
 			selectors: [
+				":is(.composer-surface-chrome, [class*='_ComposerLayoutRoot_'], [data-composer-surface-variant][data-composer-radius-variant])",
 				".composer-surface-chrome",
 				"form textarea",
 				"[contenteditable='true']",
 				"textarea",
 			],
 			required: false,
-			description: "底部输入区域",
+			description: "底部输入区域（26.814+ 壳体迁移至 _ComposerLayoutRoot_ CSS Module）",
 			semantic: {
 				controlled: true,
-				controllingSelector: ".composer-surface-chrome",
+				controllingSelector:
+					":is(.composer-surface-chrome, [class*='_ComposerLayoutRoot_'], [data-composer-surface-variant][data-composer-radius-variant])",
 				innerInputNonControlled: true,
 				innerInputSelector: "[contenteditable='true'], textarea",
 				innerButtonNonControlled: true,
@@ -154,6 +158,15 @@ export const SELECTOR_REGISTRIES = {
 			],
 			required: false,
 			description: "会话主内容区",
+		},
+		toolbar: {
+			selectors: [
+				"header:is(.app-header-tint, [data-app-shell-header-edge-scroll], [class*='_Header_'])",
+				"header",
+			],
+			required: false,
+			description:
+				"顶栏（26.727.40816 起输出 data-app-shell-header-edge-scroll 并使用 _Header_ CSS Module；.app-header-tint 兼容历史版本）",
 		},
 	},
 	doubao: {

@@ -81,5 +81,25 @@
     document.adoptedStyleSheets = [...document.adoptedStyleSheets, ndfSheet];
   } catch {}
 
+  // ── Marker registration (audit W5 fix, 2026-09-08) ──
+  // Previously workbuddy was the ONLY adapter that never set window[MARKER]:
+  // the already-applied guard above was dead code, and the restore chain
+  // (injection-runtime CLEAR_ADAPTERS_BODY) had no marker to clean, so the
+  // localStorage/serviceWorker monkey-patches and the patrol survived
+  // restore forever. Register lifecycle handles the way doubao does.
+  window[MARKER] = {
+    adapter,
+    storageRestore: typeof config.restoreHostPatches === 'function'
+      ? config.restoreHostPatches
+      : undefined,
+    patrolStop() {
+      try {
+        if (typeof window.__agentskin_createPatrolCleanup === 'function') {
+          window.__agentskin_createPatrolCleanup();
+        }
+      } catch {}
+    },
+  };
+
   return 'applied';
 })();

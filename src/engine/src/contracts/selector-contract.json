@@ -105,9 +105,9 @@
     },
     "codex": {
       "root": {
-        "selector": "main.main-surface, main, #root, body > div",
+        "selector": "main:is(.main-surface, [data-app-shell-main-surface], [class*='_MainContentSurface_']), main, #root, body > div",
         "tier": "L1",
-        "description": "ChatGPT/Codex 主视图根节点。main-surface 是 Codex 桌面端的标志性类名。"
+        "description": "ChatGPT/Codex 主视图根节点。与上游 Codex-Dream-Skin selectors.json 对齐（26.715→26.818 实测）：保留旧锚点、追加稳定属性/CSS Module 前缀。"
       },
       "sidebar": {
         "selector": "aside.app-shell-left-panel, aside[class*='left'], [class*='sidebar'], aside",
@@ -115,9 +115,9 @@
         "description": "左侧历史对话面板"
       },
       "composer": {
-        "selector": ".composer-surface-chrome, form textarea, [contenteditable='true'], textarea",
+        "selector": ":is(.composer-surface-chrome, [class*='_ComposerLayoutRoot_'], [data-composer-surface-variant][data-composer-radius-variant]), .composer-surface-chrome, form textarea, [contenteditable='true'], textarea",
         "tier": "L2",
-        "description": "底部输入区域"
+        "description": "底部输入区域（26.814+ 壳体迁移至 _ComposerLayoutRoot_ CSS Module）"
       },
       "workspace": {
         "selector": ".conversation-shell, .chat-viewport, main > div",
